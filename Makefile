@@ -9,6 +9,11 @@
 include .env
 export $(shell sed 's/=.*//' .env)
 
+# Check if variable is set in .env
+ifndef REGISTRY_USER
+$(error REGISTRY_USER is not set)
+endif
+
 # ---
 # Global Variables
 # ---
