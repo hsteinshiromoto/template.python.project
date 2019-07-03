@@ -5,9 +5,10 @@
 # ---
 
 PROJECT_PATH := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+PROJECT_NAME = $(shell basename ${PROJECT_PATH})
+
 BUCKET = [OPTIONAL] your-bucket-for-syncing-data (do not include 's3://')
 PROFILE = default
-PROJECT_NAME = project_name
 PYTHON_INTERPRETER = python3
 
 ifeq (,$(shell which conda))
