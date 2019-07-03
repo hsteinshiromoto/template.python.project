@@ -53,7 +53,7 @@ build:
 		   --build-arg REGISTRY=$(REGISTRY) \
 		   --build-arg AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
 		   --build-arg AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
-		   --build-arg FILES=. \
+		   --build-arg FILES=${F} \
 		   -t $(DOCKER_IMAGE) .
 
 ## Install Python Dependencies
