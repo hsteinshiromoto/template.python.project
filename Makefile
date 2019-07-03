@@ -1,10 +1,10 @@
 .PHONY: clean data lint requirements sync_data_to_s3 sync_data_from_s3
 
-#################################################################################
-# GLOBALS                                                                       #
-#################################################################################
+# ---
+# Global Variables
+# ---
 
-PROJECT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+PROJECT_PATH := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 BUCKET = [OPTIONAL] your-bucket-for-syncing-data (do not include 's3://')
 PROFILE = default
 PROJECT_NAME = project_name
@@ -16,9 +16,9 @@ else
 HAS_CONDA=True
 endif
 
-#################################################################################
-# COMMANDS                                                                      #
-#################################################################################
+# ---
+# Commands
+# ---
 
 ## Install Python Dependencies
 requirements: test_environment
