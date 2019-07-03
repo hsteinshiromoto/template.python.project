@@ -7,7 +7,7 @@
 # ---
 
 include .env
-export $(shell sed 's/=.*//' envfile)
+export $(shell sed 's/=.*//' .env)
 
 # ---
 # Global Variables
@@ -34,8 +34,27 @@ HAS_CONDA=True
 endif
 
 # ---
+# Arguments
+# ---
+
+# Files to be copied in build phase of the container
+ifndef F
+	F = .
+endif
 # Commands
 # ---
+
+## Build Docker Container
+build:
+	@echo "Building docker image: ${DOCKER_IMAGE}"
+	docker build --build-arg BUILD_DATE=$(BUILD_DATE) \
+		   --build-arg PROJECT_NAME=$(PROJECT_NAME) \
+		   --build-arg DOCKER_IMAGE=$(DOCKER_IMAGE) \
+		   --build-arg REGISTRY=$(REGISTRY) \
+		   --build-arg AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
+		   --build-arg AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
+		   --build-arg FILES=. \
+		   -t $(DOCKER_IMAGE) .
 
 ## Install Python Dependencies
 requirements: test_environment
