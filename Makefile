@@ -1,13 +1,29 @@
 .PHONY: clean data lint requirements sync_data_to_s3 sync_data_from_s3
 
 # ---
+# Export environ variables defined in .env file:
+# 
+# REGISTRY_USER
+# ---
+
+include .env
+export $(shell sed 's/=.*//' envfile)
+
+# ---
 # Global Variables
 # ---
 
 PROJECT_PATH := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 PROJECT_NAME = $(shell basename ${PROJECT_PATH})
 
-BUCKET = [OPTIONAL] your-bucket-for-syncing-data (do not include 's3://')
+DOCKER_REGISTRY = registry.gitlab.com/${REGISTRY_USER}
+
+DOCKER_TAG = latest
+DOCKER_IMAGE = ${DOCKER_REGISTRY}/${PROJECT_NAME}:${DOCKER_TAG}
+
+BUILD_DATE = $(shell date +%Y%m%d-%H:%M:%S)
+
+BUCKET = ${PROJECT_NAME}
 PROFILE = default
 PYTHON_INTERPRETER = python3
 
