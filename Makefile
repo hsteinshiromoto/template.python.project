@@ -22,7 +22,6 @@ PROJECT_PATH := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 PROJECT_NAME = $(shell basename ${PROJECT_PATH})
 
 DOCKER_REGISTRY = registry.gitlab.com/${REGISTRY_USER}
-
 DOCKER_TAG = latest
 DOCKER_IMAGE = ${DOCKER_REGISTRY}/${PROJECT_NAME}:${DOCKER_TAG}
 
@@ -46,6 +45,14 @@ endif
 ifndef F
 	F = .
 endif
+
+ifndef P
+	DOCKER_PARENT_IMAGE = python:3.7-slim-stretch
+endif
+
+
+
+# ---
 # Commands
 # ---
 
@@ -56,8 +63,6 @@ build:
 		   --build-arg PROJECT_NAME=$(PROJECT_NAME) \
 		   --build-arg DOCKER_IMAGE=$(DOCKER_IMAGE) \
 		   --build-arg REGISTRY=$(REGISTRY) \
-		   --build-arg AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
-		   --build-arg AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
 		   --build-arg FILES=${F} \
 		   -t $(DOCKER_IMAGE) .
 
