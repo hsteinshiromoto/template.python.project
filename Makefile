@@ -62,6 +62,7 @@ build:
 	docker build --build-arg BUILD_DATE=$(BUILD_DATE) \
 		   --build-arg PROJECT_NAME=$(PROJECT_NAME) \
 		   --build-arg DOCKER_IMAGE=$(DOCKER_IMAGE) \
+		   --build-arg DOCKER_PARENT_IMAGE=${DOCKER_PARENT_IMAGE} \
 		   --build-arg REGISTRY=$(REGISTRY) \
 		   --build-arg FILES=${F} \
 		   -t $(DOCKER_IMAGE) .
