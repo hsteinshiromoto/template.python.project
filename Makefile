@@ -45,7 +45,6 @@ BUILD_DATE = $(shell date +%Y%m%d-%H:%M:%S)
 
 BUCKET = ${PROJECT_NAME}
 PROFILE = default
-PYTHON_INTERPRETER = python3
 
 ifeq (,$(shell which conda))
 HAS_CONDA=False
@@ -67,7 +66,6 @@ build:
 		   --build-arg DOCKER_IMAGE=$(DOCKER_IMAGE) \
 		   --build-arg DOCKER_PARENT_IMAGE=${DOCKER_PARENT_IMAGE} \
 		   --build-arg REGISTRY=$(REGISTRY) \
-		   --build-arg PYTHON_INTERPRETER=${PYTHON_INTERPRETER} \
 		   --build-arg FILES=${F} \
 		   -t $(DOCKER_IMAGE) .
 

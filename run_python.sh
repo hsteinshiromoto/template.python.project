@@ -1,26 +1,28 @@
 #!/bin/bash
 
-
 ## Test python environment is setup correctly
 if [[ $1 = "test_environment" ]]; then
-	${PYTHON_INTERPRETER} test_environment.py
+	python test_environment.py
 fi
 
-# Install Python Dependencies
+## Install Python Dependencies
 if [[ $1 = "requirements" ]]; then
  	bash run_python.sh test_environment
-	${PYTHON_INTERPRETER} -m pip install -U pip setuptools wheel
-	${PYTHON_INTERPRETER} -m pip install -r requirements.txt
+	python -m pip install -U pip setuptools wheel
+	python -m pip install -r requirements.txt
 fi
 
-# ## Make Dataset
-# data: requirements
-# 	$(PYTHON_INTERPRETER) src/data/make_dataset.py data/raw data/processed
+## Make Dataset
+if [[ $1 == "data" ]]; then
+	bash run_python.sh requirements
+	python src/data/make_dataset.py data/raw data/processed
+fi
 
-# ## Delete all compiled Python files
-# clean:
-# 	find . -type f -name "*.py[co]" -delete
-# 	find . -type d -name "__pycache__" -delete
+## Delete all compiled Python files
+if [[ $1 = "clean" ]]; then
+	find . -type f -name "*.py[co]" -delete
+	find . -type d -name "__pycache__" -delete
+fi
 
 # ## Lint using flake8
 # lint:
