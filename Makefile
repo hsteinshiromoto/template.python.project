@@ -2,8 +2,6 @@
 
 # ---
 # Export environ variables defined in .env file:
-# 
-# REGISTRY_USER
 # ---
 
 include .env
@@ -15,14 +13,32 @@ $(error REGISTRY_USER is not set)
 endif
 
 # ---
+# Arguments
+# ---
+
+# Files to be copied in build phase of the container
+ifndef FILES
+	FILES = .
+endif
+
+ifndef DOCKER_PARENT_IMAGE
+	DOCKER_PARENT_IMAGE = python:3.7-slim-stretch
+endif
+
+ifndef DOCKER_TAG
+	DOCKER_TAG = latest
+endif	
+
+ifndef DOCKER_REGISTRY
+	DOCKER_REGISTRY = registry.gitlab.com/${REGISTRY_USER}
+endif	
+
+# ---
 # Global Variables
 # ---
 
 PROJECT_PATH := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 PROJECT_NAME = $(shell basename ${PROJECT_PATH})
-
-DOCKER_REGISTRY = registry.gitlab.com/${REGISTRY_USER}
-DOCKER_TAG = latest
 DOCKER_IMAGE = ${DOCKER_REGISTRY}/${PROJECT_NAME}:${DOCKER_TAG}
 
 BUILD_DATE = $(shell date +%Y%m%d-%H:%M:%S)
@@ -35,19 +51,6 @@ ifeq (,$(shell which conda))
 HAS_CONDA=False
 else
 HAS_CONDA=True
-endif
-
-# ---
-# Arguments
-# ---
-
-# Files to be copied in build phase of the container
-ifndef F
-	F = .
-endif
-
-ifndef P
-	DOCKER_PARENT_IMAGE = python:3.7-slim-stretch
 endif
 
 
