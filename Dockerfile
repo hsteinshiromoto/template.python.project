@@ -51,7 +51,6 @@ WORKDIR $PROJECT_DIR
 # ---
 # Set up the necessary Python packages
 # ---
-COPY $FILES $PROJECT_DIR
-COPY run_python.sh $PROJECT_DIR
+COPY run_python.sh $FILES $PROJECT_DIR
 RUN bash run_python.sh requirements
 
