@@ -1,4 +1,20 @@
 #!/usr/bin/env bash
+
+# ---
+# Export environ variables defined in .env file:
+# ---
+
+set -a # automatically export all variables
+source .env
+set +a
+
+# Check if variable is defined in .env file
+if [[ -z ${REGISTRY_USER} ]]; then
+	echo "Error! Variable REGISTRY_USER is not defined" 1>&2
+	exit 64
+
+fi
+
 # ---
 # Global Variables
 # ---
@@ -6,7 +22,7 @@
 PROJECT_DIR=$(pwd)
 PROJECT_NAME=$(basename ${PROJECT_DIR})
 
-REGISTRY=registry.gitlab.com/hsteinshiromoto
+REGISTRY=registry.gitlab.com/${REGISTRY_USER}
 DOCKER_TAG=latest
 DOCKER_IMAGE=${REGISTRY}/${PROJECT_NAME}:${DOCKER_TAG}
 DOCKER_PROJECT_DIR=/home/${PROJECT_NAME}
