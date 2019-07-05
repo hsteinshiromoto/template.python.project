@@ -2,12 +2,15 @@
 
 ## Test python environment is setup correctly
 if [[ $1 = "test_environment" ]]; then
+	@echo "Testing Python Environment"
 	python test_environment.py
 fi
 
 ## Install Python Dependencies
 if [[ $1 = "requirements" ]]; then
  	bash run_python.sh test_environment
+
+ 	@echo "Installing Required Modules"
 	python -m pip install -U pip setuptools wheel
 	python -m pip install -r requirements.txt
 fi
