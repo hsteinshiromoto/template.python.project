@@ -18,19 +18,19 @@ endif
 
 # Files to be copied in build phase of the container
 ifndef FILES
-	FILES = .
+FILES=.
 endif
 
 ifndef DOCKER_PARENT_IMAGE
-	DOCKER_PARENT_IMAGE = python:3.7-slim-stretch
+DOCKER_PARENT_IMAGE=python:3.7-slim-stretch
 endif
 
 ifndef DOCKER_TAG
-	DOCKER_TAG = latest
+DOCKER_TAG=latest
 endif	
 
 ifndef DOCKER_REGISTRY
-	DOCKER_REGISTRY = registry.gitlab.com/${REGISTRY_USER}
+DOCKER_REGISTRY=registry.gitlab.com/${REGISTRY_USER}
 endif	
 
 # ---
