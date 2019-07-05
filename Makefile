@@ -18,7 +18,7 @@ endif
 
 # Files to be copied in build phase of the container
 ifndef FILES
-FILES=.
+FILES=requirements.txt
 endif
 
 ifndef DOCKER_PARENT_IMAGE
@@ -45,13 +45,6 @@ BUILD_DATE = $(shell date +%Y%m%d-%H:%M:%S)
 
 BUCKET = ${PROJECT_NAME}
 PROFILE = default
-
-ifeq (,$(shell which conda))
-HAS_CONDA=False
-else
-HAS_CONDA=True
-endif
-
 
 
 # ---
