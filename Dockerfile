@@ -1,14 +1,18 @@
 # ---
 # Build arguments
 # ---
+
+ARG DOCKER_PARENT_IMAGE
+
+FROM $DOCKER_PARENT_IMAGE
+
+# NB: Arguments should come after FROM otherwise they're deleted
 ARG BUILD_DATE
 ARG PROJECT_NAME
 ARG DOCKER_IMAGE
-ARG DOCKER_PARENT_IMAGE
 ARG REGISTRY
 ARG FILES
-
-FROM $DOCKER_PARENT_IMAGE
+ARG USER
 
 # Setup AWS S3 access
 ARG AWS_ACCESS_KEY_ID
@@ -44,13 +48,17 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
 #RUN apt update
 #RUN apt install -y git procps cron sudo groff
 
+RUN useradd -ms /bin/bash $USER
+
 # Create the "home" folder
 RUN mkdir -p $PROJECT_DIR
 WORKDIR $PROJECT_DIR
 
 # ---
-# Set up the necessary Python packages
+# Set up the necessary Python environment and packages
 # ---
-COPY run_python.sh $FILES $PROJECT_DIR
+COPY "run_python.sh" "test_environment.py" "setup.py" $FILES $PROJECT_DIR/
 RUN bash run_python.sh requirements
+
+USER $USER
 

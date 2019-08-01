@@ -18,7 +18,7 @@ endif
 
 # Files to be copied in build phase of the container
 ifndef FILES
-FILES=requirements.txt
+FILES="requirements.txt"
 endif
 
 ifndef DOCKER_PARENT_IMAGE
@@ -32,6 +32,10 @@ endif
 ifndef DOCKER_REGISTRY
 DOCKER_REGISTRY=registry.gitlab.com/${REGISTRY_USER}
 endif	
+
+ifndef DOCKER_REGISTRY
+USER=user
+endif
 
 # ---
 # Global Variables
@@ -60,6 +64,7 @@ build:
 		   --build-arg DOCKER_PARENT_IMAGE=${DOCKER_PARENT_IMAGE} \
 		   --build-arg REGISTRY=${REGISTRY} \
 		   --build-arg FILES=${FILES} \
+		   --build-arg USER=user \
 		   -t $(DOCKER_IMAGE) .
 
 #
