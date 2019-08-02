@@ -8,8 +8,6 @@ fi
 
 ## Install Python Dependencies
 if [[ $1 = "requirements" ]]; then
- 	bash run_python.sh test_environment
-
  	echo ">>> Installing Required Modules .."
 	python -m pip install -U pip setuptools wheel
 	python -m pip install -r requirements.txt

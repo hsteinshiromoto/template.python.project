@@ -58,6 +58,7 @@ WORKDIR $PROJECT_DIR
 # Set up the necessary Python environment and packages
 # ---
 COPY "run_python.sh" "test_environment.py" "setup.py" $FILES $PROJECT_DIR/
+RUN bash run_python.sh test_environment
 RUN bash run_python.sh requirements
 
 USER $USER
