@@ -74,6 +74,7 @@ compose:
 	DOCKER_IMAGE=$(DOCKER_IMAGE) \
 	DOCKER_IMAGE_TAG=$(DOCKER_IMAGE_TAG) \
 	DOCKER_PARENT_IMAGE=$(DOCKER_IMAGE_TAG) \
+	USER=${USER} \
 	docker-compose up -d
 
 #################################################################################

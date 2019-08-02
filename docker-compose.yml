@@ -8,6 +8,7 @@ services:
     build:
       args:
         DOCKER_PARENT_IMAGE: ${DOCKER_PARENT_IMAGE}
+        USER: ${USER}
 
       context: jupyter/
       dockerfile: Dockerfile
