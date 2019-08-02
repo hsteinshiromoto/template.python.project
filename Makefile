@@ -43,7 +43,8 @@ endif
 
 PROJECT_PATH := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 PROJECT_NAME = $(shell basename ${PROJECT_PATH})
-DOCKER_IMAGE = ${DOCKER_REGISTRY}/${PROJECT_NAME}:${DOCKER_TAG}
+DOCKER_IMAGE = ${DOCKER_REGISTRY}/${PROJECT_NAME}
+DOCKER_IMAGE_TAG = ${DOCKER_IMAGE}:${DOCKER_TAG}
 
 BUILD_DATE = $(shell date +%Y%m%d-%H:%M:%S)
 
@@ -55,17 +56,17 @@ PROFILE = default
 # Commands
 # ---
 
-## Build Docker Container
+## Build Base Docker Container
 build:
-	@echo "Building docker image: ${DOCKER_IMAGE}"
+	@echo "Building docker image: ${DOCKER_IMAGE_TAG}"
 	docker build --build-arg BUILD_DATE=$(BUILD_DATE) \
 		   --build-arg PROJECT_NAME=$(PROJECT_NAME) \
-		   --build-arg DOCKER_IMAGE=$(DOCKER_IMAGE) \
+		   --build-arg DOCKER_IMAGE_TAG=$(DOCKER_IMAGE_TAG) \
 		   --build-arg DOCKER_PARENT_IMAGE=${DOCKER_PARENT_IMAGE} \
 		   --build-arg REGISTRY=${REGISTRY} \
 		   --build-arg FILES=${FILES} \
 		   --build-arg USER=user \
-		   -t $(DOCKER_IMAGE) .
+		   -t $(DOCKER_IMAGE_TAG) .
 
 #
 
