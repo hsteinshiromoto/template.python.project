@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  base:
+    image: ${DOCKER_IMAGE_TAG}
+
+  jupyter:
+    build:
+      args:
+        DOCKER_PARENT_IMAGE: ${DOCKER_PARENT_IMAGE}
+
+      context: jupyter/
+      dockerfile: Dockerfile
+
+    image: "${DOCKER_IMAGE}:jupyter"
+    ports:
+      - "35745:8888"
+

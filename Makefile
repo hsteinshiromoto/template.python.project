@@ -68,7 +68,13 @@ build:
 		   --build-arg USER=user \
 		   -t $(DOCKER_IMAGE_TAG) .
 
-#
+## Compose Containers
+compose:
+	@echo "Compose containers"
+	DOCKER_IMAGE=$(DOCKER_IMAGE) \
+	DOCKER_IMAGE_TAG=$(DOCKER_IMAGE_TAG) \
+	DOCKER_PARENT_IMAGE=$(DOCKER_IMAGE_TAG) \
+	docker-compose up -d
 
 #################################################################################
 # PROJECT RULES                                                                 #
