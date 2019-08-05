@@ -44,7 +44,7 @@ endif
 PROJECT_PATH := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 PROJECT_NAME = $(shell basename ${PROJECT_PATH})
 DOCKER_IMAGE = ${DOCKER_REGISTRY}/${PROJECT_NAME}
-DOCKER_IMAGE_TAG = ${DOCKER_IMAGE}:${DOCKER_TAG}
+#DOCKER_IMAGE_TAG = ${DOCKER_IMAGE}:${DOCKER_TAG}
 
 BUILD_DATE = $(shell date +%Y%m%d-%H:%M:%S)
 
@@ -58,23 +58,27 @@ PROFILE = default
 
 ## Build Base Docker Container
 build:
-	@echo "Building docker image: ${DOCKER_IMAGE_TAG}"
+	@echo "Building docker image: ${DOCKER_IMAGE}.base:${DOCKER_TAG}"
 	docker build --build-arg BUILD_DATE=$(BUILD_DATE) \
 		   --build-arg PROJECT_NAME=$(PROJECT_NAME) \
-		   --build-arg DOCKER_IMAGE_TAG=$(DOCKER_IMAGE_TAG) \
+		   --build-arg DOCKER_IMAGE_TAG=${DOCKER_IMAGE}.base:${DOCKER_TAG} \
 		   --build-arg DOCKER_PARENT_IMAGE=${DOCKER_PARENT_IMAGE} \
 		   --build-arg REGISTRY=${REGISTRY} \
 		   --build-arg FILES=${FILES} \
 		   --build-arg USER=user \
-		   -t $(DOCKER_IMAGE_TAG) .
+		   -t ${DOCKER_IMAGE}.base:${DOCKER_TAG} .
+
+build_jupyter:
+	@echo "Building docker image: ${DOCKER_IMAGE}.jupyter:${DOCKER_TAG}"
+	docker build --build-arg DOCKER_PARENT_IMAGE=${DOCKER_IMAGE}.base:${DOCKER_TAG} \
+		   --build-arg USER=user \
+		   -t ${DOCKER_IMAGE}.jupyter:${DOCKER_TAG} jupyter/
 
 ## Compose Containers
 compose:
 	@echo "Compose containers"
 	DOCKER_IMAGE=$(DOCKER_IMAGE) \
-	DOCKER_IMAGE_TAG=$(DOCKER_IMAGE_TAG) \
-	DOCKER_PARENT_IMAGE=$(DOCKER_IMAGE_TAG) \
-	USER=${USER} \
+	DOCKER_TAG=${DOCKER_TAG} \
 	docker-compose up -d
 
 #################################################################################
