@@ -8,4 +8,5 @@ services:
     image: "${DOCKER_IMAGE}.jupyter:${DOCKER_TAG}"
     ports:
       - "35745:8888"
-
+    volumes:
+      - ${PROJECT_PATH}:/home/${PROJECT_NAME}

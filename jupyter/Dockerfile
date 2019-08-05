@@ -39,5 +39,4 @@ WORKDIR $PROJECT_DIR
 EXPOSE 8888
 
 USER $USER
-CMD su - user -c "jupyter notebook --no-browser --ip=0.0.0.0 --port=8888"
-#CMD ["jupyter", "notebook", "--no-browser", "--ip=0.0.0.0", "--allow-root", "--port=8888"]
+CMD su - user -c "jupyter notebook --no-browser --ip=0.0.0.0 --port=8888 --notebook-dir=$PROJECT_DIR"

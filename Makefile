@@ -79,6 +79,8 @@ compose:
 	@echo "Compose containers"
 	DOCKER_IMAGE=$(DOCKER_IMAGE) \
 	DOCKER_TAG=${DOCKER_TAG} \
+	PROJECT_PATH=${PROJECT_PATH} \
+	PROJECT_NAME=${PROJECT_NAME} \
 	docker-compose up -d
 
 #################################################################################
