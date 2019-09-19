@@ -57,16 +57,13 @@ PROFILE = default
 # ---
 
 ## Build Base Docker Container
-build:
-	@echo "Building docker image: ${DOCKER_IMAGE}.base:${DOCKER_TAG}"
+buildlocal:
+	$(eval DOCKER_FULL_IMAGE=${DOCKER_IMAGE}:${DOCKER_TAG})
+	@echo "Building docker image: ${DOCKER_FULL_IMAGE}"
 	docker build --build-arg BUILD_DATE=$(BUILD_DATE) \
-		   --build-arg PROJECT_NAME=$(PROJECT_NAME) \
-		   --build-arg DOCKER_IMAGE_TAG=${DOCKER_IMAGE}.base:${DOCKER_TAG} \
-		   --build-arg DOCKER_PARENT_IMAGE=${DOCKER_PARENT_IMAGE} \
-		   --build-arg REGISTRY=${REGISTRY} \
-		   --build-arg FILES=${FILES} \
-		   --build-arg USER=user \
-		   -t ${DOCKER_IMAGE}.base:${DOCKER_TAG} .
+			--build-arg DOCKER_PARENT_IMAGE=${DOCKER_PARENT_IMAGE} \
+			--build-arg PROJECT_NAME=$(PROJECT_NAME) \
+			-t ${DOCKER_FULL_IMAGE} .
 
 build_jupyter:
 	@echo "Building docker image: ${DOCKER_IMAGE}.jupyter:${DOCKER_TAG}"

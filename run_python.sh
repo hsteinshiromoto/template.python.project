@@ -1,16 +1,19 @@
 #!/bin/bash
 
+#!/bin/bash
+
 ## Test python environment is setup correctly
 if [[ $1 = "test_environment" ]]; then
 	echo ">>> Testing Python Environment"
-	python test_environment.py
+	/usr/local/bin/test_environment.py
 fi
 
 ## Install Python Dependencies
 if [[ $1 = "requirements" ]]; then
  	echo ">>> Installing Required Modules .."
+ 	cd /usr/local/bin/
 	python -m pip install -U pip setuptools wheel
-	python -m pip install -r requirements.txt
+	python -m pip install -r /usr/local/requirements.txt
 	echo ">>> Done!"
 fi
 
@@ -30,21 +33,24 @@ fi
 # lint:
 # 	flake8 src
 
-# ## Upload Data to S3
-# sync_data_to_s3:
-# ifeq (default,$(PROFILE))
-# 	aws s3 sync data/ s3://$(BUCKET)/data/
-# else
-# 	aws s3 sync data/ s3://$(BUCKET)/data/ --profile $(PROFILE)
-# endif
+## Upload Data to S3
+if [[ $1 == "to_s3" ]]; then
+	echo "Uploading data from data/ to S3"
 
-# ## Download Data from S3
-# sync_data_from_s3:
-# ifeq (default,$(PROFILE))
-# 	aws s3 sync s3://$(BUCKET)/data/ data/
-# else
-# 	aws s3 sync s3://$(BUCKET)/data/ data/ --profile $(PROFILE)
-# endif
+	if [[ ${PROFILE_S3} == "default" ]]; then
+		aws s3 sync data/ s3://${BUCKET}/data/
+	else
+		aws s3 sync data/ s3://${BUCKET}/data/ --profile ${PROFILE_S3}
+	fi
+elif [[ $1 == "from_s3" ]]; then
+	echo "Downloaing data from data/ to S3"
+	if [[ ${PROFILE_S3} == "default" ]]; then
+		aws s3 sync s3://${BUCKET}/data/ data/
+	else
+		aws s3 sync s3://${BUCKET}/data/ data/ --profile ${PROFILE_S3}
+	fi
+
+fi
 
 ## Set up python interpreter environment
 # Todo: test this!

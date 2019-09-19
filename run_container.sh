@@ -38,9 +38,9 @@ CONTAINER_ID=$(docker ps -qf "ancestor=${DOCKER_IMAGE}")
 # Run Commands
 # ---
 
-if [[ -z "$CONTAINER_ID" ]] && [[ $1 = "mount" ]]; then
+if [[ -z "$CONTAINER_ID" ]]; then
 	echo "Creating container from image ${DOCKER_IMAGE}"
-	docker run -d -P -v ${PROJECT_DIR}:${DOCKER_PROJECT_DIR} -t ${DOCKER_IMAGE}
+	docker run -it --env-file .env -e uid=$UID -e docker_user=$(whoami) -P -v ${PROJECT_DIR}:${DOCKER_PROJECT_DIR} ${DOCKER_IMAGE} /bin/bash
 	CONTAINER_ID=$(docker ps -qf "ancestor=${DOCKER_IMAGE}")
 
 else
