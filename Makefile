@@ -51,15 +51,15 @@ build:
 	docker build --build-arg BUILD_DATE=$(BUILD_DATE) \
 		   -t ${DOCKER_IMAGE_TAG} .
 
-bin/gh-md-toc:
+get_toc_script:
 	mkdir -p bin
 	wget https://raw.githubusercontent.com/ekalinin/github-markdown-toc/master/gh-md-toc
 	chmod a+x gh-md-toc
 	mv gh-md-toc bin/
 
-## Generate TOC Automatically for README.md
 .PHONY: README.md
-README.md: bin/gh-md-toc
+## Generate TOC Automatically for README.md
+readme: get_toc_script
 	./bin/gh-md-toc --insert README.md
 	rm -f README.md.orig.* README.md.toc.*
 
