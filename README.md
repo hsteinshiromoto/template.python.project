@@ -2,6 +2,7 @@
 
 A short description of the project.
 
+# Table of Contents
 <!--ts-->
    * [project_name](#project_name)
    * [Project Organization](#project-organization)
