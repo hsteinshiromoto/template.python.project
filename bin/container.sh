@@ -159,7 +159,7 @@ do
           ;;
 
       "")
-          run_container  # Call your function
+          display_help  # Call your function
           break
           ;;
 
