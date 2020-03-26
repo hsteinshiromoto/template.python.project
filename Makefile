@@ -51,7 +51,6 @@ build:
 	docker build --build-arg BUILD_DATE=$(BUILD_DATE) \
 		   -t ${DOCKER_IMAGE_TAG} .
 
-## Download Script to Generate TOC Automatically
 bin/gh-md-toc:
 	mkdir -p bin
 	wget https://raw.githubusercontent.com/ekalinin/github-markdown-toc/master/gh-md-toc
