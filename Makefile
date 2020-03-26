@@ -23,6 +23,10 @@ ifndef DOCKER_REGISTRY
 DOCKER_REGISTRY=registry.gitlab.com/${REGISTRY_USER}
 endif
 
+ifndef DOCKER_PARENT_IMAGE
+DOCKER_PARENT_IMAGE="python:3.7-slim-stretch"
+endif
+
 # ---
 # Global Variables
 # ---
@@ -46,8 +50,9 @@ build:
 	$(eval DOCKER_IMAGE_TAG=${DOCKER_IMAGE}:${DOCKER_TAG})
 
 	@echo "Building docker image ${DOCKER_IMAGE_TAG}"
-	docker build --build-arg BUILD_DATE=$(BUILD_DATE) \
-		   -t ${DOCKER_IMAGE_TAG} .
+	docker build --build-arg BUILD_DATE=${BUILD_DATE} \
+				 --build-arg DOCKER_PARENT_IMAGE=${DOCKER_PARENT_IMAGE}
+		   		 -t ${DOCKER_IMAGE_TAG} .
 
 get_toc_script:
 	mkdir -p bin
