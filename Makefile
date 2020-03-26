@@ -51,7 +51,7 @@ build:
 
 	@echo "Building docker image ${DOCKER_IMAGE_TAG}"
 	docker build --build-arg BUILD_DATE=${BUILD_DATE} \
-				 --build-arg DOCKER_PARENT_IMAGE=${DOCKER_PARENT_IMAGE}
+				 --build-arg DOCKER_PARENT_IMAGE=${DOCKER_PARENT_IMAGE} \
 		   		 -t ${DOCKER_IMAGE_TAG} .
 
 get_toc_script:
