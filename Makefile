@@ -1,5 +1,3 @@
-.PHONY: clean data lint requirements sync_data_to_s3 sync_data_from_s3
-
 # ---
 # Export environ variables defined in .env file:
 # ---
@@ -17,24 +15,16 @@ endif
 # ---
 
 # Files to be copied in build phase of the container
-ifndef FILES
-FILES="requirements.txt"
-endif
-
-ifndef DOCKER_PARENT_IMAGE
-DOCKER_PARENT_IMAGE=python:3.7-slim-stretch
-endif
-
 ifndef DOCKER_TAG
 DOCKER_TAG=latest
-endif	
+endif
 
 ifndef DOCKER_REGISTRY
 DOCKER_REGISTRY=registry.gitlab.com/${REGISTRY_USER}
-endif	
+endif
 
-ifndef DOCKER_REGISTRY
-USER=user
+ifndef DOCKER_PARENT_IMAGE
+DOCKER_PARENT_IMAGE="python:3.7-slim-stretch"
 endif
 
 # ---
@@ -43,53 +33,36 @@ endif
 
 PROJECT_PATH := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 PROJECT_NAME = $(shell basename ${PROJECT_PATH})
+
 DOCKER_IMAGE = ${DOCKER_REGISTRY}/${PROJECT_NAME}
-#DOCKER_IMAGE_TAG = ${DOCKER_IMAGE}:${DOCKER_TAG}
 
 BUILD_DATE = $(shell date +%Y%m%d-%H:%M:%S)
 
 BUCKET = ${PROJECT_NAME}
 PROFILE = default
 
-
 # ---
 # Commands
 # ---
 
-## Build Base Docker Container
-buildlocal:
-	$(eval DOCKER_FULL_IMAGE=${DOCKER_IMAGE}:${DOCKER_TAG})
-	@echo "Building docker image: ${DOCKER_FULL_IMAGE}"
-	docker build --build-arg BUILD_DATE=$(BUILD_DATE) \
-			--build-arg DOCKER_PARENT_IMAGE=${DOCKER_PARENT_IMAGE} \
-			--build-arg PROJECT_NAME=$(PROJECT_NAME) \
-			-t ${DOCKER_FULL_IMAGE} .
+## Build container locally
+build:
+	$(eval DOCKER_IMAGE_TAG=${DOCKER_IMAGE}:${DOCKER_TAG})
 
-build_jupyter:
-	@echo "Building docker image: ${DOCKER_IMAGE}.jupyter:${DOCKER_TAG}"
-	docker build --build-arg DOCKER_PARENT_IMAGE=${DOCKER_IMAGE}.base:${DOCKER_TAG} \
-		   --build-arg USER=user \
-		   -t ${DOCKER_IMAGE}.jupyter:${DOCKER_TAG} jupyter/
+	@echo "Building docker image ${DOCKER_IMAGE_TAG}"
+	docker build --build-arg BUILD_DATE=${BUILD_DATE} \
+				 --build-arg DOCKER_PARENT_IMAGE=${DOCKER_PARENT_IMAGE} \
+		   		 -t ${DOCKER_IMAGE_TAG} .
 
-## Compose Containers
-compose:
-	@echo "Compose containers"
-	DOCKER_IMAGE=$(DOCKER_IMAGE) \
-	DOCKER_TAG=${DOCKER_TAG} \
-	PROJECT_PATH=${PROJECT_PATH} \
-	PROJECT_NAME=${PROJECT_NAME} \
-	docker-compose up -d
-
-## Download Script to Generate TOC Automatically
-bin/gh-md-toc:
+get_toc_script:
 	mkdir -p bin
 	wget https://raw.githubusercontent.com/ekalinin/github-markdown-toc/master/gh-md-toc
 	chmod a+x gh-md-toc
 	mv gh-md-toc bin/
 
-## Generate TOC Automatically for README.md
 .PHONY: README.md
-README.md: bin/gh-md-toc
+## Generate TOC Automatically for README.md
+readme: get_toc_script
 	./bin/gh-md-toc --insert README.md
 	rm -f README.md.orig.* README.md.toc.*
 

@@ -16,8 +16,8 @@ ARG DEBIAN_FRONTEND=noninteractive
 # ---
 ENV LANG=C.UTF-8 \
     LC_ALL=C.UTF-8
-ENV PROJECT_DIR /home/$PROJECT_NAME
-ENV PYTHONPATH $PROJECT_DIR
+ENV PROJECT_ROOT /home/$PROJECT_NAME
+ENV PYTHONPATH $PROJECT_ROOT
 ENV TZ Australia/Sydney
 
 
@@ -56,8 +56,8 @@ RUN bash /usr/local/bin/run_python.sh test_environment && \
 	bash /usr/local/bin/run_python.sh requirements
 
 # Create the "home" folder
-RUN mkdir -p $PROJECT_DIR
-WORKDIR $PROJECT_DIR
+RUN mkdir -p $PROJECT_ROOT
+WORKDIR $PROJECT_ROOT
 
 # ---
 # Set up the necessary Python environment and packages
