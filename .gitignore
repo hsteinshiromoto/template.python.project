@@ -144,3 +144,7 @@ GitHub.sublime-settings
 .history
 
 # End of https://www.gitignore.io/api/dbeaver,pycharm,sublimetext,visualstudiocode,jupyternotebooks
+.bash_history
+.idea/inspectionProfiles/
+.idea/misc.xml
+.idea/vcs.xml
