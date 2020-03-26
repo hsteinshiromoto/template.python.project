@@ -5,9 +5,10 @@ A short description of the project.
 # Table of Contents
 <!--ts-->
    * [project_name](#project_name)
+   * [Table of Contents](#table-of-contents)
    * [Project Organization](#project-organization)
 
-<!-- Added by: humberto, at: Thu Mar 26 20:31:17 AEDT 2020 -->
+<!-- Added by: humberto, at: Thu Mar 26 20:56:51 AEDT 2020 -->
 
 <!--te-->
 
