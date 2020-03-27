@@ -42,7 +42,7 @@ RUN apt-get update && \
 # ---
 
 COPY bin/entrypoint.sh /usr/local/bin/entrypoint.sh
-COPY run_python.sh /usr/local/bin/run_python.sh
+COPY bin/run_python.sh /usr/local/bin/run_python.sh
 COPY test_environment.py /usr/local/bin/test_environment.py
 COPY setup.py /usr/local/bin/setup.py
 COPY requirements.txt /usr/local/requirements.txt
