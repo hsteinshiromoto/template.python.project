@@ -94,8 +94,8 @@ make_variables() {
 
     fi
 
-    PROJECT_DIR=$(pwd)
-    PROJECT_NAME=$(basename ${PROJECT_DIR})
+    PROJECT_ROOT=$(pwd)
+    PROJECT_NAME=$(basename ${PROJECT_ROOT})
 
     REGISTRY=registry.gitlab.com/${REGISTRY_USER}
     DOCKER_IMAGE=${REGISTRY}/${PROJECT_NAME}
@@ -150,6 +150,11 @@ do
 
       -d | --deploy)
           deploy_container  # Call your function
+          break
+          ;;
+
+      -r | --run)
+          run_container  # Call your function
           break
           ;;
 
