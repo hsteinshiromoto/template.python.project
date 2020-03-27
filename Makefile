@@ -20,7 +20,7 @@ DOCKER_TAG=latest
 endif
 
 ifndef DOCKER_REGISTRY
-DOCKER_REGISTRY=registry.gitlab.com/${REGISTRY_USER}
+DOCKER_REGISTRY=docker.pkg.github.com/${REGISTRY_USER}
 endif
 
 ifndef DOCKER_PARENT_IMAGE
