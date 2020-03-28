@@ -19,8 +19,12 @@ ifndef DOCKER_TAG
 DOCKER_TAG=latest
 endif
 
+ifndef DOCKER_REGISTRY
+DOCKER_REGISTRY=docker.pkg.github.com
+endif
+
 ifndef DOCKER_IMAGE_NAME
-DOCKER_IMAGE_NAME=docker.pkg.github.com/${REGISTRY_USER}
+DOCKER_IMAGE_NAME=image
 endif
 
 ifndef DOCKER_PARENT_IMAGE
@@ -34,7 +38,7 @@ endif
 PROJECT_PATH := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 PROJECT_NAME = $(shell basename ${PROJECT_PATH})
 
-DOCKER_IMAGE = ${DOCKER_IMAGE_NAME}/${REGISTRY_USER}/${PROJECT_NAME}/${PROJECT_NAME}
+DOCKER_IMAGE = ${DOCKER_REGISTRY}/${REGISTRY_USER}/${PROJECT_NAME}/${DOCKER_IMAGE_NAME}
 
 BUILD_DATE = $(shell date +%Y%m%d-%H:%M:%S)
 
