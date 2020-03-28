@@ -23,10 +23,6 @@ ifndef DOCKER_REGISTRY
 DOCKER_REGISTRY=docker.pkg.github.com
 endif
 
-ifndef DOCKER_IMAGE_NAME
-DOCKER_IMAGE_NAME=image
-endif
-
 ifndef DOCKER_PARENT_IMAGE
 DOCKER_PARENT_IMAGE="python:3.7-slim-stretch"
 endif
@@ -37,6 +33,10 @@ endif
 
 PROJECT_PATH := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 PROJECT_NAME = $(shell basename ${PROJECT_PATH})
+
+ifndef DOCKER_IMAGE_NAME
+DOCKER_IMAGE_NAME=${PROJECT_NAME}
+endif
 
 DOCKER_IMAGE = ${DOCKER_REGISTRY}/${REGISTRY_USER}/${PROJECT_NAME}/${DOCKER_IMAGE_NAME}
 

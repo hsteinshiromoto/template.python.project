@@ -75,8 +75,19 @@ get_container_id() {
 
 # Get container id
 deploy_container() {
-    echo
-    echo "Deploying container ..."
+    make_variables
+
+    echo "Pushing image ${DOCKER_IMAGE_TAG}"
+    docker push ${DOCKER_IMAGE_TAG}
+}
+
+registry_login() {
+    # Todo: Not working. Need to fix this!
+    make_variables
+    GITHUB_PAT=$(cat .env | grep GITHUB_PAT | awk -F'=' '{print $2}') 
+    echo ${DOCKER_REGISTRY}
+    echo ${REGISTRY_USER}
+    $(echo ${GITHUB_PAT} | docker login ${DOCKER_REGISTRY} -u ${REGISTRY_USER} --password-stdin)
 }
 
 make_variables() {
@@ -97,8 +108,9 @@ make_variables() {
     PROJECT_ROOT=$(pwd)
     PROJECT_NAME=$(basename ${PROJECT_ROOT})
 
+    REGISTRY_USER=${REGISTRY_USER}
     DOCKER_REGISTRY=docker.pkg.github.com
-    DOCKER_IMAGE_NAME=image
+    DOCKER_IMAGE_NAME=${PROJECT_NAME}
     DOCKER_IMAGE=${DOCKER_REGISTRY}/${REGISTRY_USER}/${PROJECT_NAME}/${DOCKER_IMAGE_NAME}
     DOCKER_TAG=${DOCKER_TAG:-latest}
     DOCKER_IMAGE_TAG=${DOCKER_IMAGE}:${DOCKER_TAG}
