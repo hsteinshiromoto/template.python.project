@@ -129,12 +129,6 @@ run_container() {
 
 }
 
-run_ssh_container() {
-    echo "Run container with ssh server"
-
-    run_container "bash:ssh"
-
-}
 # Available options
 while :
 do
