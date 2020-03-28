@@ -37,7 +37,7 @@ jupyter() {
 
       echo "Installing requirements"
 
-      docker exec -u root -i ${CONTAINER_ID} /bin/bash -c "cp /home/${DOCKER_USER}/work/requirements.txt /usr/local/requirements.txt && bash /home/${DOCKER_USER}/work/run_python.sh -r"
+      docker exec -u root -i ${CONTAINER_ID} /bin/bash -c "cp /home/${DOCKER_USER}/work/requirements.txt /usr/local/requirements.txt && bash /home/${DOCKER_USER}/work/bin/run_python.sh -r"
 
       sleep 5
 
