@@ -16,6 +16,6 @@ FROM {schema}.{table}
 /* Calculates summary statistics for categorical variables  */
 SELECT {date_column}
     ,{target_column}
-    ,COUNT({predictor_column}) OVER (PARTITION BY {date_column}, {target_column}) AS "Count"
+    ,COUNT({predictor_column}) AS "Count"
 FROM {schema}.{table}
 GROUP BY {date_column}, {target_column}
