@@ -1,3 +1,5 @@
+/* Calculates summary statistics for continuous variables */
+
 SELECT DISTINCT {date_column}
     ,{target_column}
     ,COUNT({predictor_column}) OVER (PARTITION BY {date_column}, {target_column}) AS "Count"
@@ -10,3 +12,10 @@ SELECT DISTINCT {date_column}
     ,PERCENTILE_CONT(0.5) WITH GROUP (ORDER BY {predictor_column}) OVER (PARTITION BY {date_column}, {target_column}) AS "Median"
     ,PERCENTILE_CONT(0.25) WITH GROUP (ORDER BY {predictor_column}) OVER (PARTITION BY {date_column}, {target_column}) AS "Q1"
 FROM {schema}.{table}
+
+/* Calculates summary statistics for categorical variables  */
+SELECT {date_column}
+    ,{target_column}
+    ,COUNT({predictor_column}) OVER (PARTITION BY {date_column}, {target_column}) AS "Count"
+FROM {schema}.{table}
+GROUP BY {date_column}, {target_column}
