@@ -21,23 +21,34 @@ jupyter() {
     echo "Starting Jupyter Notebook"
     make_variables
 
+    # Use existing jupyter images instead of creating new
     DOCKER_IMAGE=jupyter/scipy-notebook
     DOCKER_USER=jovyan
+    DOCKER_IMAGE_TAG=${DOCKER_IMAGE}:latest
 
-    docker tag ${DOCKER_IMAGE} ${DOCKER_IMAGE}:${PROJECT_NAME}
+    # Check if the container has existed and remove it
+    EXITED_ID=$(docker ps -aqf "name=blog" -f "status=exited" | awk '{ print $1}')
 
-    DOCKER_IMAGE_TAG=${DOCKER_IMAGE}:${PROJECT_NAME}
+    if [[ -n "${EXITED_ID}" ]]; then
+        docker rm ${EXITED_ID}
 
-    get_container_id
+    else
+        CONTAINER_ID=$(docker ps -aqf "name=blog" | awk '{ print $1}')
 
+    fi
+
+    # Run new container and install the requirements
     if [[ -z "${CONTAINER_ID}" ]]; then
       echo "Creating Container from image ${DOCKER_IMAGE_TAG} ..."
-      docker run -d -P -v $(pwd):/home/${DOCKER_USER}/work -t ${DOCKER_IMAGE_TAG} $1 >/dev/null >&1
-      get_container_id
+      docker run --name ${PROJECT_NAME} -d -P -v $(pwd):/home/${DOCKER_USER}/work -t ${DOCKER_IMAGE_TAG} $1 >/dev/null >&1
+      CONTAINER_ID=$(docker ps -aqf "name=blog" | awk '{ print $1}')
 
       echo "Installing requirements"
-
-      docker exec -u root -i ${CONTAINER_ID} /bin/bash -c "cp /home/${DOCKER_USER}/work/requirements.txt /usr/local/requirements.txt && bash /home/${DOCKER_USER}/work/bin/run_python.sh -r"
+     
+      docker exec -u root -i ${CONTAINER_ID} /bin/bash -c "cp /home/${DOCKER_USER}/work/bin/setup.py /usr/local/bin"
+      docker exec -u root -i ${CONTAINER_ID} /bin/bash -c "cp /home/${DOCKER_USER}/work/requirements.txt /usr/local/requirements.txt"
+      docker exec -u root -i ${CONTAINER_ID} /bin/bash -c "bash /home/${DOCKER_USER}/work/bin/run_python.sh requirements"
+      docker exec -u root -i ${CONTAINER_ID} /bin/bash -c "bash /home/${DOCKER_USER}/work/bin/run_python.sh jupyter_extensions"
 
       sleep 5
 
@@ -46,9 +57,11 @@ jupyter() {
 
     fi
 
-	  JUPYTER_PORT=$(docker ps -f "ancestor=${DOCKER_IMAGE_TAG}" | grep -o "0.0.0.0:[0-9]*->8888" | cut -d ":" -f 2 | head -n 1)
+	  JUPYTER_PORT=$(docker ps -f "name=${PROJECT_NAME}" | grep -o "0.0.0.0:[0-9]*->8888" | cut -d ":" -f 2 | head -n 1)
 
-    echo -e "Port mapping: ${BLUE}${JUPYTER_PORT}${NC}"
+    echo -e "Container ID: ${BLUE}${CONTAINER_ID}${NC}"
+
+    echo -e "Port mapping: ${JUPYTER_PORT}"
 
     JUPYTER_TOKEN=$(docker exec -u ${DOCKER_USER} -i ${CONTAINER_ID} sh -c "jupyter notebook list" | tac | grep -o "token=[a-z0-9]*" | sed -n 1p | cut -d "=" -f 2)
     echo -e "Jupyter token: ${GREEN}${JUPYTER_TOKEN}${NC}"
