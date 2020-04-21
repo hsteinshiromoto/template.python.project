@@ -27,13 +27,13 @@ jupyter() {
     DOCKER_IMAGE_TAG=${DOCKER_IMAGE}:latest
 
     # Check if the container has existed and remove it
-    EXITED_ID=$(docker ps -aqf "name=blog" -f "status=exited" | awk '{ print $1}')
+    EXITED_ID=$(docker ps -aqf "name=${PROJECT_NAME}" -f "status=exited" | awk '{ print $1}')
 
     if [[ -n "${EXITED_ID}" ]]; then
         docker rm ${EXITED_ID}
 
     else
-        CONTAINER_ID=$(docker ps -aqf "name=blog" | awk '{ print $1}')
+        CONTAINER_ID=$(docker ps -aqf "name=${PROJECT_NAME}" | awk '{ print $1}')
 
     fi
 
@@ -41,7 +41,7 @@ jupyter() {
     if [[ -z "${CONTAINER_ID}" ]]; then
       echo "Creating Container from image ${DOCKER_IMAGE_TAG} ..."
       docker run --name ${PROJECT_NAME} -d -P -v $(pwd):/home/${DOCKER_USER}/work -t ${DOCKER_IMAGE_TAG} $1 >/dev/null >&1
-      CONTAINER_ID=$(docker ps -aqf "name=blog" | awk '{ print $1}')
+      CONTAINER_ID=$(docker ps -aqf "name=${PROJECT_NAME}" | awk '{ print $1}')
 
       echo "Installing requirements"
      
