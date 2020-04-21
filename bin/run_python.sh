@@ -17,6 +17,25 @@ if [[ $1 = "requirements" ]]; then
 	echo ">>> Done!"
 fi
 
+if [[ $1 = "jupyter_extensions" ]]; then
+	echo ">>> Enabling Jupyter Notebook Extensions .."
+	jupyter contrib nbextension install --system
+	jupyter nbextensions_configurator enable --system
+	jupyter nbextension enable contrib_nbextensions_help_item/main 
+ 	jupyter nbextension enable codefolding/main
+ 	jupyter nbextension enable code_prettify/code_prettify
+ 	jupyter nbextension enable collapsible_headings/main
+ 	jupyter nbextension enable comment-uncomment/main
+ 	jupyter nbextension enable equation-numbering/main
+ 	jupyter nbextension enable execute_time/ExecuteTime 
+ 	jupyter nbextension enable gist_it/main 
+ 	jupyter nbextension enable hide_input/main 
+ 	jupyter nbextension enable spellchecker/main
+ 	jupyter nbextension enable toc2/main
+ 	jupyter nbextension enable toggle_all_line_numbers/main
+	echo ">>> Done!"
+fi
+
 ## Make Dataset
 if [[ $1 == "data" ]]; then
 	bash run_python.sh requirements
