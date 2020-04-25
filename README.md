@@ -64,3 +64,9 @@ A short description of the project.
 --------
 
 <p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
+
+# References
+
+* [Agg18] Charu C. Aggarwal. "Neural Networks and Deep Learning". Springer, 2018
+* [For18] David Forsyth. "Probability and Statistics for Computer Science". Springer. 2018
+* [Hun19] John Hunt. "Advanced Guide to Python 3 Programming". Springer. 2019
