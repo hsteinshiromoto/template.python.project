@@ -68,5 +68,12 @@ A short description of the project.
 # References
 
 * [Agg18] Charu C. Aggarwal. "Neural Networks and Deep Learning". Springer, 2018
+* [Agg16] Charu C. Aggarwal. "Recommender Systems". Springer, 2016
+* [Bra18] Max Bramer. "Principles of Data Mining". Springer. 2018
 * [For18] David Forsyth. "Probability and Statistics for Computer Science". Springer. 2018
 * [Hun19] John Hunt. "Advanced Guide to Python 3 Programming". Springer. 2019
+* [Lee17] Kent D. Lee. "Foundations of Programming Languages". Springer. 2017
+* [LS17] Laura Igual and Santi Seguí. "Introduction to Data Science". Springer. 2017
+* [Kub17] Miroslav Kubat. "An Introduction to Machine Learning". Springer. 2017
+* [ORe17] Gerard O'Regan. "Concise Guide to Software Engineering". Springer. 2017
+* [Ski17] Steven S. Skiena. "The Data Science Design Manual". Springer. 2017
