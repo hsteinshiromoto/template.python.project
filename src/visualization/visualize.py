@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 
+import matplotlib
 from matplotlib.collections import PatchCollection
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -34,6 +35,8 @@ def heatmap_4d(volume: pd.DataFrame, probabilities: pd.DataFrame
         >>> volume = pd.DataFrame(np.random.randint(0, 1000, size=(nrows, ncols)), columns=[f"col_{i}" for i in range(ncols)])
         >>> probabilities = pd.DataFrame(np.random.randn(nrows, ncols), columns=[f"col_{i}" for i in range(ncols)])
         >>> heatmap, legend = heatmap_4d(volume, probabilities, xlabel="Category_1", ylabel="Category_2")
+        >>> assert(isinstance(hetmap, matplotlib))
+        True
 
 
 heatmap, legend = heatmap_4d(volume, probabilities, xlabel="Category_1", ylabel="Category_2")
