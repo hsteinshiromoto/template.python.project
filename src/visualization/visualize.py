@@ -38,10 +38,6 @@ def heatmap_4d(volume: pd.DataFrame, probabilities: pd.DataFrame
         >>> assert(isinstance(hetmap, matplotlib))
         True
 
-
-heatmap, legend = heatmap_4d(volume, probabilities, xlabel="Category_1", ylabel="Category_2")
-
-
     References:
         [1] https://blogs.oii.ox.ac.uk/bright/2014/08/12/point-size-legends-in-matplotlib-and-basemap-plots/
         [2] https://stackoverflow.com/questions/54545758/create-equal-aspect-square-plot-with-multiple-axes-when-data-limits-are-differ/54555334#54555334
