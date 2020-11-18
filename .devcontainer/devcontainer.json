@@ -13,7 +13,30 @@
 	},
 
 	// Add the IDs of extensions you want installed when the container is created.
-	"extensions": []
+	"extensions": [
+		"ms-toolsai.jupyter",
+		"ms-python.python",
+		"aaron-bond.better-comments",
+		"coenraads.bracket-pair-colorizer",
+		"mikestead.dotenv",
+		"shan.code-settings-sync",
+		"wayou.vscode-todo-highlight",
+		"vscode-icons-team.vscode-icons",
+		"alefragnani.bookmarks",
+		"streetsidesoftware.code-spell-checker",
+		"oderwat.indent-rainbow",
+		"yzhang.markdown-all-in-one",
+		"shd101wyy.markdown-preview-enhanced",
+		"davidanson.vscode-markdownlint",
+		"christian-kohler.path-intellisense",
+		"jebbs.plantuml",
+		"njpwerner.autodocstring",
+		"littlefoxteam.vscode-python-test-adapter",
+		"sourcery.sourcery",
+		"cssho.vscode-svgviewer",
+		"hbenl.vscode-test-explorer",
+		"redhat.vscode-yaml"
+	]
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
