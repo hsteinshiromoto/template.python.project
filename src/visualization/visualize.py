@@ -65,7 +65,7 @@ def heatmap_4d(volume: pd.DataFrame, probabilities: pd.DataFrame
     heatmap.add_collection(col)
 
     heatmap.set(xticks=np.arange(xlabels.shape[0]), yticks=np.arange(ylabels.shape[0])
-               ,xticklabels=xlabels, yticklabels=ylabels)
+                ,xticklabels=xlabels, yticklabels=ylabels)
 
     heatmap.set_xticks(np.arange(xlabels.shape[0]+1)-0.5, minor=True)
     heatmap.set_yticks(np.arange(ylabels.shape[0]+1)-0.5, minor=True)
