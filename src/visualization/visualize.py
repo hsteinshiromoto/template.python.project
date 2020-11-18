@@ -35,7 +35,7 @@ def heatmap_4d(volume: pd.DataFrame, probabilities: pd.DataFrame
         >>> volume = pd.DataFrame(np.random.randint(0, 1000, size=(nrows, ncols)), columns=[f"col_{i}" for i in range(ncols)])
         >>> probabilities = pd.DataFrame(np.random.randn(nrows, ncols), columns=[f"col_{i}" for i in range(ncols)])
         >>> heatmap, legend = heatmap_4d(volume, probabilities, xlabel="Category_1", ylabel="Category_2")
-        >>> assert(isinstance(hetmap, matplotlib))
+        >>> assert(isinstance(heatmap, matplotlib))
         True
 
     References:
