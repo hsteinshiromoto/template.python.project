@@ -27,7 +27,7 @@ def make_logger(filename: str, path: pathlib.Path=PROJECT_ROOT / "logs", test: b
     References:
         [1] https://realpython.com/python-logging/
     """
-    logging.config.fileConfig(str(PROJECT_ROOT / "conf" / "logging.conf"), disable_existing_loggers=False)
+    logging.config.fileConfig(str(PROJECT_ROOT / "conf" / "log.conf"), disable_existing_loggers=False)
     logger = logging.getLogger()
 
     filename = f"{Path(filename).stem}_{datetime.now().date()}_{datetime.now().time()}.log"
