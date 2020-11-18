@@ -2,6 +2,7 @@
 # Created by https://www.gitignore.io/api/macos,pycharm,windows,dbeaver,sublimetext,jupyternotebooks,visualstudiocode
 # Edit at https://www.gitignore.io/?templates=macos,pycharm,windows,dbeaver,sublimetext,jupyternotebooks,visualstudiocode
 
+*.log
 *.pyc
 */__pycache__/*
 .env
