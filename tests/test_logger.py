@@ -1,7 +1,8 @@
-from src.make_logger import log_fun, make_logger
 import logging
 from datetime import datetime
 from pathlib import Path
+
+from src.make_logger import log_fun, make_logger
 
 LOGGER, FILENAME = make_logger(__file__, test=True)
 
