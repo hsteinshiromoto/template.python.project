@@ -1,8 +1,10 @@
+import subprocess
+import sys
 from math import e, log
+
+import dask.dataframe as dd
 import numpy as np
 import pandas as pd
-import dask.dataframe as dd
-
 
 PROJECT_ROOT = Path(subprocess.Popen(['git', 'rev-parse', '--show-toplevel'], 
                                 stdout=subprocess.PIPE).communicate()[0].rstrip().decode('utf-8'))
@@ -10,6 +12,7 @@ PROJECT_ROOT = Path(subprocess.Popen(['git', 'rev-parse', '--show-toplevel'],
 sys.path.append(PROJECT_ROOT)
 
 from src.make_logger import log_fun, make_logger
+
 
 @log_fun
 def entropy(data, base: int=None) -> float:
