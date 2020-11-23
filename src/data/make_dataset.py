@@ -17,6 +17,8 @@ sys.path.append(PROJECT_ROOT)
 
 from src.base import get_settings
 from src.make_logger import make_logger
+
+def date_parser(array, format: str="%Y-%m-%d"):
     """Converts array with dates to datetime format
 
     Args:
