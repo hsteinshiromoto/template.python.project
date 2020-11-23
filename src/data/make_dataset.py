@@ -39,19 +39,56 @@ def date_parser(array, format: str="%Y-%m-%d"):
 
 
 def get_raw_data(basename: str, meta_data: pd.DataFrame, path: Path=DATA / "raw"):
+    """
+    Reads raw data
 
-    mask_datetime = meta_data["python_dtypes"] == "datetime64[ns]"
-    datetime_columns = list(meta_data[mask_datetime, "python_dtypes"].values)
+    Args:
+        basename (str): Filename
+        meta_data (pd.DataFrame): Data frame describing the raw data
+        path (Path, optional): Path to raw data. Defaults to DATA/"raw".
 
-    dtypes_mapping = {zip(meta_data.loc[mask_datetime, "column_name"].values, 
-                        meta_data.loc[mask_datetime, "python_dtypes"].values)}
+    Raises:
+        NotImplementedError: SQL queries are not yet implemented
+        ValueError: Only csv, parquet, and SQL are accepted at the moment
+
+    Returns:
+        dask.dataframe: Raw dataframe
+    """
+
+    try:
+        ignore_mask = meta_data["ignore"] == True
+
+    except KeyError:
+        ignore_mask = [True for i in range(meta_data.shape[0])]
+
+    meta_data = meta_data[ignore_mask]
 
     if basename.endswith("csv"):
+    
+        # Identify datetime columns
+        mask_datetime = meta_data["python_dtypes"] == "datetime64[ns]"
+        datetime_columns = list(meta_data[mask_datetime, "python_dtypes"].values)
+
+        # Create dict with column name and data type
+        dtypes_mapping = {zip(meta_data.loc[~mask_datetime, "column_name"].values, 
+                        meta_data.loc[~mask_datetime, "python_dtypes"].values)}
+
+        # Load data file
         data = dd.read_csv(str(path / basename), parse_dates=datetime_columns
                             ,date_parser=date_parser, dtypes=dtypes_mapping)
 
     elif basename.endswith("parquet"):
-        pass
+        data = dd.read_parquet(str(path / basename), 
+                                columns=meta_data["columns_name"].values)
+
+    elif basename.endswith("sql"):
+        msg = "Read queries are not implemented yet."
+        raise NotImplementedError(msg)
+
+    else:
+        msg = f"Wrong file format. Expected either: csv, parquet or sql. \
+                Got {Path(basename)}."
+        raise ValueError(msg)
 
     return data
 
