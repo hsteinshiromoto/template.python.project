@@ -3,7 +3,7 @@ import logging
 import subprocess
 import sys
 from pathlib import Path
-
+import numpy as np
 import click
 import dask.dataframe as dd
 import pandas as pd
@@ -16,7 +16,7 @@ DATA = PROJECT_ROOT / "data"
 sys.path.append(PROJECT_ROOT)
 
 from src.base import get_settings
-from src.make_logger import make_logger
+from src.make_logger import make_logger, log_fun
 
 def date_parser(array, format: str="%Y-%m-%d"):
     """Converts array with dates to datetime format
@@ -43,12 +43,15 @@ def get_raw_data(basename: str, meta_data: pd.DataFrame, path: Path=DATA / "raw"
     mask_datetime = meta_data["python_dtypes"] == "datetime64[ns]"
     datetime_columns = list(meta_data[mask_datetime, "python_dtypes"].values)
 
-    dtypes_mapping = {zip(meta_data.loc[mask_datetime, "column_name"].values: 
+    dtypes_mapping = {zip(meta_data.loc[mask_datetime, "column_name"].values, 
                         meta_data.loc[mask_datetime, "python_dtypes"].values)}
 
     if basename.endswith("csv"):
         data = dd.read_csv(str(path / basename), parse_dates=datetime_columns
                             ,date_parser=date_parser, dtypes=dtypes_mapping)
+
+    elif basename.endswith("parquet"):
+        pass
 
     return data
 
