@@ -2,12 +2,14 @@
 import logging
 import subprocess
 import sys
+from math import e, log
 from pathlib import Path
 
 import click
 import dask.dataframe as dd
 import numpy as np
 import pandas as pd
+import pretty_errors
 from dotenv import find_dotenv, load_dotenv
 
 PROJECT_ROOT = Path(subprocess.Popen(['git', 'rev-parse', '--show-toplevel'], 
