@@ -95,6 +95,7 @@ def filter_nulls(data: dd, nulls_threshold: float=0.75):
 @log_fun
 def filter_numerical_variance(data: dd, std_thresholds: list=[0, np.inf], 
                                 inclusive: bool=False):
+    #! Skip statistical summary
     """
     Filter data set based on standard deviation of numerical values
 
@@ -132,6 +133,7 @@ def filter_numerical_variance(data: dd, std_thresholds: list=[0, np.inf],
 @log_fun
 def filter_entropy(data: dd, entropy_thresholds: list=[0, np.inf],
                     inclusive: bool=False):
+    #! Skip statistical summary
     """
     Filter data set based on entropy
 
