@@ -194,12 +194,12 @@ def date_parser(array, format: str="%Y-%m-%d"):
     return pd.to_datetime(array, format=format)
 
 
-def get_raw_data(basename: str, meta_data: pd.DataFrame, path: Path=DATA / "raw"):
+def get_raw_data(basename: Path, meta_data: pd.DataFrame, path: Path=DATA / "raw"):
     """
     Reads raw data
 
     Args:
-        basename (str): Filename
+        basename (Path): Filename
         meta_data (pd.DataFrame): Data frame describing the raw data
         path (Path, optional): Path to raw data. Defaults to DATA/"raw".
 
@@ -219,7 +219,7 @@ def get_raw_data(basename: str, meta_data: pd.DataFrame, path: Path=DATA / "raw"
 
     meta_data = meta_data[ignore_mask]
 
-    if basename.endswith("csv"):
+    if basename.suffix == "csv":
     
         # Identify datetime columns
         mask_datetime = meta_data["python_dtypes"] == "datetime64[ns]"
@@ -233,11 +233,11 @@ def get_raw_data(basename: str, meta_data: pd.DataFrame, path: Path=DATA / "raw"
         data = dd.read_csv(str(path / basename), parse_dates=datetime_columns
                             ,date_parser=date_parser, dtypes=dtypes_mapping)
 
-    elif basename.endswith("parquet"):
+    elif basename.suffix == "parquet":
         data = dd.read_parquet(str(path / basename), 
                                 columns=meta_data["columns_name"].values)
 
-    elif basename.endswith("sql"):
+    elif basename.suffix == "sql":
         msg = "Read queries are not implemented yet."
         raise NotImplementedError(msg)
 
