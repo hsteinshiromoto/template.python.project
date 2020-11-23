@@ -17,8 +17,21 @@ sys.path.append(PROJECT_ROOT)
 
 from src.base import get_settings
 from src.make_logger import make_logger
+    """Converts array with dates to datetime format
 
-def date_parser(array, format="YYYY-MM-DD"):
+    Args:
+        array (hashable): Array containing dates and/or time
+        format (str, optional): Datetime format. Defaults to "YYYY-MM-DD".
+
+    Returns:
+        [type]: Array with elements transformed into datetime format
+
+    Example:
+        >>> array = np.array(["2020-01-20", "2019-10-01"])
+        >>> output = date_parser(array)
+        >>> np.issubdtype(output.values.dtype, np.datetime64)
+        True
+    """
 
     return pd.to_datetime(array, format=format)
 
