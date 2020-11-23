@@ -250,14 +250,14 @@ def get_raw_data(basename: Path, meta_data: pd.DataFrame, path: Path=DATA / "raw
 
 
 @click.command()
-@click.argument('basename', type=str)
-@click.argument('output_filepath', type=click.Path())
-def main(basename, output_filepath):
+@click.argument('basename', type=click.Path())
+def main(basename):
     """ Runs data processing scripts to turn raw data from (../raw) into
         cleaned data ready to be analyzed (saved in ../processed).
     """
-    
     # Load Settings
+    settings = get_settings()
+    filter_thresholds = settings["thresholds"]
 
     # Load Metadata
     meta_data = pd.read_csv(str(DATA / "meta" / f"{basename}"))
@@ -265,7 +265,12 @@ def main(basename, output_filepath):
     # Load Raw Data
     raw_data = get_raw_data(basename, meta_data)
 
+    # Filter Data
+    data = filter_nulls(raw_data, filter_thresholds.get("nulls"))
+    data = filter_numerical_variance(data, filter_thresholds.get("std_thresholds"))
+    data = filter_entropy(data, filter_thresholds.get("entropy"))
 
+    #! Todo: Start sklearn pipeline here
 
 if __name__ == '__main__':
     logger = make_logger(__file__)
