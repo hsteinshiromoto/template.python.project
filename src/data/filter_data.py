@@ -164,3 +164,41 @@ def filter_entropy(data: dd, entropy_thresholds: list=[0, np.inf],
     summary_df.loc[~mask_removed, "filtered_entropy"]  = 0
     
     return data.drop(labels=removed_cols, axis=1), summary_df.set_index("column_name")
+
+
+@log_fun
+def filter(data: dd, nulls: bool=True, numerical: bool=True, entropy: bool=True
+            ,thresholds: dict={}, **kwargs) -> dd:
+    """
+    Filter data set and generate statistical summary 
+
+    Args:
+        data (dd): Data to be filtered
+        nulls (bool, optional): Flag to apply nulls filter. Defaults to True.
+        numerical (bool, optional): Flag to apply numerical filter. Defaults to True.
+        entropy (bool, optional): Flag to apply entropy filter. Defaults to True.
+        thresholds (dict, optional): Dictionary of thresholds. Defaults to {}.
+
+    Returns:
+        dd: Filtered data set
+    """
+
+    summary = pd.DataFrame.from_dict({"column_name": data.columns.values})
+    summary.set_index("column_name", inplace=True)
+
+    if nulls:
+        data, nulls_summary = filter_nulls(data, thresholds.get("nulls"))
+        summary = summary.merge(nulls_summary, left_index=True, 
+                                right_index=True, how="left")
+
+    if numerical:
+        data, num_summary = filter_numerical_variance(data, std_thresholds=thresholds.get("std"), inclusive=kwargs.get("numerical"))
+        summary = summary.merge(num_summary, left_index=True, 
+                                right_index=True, how="left")
+
+    if entropy:
+        data, ent_summary = filter_entropy(data, entropy_thresholds=thresholds.get("std"), inclusive=kwargs.get("entropy"))
+        summary = summary.merge(ent_summary, left_index=True, 
+                                right_index=True, how="left")
+
+    return data
