@@ -1,6 +1,7 @@
 from math import e, log
 import numpy as np
 import pandas as pd
+import dask.dataframe as dd
 
 @log_fun
 def entropy(data, base: int=None) -> float:
