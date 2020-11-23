@@ -47,7 +47,7 @@ def entropy(data, base: int=None) -> float:
     if n_labels <= 1:
         return 0
 
-    value, counts = np.unique(data, return_counts=True)
+    _, counts = np.unique(data, return_counts=True)
     probs = counts / n_labels
     n_classes = np.count_nonzero(probs)
 
