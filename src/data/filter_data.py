@@ -118,7 +118,6 @@ def filter_numerical_variance(data: dd, std_thresholds: list=[0, np.inf],
     stds_df = pd.DataFrame.from_dict({"column_name": columns
                                     ,"std": stds})
 
-    
     stds_df.sort_values(by="std", inplace=True, ascending=False)
 
     thresholds = [float(value) for value in std_thresholds]
