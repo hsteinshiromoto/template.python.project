@@ -136,7 +136,6 @@ def filter_numerical_variance(data: dd, std_thresholds: list=[0, np.inf],
 @log_fun
 def filter_entropy(data: dd, entropy_thresholds: list=[0, np.inf],
                     inclusive: bool=False):
-    #! Skip statistical summary
     """
     Filter data set based on entropy
 
@@ -149,26 +148,19 @@ def filter_entropy(data: dd, entropy_thresholds: list=[0, np.inf],
         Union[dask.dataframe, pd.DataFrame]: Filtered data, summary of numerical columns
     """
 
-    summary_df = data.select_dtypes(exclude=[np.number], include=["object"]).describe().compute()
-    summary_df = summary_df.T
+    entropies = data.select_dtypes(exclude=[np.number], include=["object"])
+    entropies_df = entropies.compute().apply(entropy, axis=0).to_frame(name="entropy")
 
-    entropies = data.select_dtypes(exclude=[np.number], include=["object"]).compute().apply(entropy, axis=0)
-    entropies = entropies.to_frame(name="entropy")
-
-    summary_df = summary_df.merge(entropies, left_index=True, right_index=True)
-
-    summary_df.reset_index(inplace=True)
-    summary_df.rename(columns={"index": "column_name"}, inplace=True)
-    summary_df.sort_values(by="column_name", inplace=True)
+    entropies_df.sort_values(by="entropy", inplace=True, ascending=False)
 
     thresholds = [float(value) for value in entropy_thresholds]
-    mask_entropy = summary_df["entropy"].between(min(thresholds), max(thresholds), inclusive=inclusive)
-    removed_cols = list(summary_df.loc[~mask_entropy, "column_name"].values)
-    mask_removed = summary_df["column_name"].isin(removed_cols)
-    summary_df.loc[mask_removed, "filtered_entropy"]  = 1
-    summary_df.loc[~mask_removed, "filtered_entropy"]  = 0
+    mask_entropy = entropies_df["entropy"].between(min(thresholds), max(thresholds), inclusive=inclusive)
+    removed_cols = list(entropies_df.loc[~mask_entropy, "column_name"].values)
+    mask_removed = entropies_df["column_name"].isin(removed_cols)
+    entropies_df.loc[mask_removed, "filtered_entropy"]  = 1
+    entropies_df.loc[~mask_removed, "filtered_entropy"]  = 0
     
-    return data.drop(labels=removed_cols, axis=1), summary_df.set_index("column_name")
+    return data.drop(labels=removed_cols, axis=1), entropies_df
 
 
 @log_fun
