@@ -179,23 +179,13 @@ def filter(data: dd, nulls: bool=True, numerical: bool=True, entropy: bool=True
     Returns:
         dd: Filtered data set
     """
-
-    summary = pd.DataFrame.from_dict({"column_name": data.columns.values})
-    summary.set_index("column_name", inplace=True)
-
     if nulls:
-        data, nulls_summary = filter_nulls(data, thresholds.get("nulls"))
-        summary = summary.merge(nulls_summary, left_index=True, 
-                                right_index=True, how="left")
-
+        data, _ = filter_nulls(data, thresholds.get("nulls"))
+        
     if numerical:
-        data, num_summary = filter_numerical_variance(data, std_thresholds=thresholds.get("std"), inclusive=kwargs.get("numerical"))
-        summary = summary.merge(num_summary, left_index=True, 
-                                right_index=True, how="left")
-
+        data, _ = filter_numerical_variance(data, std_thresholds=thresholds.get("std"), inclusive=kwargs.get("numerical"))
+       
     if entropy:
-        data, ent_summary = filter_entropy(data, entropy_thresholds=thresholds.get("std"), inclusive=kwargs.get("entropy"))
-        summary = summary.merge(ent_summary, left_index=True, 
-                                right_index=True, how="left")
-
+        data, _ = filter_entropy(data, entropy_thresholds=thresholds.get("std"), inclusive=kwargs.get("entropy"))
+        
     return data
