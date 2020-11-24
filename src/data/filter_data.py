@@ -95,7 +95,6 @@ def filter_nulls(data: dd, nulls_threshold: float=0.75):
 @log_fun
 def filter_numerical_variance(data: dd, std_thresholds: list=[0, np.inf], 
                                 inclusive: bool=False):
-    #! Skip statistical summary
     """
     Filter data set based on standard deviation of numerical values
 
@@ -113,21 +112,25 @@ def filter_numerical_variance(data: dd, std_thresholds: list=[0, np.inf],
     Returns:
         Union[dask.dataframe, pd.DataFrame]: Filtered data, summary of numerical columns
     """
-    summary_df = data.select_dtypes(include=[np.number]).describe().compute()
-    summary_df = summary_df.T.reset_index()
-    summary_df.rename(columns={"index": "column_name"}, inplace=True)
-    summary_df.sort_values(by="column_name", inplace=True)
+    columns = data.select_dtypes(include=[np.number]).columns.values
+    stds = np.nanstd(data[columns], axis=0)
+
+    stds_df = pd.DataFrame.from_dict({"column_name": columns
+                                    ,"std": stds})
+
+    
+    stds_df.sort_values(by="std", inplace=True, ascending=False)
 
     thresholds = [float(value) for value in std_thresholds]
-    mask_variance = summary_df["std"].between(min(thresholds), max(thresholds), inclusive=inclusive)
+    mask_variance = stds_df["std"].between(min(thresholds), max(thresholds), inclusive=inclusive)
 
-    removed_cols = list(summary_df.loc[~mask_variance, "column_name"].values)
-    mask_removed = summary_df["column_name"].isin(removed_cols)
+    removed_cols = list(stds_df.loc[~mask_variance, "column_name"].values)
+    mask_removed = stds_df["column_name"].isin(removed_cols)
     
-    summary_df.loc[mask_removed, "filtered_variance"]  = 1
-    summary_df.loc[~mask_removed, "filtered_variance"]  = 0
+    stds_df.loc[mask_removed, "filtered_variance"]  = 1
+    stds_df.loc[~mask_removed, "filtered_variance"]  = 0
     
-    return data.drop(labels=removed_cols, axis=1), summary_df.set_index("column_name")
+    return data.drop(labels=removed_cols, axis=1), stds_df
 
 
 @log_fun
