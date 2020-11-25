@@ -9,7 +9,7 @@ import pandas as pd
 
 PROJECT_ROOT = Path(subprocess.Popen(['git', 'rev-parse', '--show-toplevel'], 
                                 stdout=subprocess.PIPE).communicate()[0].rstrip().decode('utf-8'))
-
+DATA = PROJECT_ROOT / "data"
 sys.path.append(PROJECT_ROOT)
 
 from src.make_logger import log_fun, make_logger
@@ -163,8 +163,8 @@ def filter_entropy(data: dd, entropy_thresholds: list=[0, np.inf],
 
 
 @log_fun
-def filter(data: dd, nulls: bool=True, numerical: bool=True, entropy: bool=True
-            ,thresholds: dict={}, **kwargs) -> dd:
+def filter_data(data: dd, nulls: bool=True, numerical: bool=True, entropy: bool=True
+            ,thresholds: dict={}, save_interim: bool=False, **kwargs) -> dd:
     """
     Filter data set and generate statistical summary 
 
@@ -183,8 +183,11 @@ def filter(data: dd, nulls: bool=True, numerical: bool=True, entropy: bool=True
         
     if numerical:
         data, _ = filter_numerical_variance(data, std_thresholds=thresholds.get("std"), inclusive=kwargs.get("numerical"))
-       
+
     if entropy:
         data, _ = filter_entropy(data, entropy_thresholds=thresholds.get("std"), inclusive=kwargs.get("entropy"))
+
+    if save_interim:
+        dd.to_parquet(data, DATA / "interim" / f"{datetime.now().date()}.parquet")
         
     return data
