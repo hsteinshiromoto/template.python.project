@@ -23,7 +23,7 @@ class Extract(BaseEstimator, TransformerMixin):
 
 
     def transform(self, X: dd, y: dd=None):
-        return self
+        return X[self.column]
 
 
     def get_feature_names(self):
