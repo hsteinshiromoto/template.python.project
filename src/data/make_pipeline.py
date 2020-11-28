@@ -5,6 +5,7 @@ from pathlib import Path
 import dask.dataframe as dd
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.pipeline import FeatureUnion, Pipeline
 
 PROJECT_ROOT = Path(subprocess.Popen(['git', 'rev-parse', '--show-toplevel'], 
                                 stdout=subprocess.PIPE).communicate()[0].rstrip().decode('utf-8'))
