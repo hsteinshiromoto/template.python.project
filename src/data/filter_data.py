@@ -12,10 +12,11 @@ from sklearn.pipeline import FeatureUnion, Pipeline
 PROJECT_ROOT = Path(subprocess.Popen(['git', 'rev-parse', '--show-toplevel'], 
                                 stdout=subprocess.PIPE).communicate()[0].rstrip().decode('utf-8'))
 DATA = PROJECT_ROOT / "data"
-sys.path.append(PROJECT_ROOT)
+sys.path.append(str(PROJECT_ROOT))
 
 from src.make_logger import log_fun, make_logger
 from src.data.make_pipeline import Extract
+from tests.mock_dataset import mock_dataset
 
 @log_fun
 def entropy(data, base: int=None) -> float:
