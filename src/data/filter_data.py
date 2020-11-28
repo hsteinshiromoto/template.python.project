@@ -1,11 +1,13 @@
 import subprocess
 import sys
+from datetime import datetime
 from math import e, log
 from pathlib import Path
 
 import dask.dataframe as dd
 import numpy as np
 import pandas as pd
+from sklearn.pipeline import FeatureUnion, Pipeline
 
 PROJECT_ROOT = Path(subprocess.Popen(['git', 'rev-parse', '--show-toplevel'], 
                                 stdout=subprocess.PIPE).communicate()[0].rstrip().decode('utf-8'))
@@ -13,7 +15,7 @@ DATA = PROJECT_ROOT / "data"
 sys.path.append(PROJECT_ROOT)
 
 from src.make_logger import log_fun, make_logger
-
+from src.data.make_pipeline import Extract
 
 @log_fun
 def entropy(data, base: int=None) -> float:
@@ -89,11 +91,11 @@ def filter_nulls(data: dd, nulls_threshold: float=0.75):
     
     removed_cols = list(summary_df[mask_nulls].index.values)
 
-    return data.drop(labels=removed_cols, axis=1), summary_df
+    return data.drop(labels=removed_cols, axis=1)
 
 
 @log_fun
-def filter_numerical_variance(data: dd, std_thresholds: list=[0, np.inf], 
+def filter_variance(data: dd, std_thresholds: list=[0, np.inf], 
                                 inclusive: bool=False):
     """
     Filter data set based on standard deviation of numerical values
@@ -105,17 +107,16 @@ def filter_numerical_variance(data: dd, std_thresholds: list=[0, np.inf],
 
     Example:
         >>> data = dd.from_pandas(pd.DataFrame(np.random.rand(100, 20)), npartitions=1)
-        >>> filtered_data, summary = filter_numerical_variance(data)
+        >>> filtered_data, summary = filter_variance(data)
         >>> isinstance(summary, pd.DataFrame)
         True
 
     Returns:
         Union[dask.dataframe, pd.DataFrame]: Filtered data, summary of numerical columns
     """
-    columns = data.select_dtypes(include=[np.number]).columns.values
-    stds = np.nanstd(data[columns], axis=0)
+    stds = np.nanstd(data, axis=0)
 
-    stds_df = pd.DataFrame.from_dict({"column_name": columns
+    stds_df = pd.DataFrame.from_dict({"column_name": data.columns.values
                                     ,"std": stds})
 
     stds_df.sort_values(by="std", inplace=True, ascending=False)
@@ -129,7 +130,7 @@ def filter_numerical_variance(data: dd, std_thresholds: list=[0, np.inf],
     stds_df.loc[mask_removed, "filtered_variance"]  = 1
     stds_df.loc[~mask_removed, "filtered_variance"]  = 0
     
-    return data.drop(labels=removed_cols, axis=1), stds_df
+    return data.drop(labels=removed_cols, axis=1)
 
 
 @log_fun
@@ -147,8 +148,7 @@ def filter_entropy(data: dd, entropy_thresholds: list=[0, np.inf],
         Union[dask.dataframe, pd.DataFrame]: Filtered data, summary of numerical columns
     """
 
-    entropies = data.select_dtypes(exclude=[np.number], include=["object"])
-    entropies_df = entropies.compute().apply(entropy, axis=0).to_frame(name="entropy")
+    entropies_df = data.compute().apply(entropy, axis=0).to_frame(name="entropy")
 
     entropies_df.sort_values(by="entropy", inplace=True, ascending=False)
 
@@ -159,35 +159,65 @@ def filter_entropy(data: dd, entropy_thresholds: list=[0, np.inf],
     entropies_df.loc[mask_removed, "filtered_entropy"]  = 1
     entropies_df.loc[~mask_removed, "filtered_entropy"]  = 0
     
-    return data.drop(labels=removed_cols, axis=1), entropies_df
+    return data.drop(labels=removed_cols, axis=1)
+
+
+def filter_duplicates(data: dd, subset: list=None):
+    
+    return data.drop_duplicates(subset=subset)
 
 
 @log_fun
-def filter_data(data: dd, nulls: bool=True, numerical: bool=True, entropy: bool=True
-            ,thresholds: dict={}, save_interim: bool=False, **kwargs) -> dd:
-    """
-    Filter data set and generate statistical summary 
+def filter_pipeline(data: dd, nulls: list or bool=True
+                    ,numerical: list or bool=True
+                    ,entropy: list or bool=True
+                    ,thresholds: dict={}, save_interim: bool=False
+                    ,pipeline: Pipeline=None, **kwargs) -> dd:
+    """[summary]
 
     Args:
         data (dd): Data to be filtered
-        nulls (bool, optional): Flag to apply nulls filter. Defaults to True.
-        numerical (bool, optional): Flag to apply numerical filter. Defaults to True.
-        entropy (bool, optional): Flag to apply entropy filter. Defaults to True.
-        thresholds (dict, optional): Dictionary of thresholds. Defaults to {}.
+        nulls (list or bool, optional): Columns to be filtered. Defaults to True.
+        numerical (list or bool, optional): Columns to be filtered. Defaults to True.
+        entropy (list or bool, optional): Columns to be filtered. Defaults to True.
+        thresholds (dict, optional): Low and high thresholds. Defaults to {}.
+        save_interim (bool, optional): Save filtered data to interim folder. Defaults to False.
+        pipeline (Pipeline, optional): Built pipeline. Defaults to None.
 
     Returns:
-        dd: Filtered data set
+        dd: [description]
     """
     if nulls:
-        data, _ = filter_nulls(data, thresholds.get("nulls"))
-        
+        null_columns = nulls if len(nulls) > 0 else data.columns.values
+        null_steps = [
+        ("extract", Extract(null_columns))
+        ,("filter_nulls", filter_nulls(data, thresholds.get("nulls")))
+        ]
+        null_pipeline = Pipeline(steps=null_steps)
+        pipeline = FeatureUnion([null_pipeline, pipeline]) if pipeline else null_pipeline
+
     if numerical:
-        data, _ = filter_numerical_variance(data, std_thresholds=thresholds.get("std"), inclusive=kwargs.get("numerical"))
+        numerical_columns = numerical if len(numerical) > 0 else 
+                            data.select_dtypes(include=[np.number]).columns.values
+        numerical_steps = [
+            ("extract", Extract(numerical_columns))
+            ,("filter_variance", filter_variance(data[numerical_columns]
+            ,std_thresholds=thresholds.get("std"), 
+            ,inclusive=kwargs.get("numerical")))
+        ]
+        numerical_pipeline = Pipeline(steps=numerical_steps)
+        pipeline = FeatureUnion([numerical_pipeline, pipeline]) if pipeline else numerical_pipeline
 
     if entropy:
-        data, _ = filter_entropy(data, entropy_thresholds=thresholds.get("std"), inclusive=kwargs.get("entropy"))
-
-    if save_interim:
-        dd.to_parquet(data, DATA / "interim" / f"{datetime.now().date()}.parquet")
+        categorical_columns = entropy if len(entropy) > 0 else 
+                                data.select_dtypes(exclude=[np.number], include=["object"])
+        categorical_steps = [
+            ("extract", Extract(categorical_columns))
+            ,("filter_variance", filter_entropy(data[categorical_columns]
+            ,entropy_thresholds=thresholds.get("std")
+            ,inclusive=kwargs.get("entropy")))
+        ]
+        categorical_pipeline = Pipeline(steps=categorical_steps)
+        pipeline = FeatureUnion([categorical_pipeline, pipeline]) if pipeline else categorical_pipeline
         
-    return data
+    return pipeline
