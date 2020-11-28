@@ -7,6 +7,11 @@
 */__pycache__/*
 .env
 
+### Data Folders ###
+
+data/raw/*
+
+
 ### DBeaver ###
 # ide config file
 .dbeaver-data-sources*.xml
