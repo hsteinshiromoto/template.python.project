@@ -173,7 +173,8 @@ def filter_pipeline(data: dd, nulls: list or bool=True
                     ,entropy: list or bool=True
                     ,thresholds: dict={}, save_interim: bool=False
                     ,pipeline: Pipeline=None, **kwargs) -> dd:
-    """[summary]
+    """
+    Creates filter pipeline
 
     Args:
         data (dd): Data to be filtered
