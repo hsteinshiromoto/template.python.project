@@ -51,9 +51,9 @@ class Filter_Std(BaseEstimator, TransformerMixin):
 
 
     def fit(self, X: dd, y: dd=None):
-        stds = np.nanstd(data, axis=0)
+        stds = np.nanstd(X, axis=0)
 
-        stds_df = pd.DataFrame.from_dict({"column_name": data.columns.values
+        stds_df = pd.DataFrame.from_dict({"column_name": X.columns.values
                                         ,"std": stds})
 
         stds_df.sort_values(by="std", inplace=True, ascending=False)
@@ -62,12 +62,12 @@ class Filter_Std(BaseEstimator, TransformerMixin):
         mask_variance = stds_df["std"].between(min(thresholds), max(thresholds), inclusive=self.inclusive)
 
         self.removed_cols = list(stds_df.loc[~mask_variance, "column_name"].values)
-        mask_removed = stds_df["column_name"].isin(removed_cols)
+        mask_removed = stds_df["column_name"].isin(self.removed_cols)
         
         stds_df.loc[mask_removed, "filtered_variance"]  = 1
         stds_df.loc[~mask_removed, "filtered_variance"]  = 0
         
-        return data.drop(labels=self.removed_cols, axis=1)
+        return X.drop(labels=self.removed_cols, axis=1)
 
 
     def transform(self, X: dd, y: dd=None):
