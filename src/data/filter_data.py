@@ -21,7 +21,7 @@ from tests.mock_dataset import mock_dataset
 
 
 class Filter_Nulls(BaseEstimator, TransformerMixin):
-    def __init__(self, nulls_threshold=None):
+    def __init__(self, nulls_threshold: float=0.75):
         self.nulls_threshold = nulls_threshold
 
 
@@ -38,6 +38,36 @@ class Filter_Nulls(BaseEstimator, TransformerMixin):
         self.removed_cols = list(summary_df[mask_nulls].index.values)
 
         return X.drop(labels=self.removed_cols, axis=1)
+
+
+    def transform(self, X: dd, y: dd=None):
+        return X.drop(labels=self.removed_cols, axis=1)
+
+
+class Filter_Std(BaseEstimator, TransformerMixin):
+    def __init__(self, std_thresholds: list=[0, np.inf], inclusive: bool=False):
+        self.std_thresholds = std_thresholds
+        self.inclusive = inclusive
+
+
+    def fit(self, X: dd, y: dd=None):
+        stds = np.nanstd(data, axis=0)
+
+        stds_df = pd.DataFrame.from_dict({"column_name": data.columns.values
+                                        ,"std": stds})
+
+        stds_df.sort_values(by="std", inplace=True, ascending=False)
+
+        thresholds = [float(value) for value in self.std_thresholds]
+        mask_variance = stds_df["std"].between(min(thresholds), max(thresholds), inclusive=self.inclusive)
+
+        self.removed_cols = list(stds_df.loc[~mask_variance, "column_name"].values)
+        mask_removed = stds_df["column_name"].isin(removed_cols)
+        
+        stds_df.loc[mask_removed, "filtered_variance"]  = 1
+        stds_df.loc[~mask_removed, "filtered_variance"]  = 0
+        
+        return data.drop(labels=self.removed_cols, axis=1)
 
 
     def transform(self, X: dd, y: dd=None):
@@ -84,45 +114,6 @@ def entropy(data, base: int=None) -> float:
         ent -= i * log(i, base)
 
     return ent
-
-
-@log_fun
-def filter_variance(data: dd, std_thresholds: list=[0, np.inf], 
-                                inclusive: bool=False):
-    """
-    Filter data set based on standard deviation of numerical values
-
-    Args:
-        data (dask.dataframe): Data set to be filtered
-        variance_thresholds (list, optional): Standard deviation thresholds used to filter the data. Defaults to [0, np.inf].
-        inclusive (bool, optional): Includes end points of the standard deviation thresholds. Defaults to False.
-
-    Example:
-        >>> data = dd.from_pandas(pd.DataFrame(np.random.rand(100, 20)), npartitions=1)
-        >>> filtered_data, summary = filter_variance(data)
-        >>> isinstance(summary, pd.DataFrame)
-        True
-
-    Returns:
-        Union[dask.dataframe, pd.DataFrame]: Filtered data, summary of numerical columns
-    """
-    stds = np.nanstd(data, axis=0)
-
-    stds_df = pd.DataFrame.from_dict({"column_name": data.columns.values
-                                    ,"std": stds})
-
-    stds_df.sort_values(by="std", inplace=True, ascending=False)
-
-    thresholds = [float(value) for value in std_thresholds]
-    mask_variance = stds_df["std"].between(min(thresholds), max(thresholds), inclusive=inclusive)
-
-    removed_cols = list(stds_df.loc[~mask_variance, "column_name"].values)
-    mask_removed = stds_df["column_name"].isin(removed_cols)
-    
-    stds_df.loc[mask_removed, "filtered_variance"]  = 1
-    stds_df.loc[~mask_removed, "filtered_variance"]  = 0
-    
-    return data.drop(labels=removed_cols, axis=1)
 
 
 @log_fun
@@ -181,21 +172,19 @@ def filter_pipeline(data: dd, nulls: list or bool=True
         dd: [description]
     """
     if nulls:
-        null_columns = nulls if len(nulls) > 0 else data.columns.values
+        null_columns = data.columns.values if isinstance(nulls, bool) else nulls
         null_steps = [
         ("extract", Extract(null_columns))
-        ,("filter_nulls", filter_nulls(data, thresholds.get("nulls")))
+        ,("filter_nulls", Filter_Nulls(thresholds.get("nulls")))
         ]
-        null_pipeline = Pipeline(steps=null_steps)
+        null_pipeline = Pipeline(null_steps)
         pipeline = FeatureUnion([null_pipeline, pipeline]) if pipeline else null_pipeline
 
     if numerical:
-        numerical_columns = numerical if len(numerical) > 0 else \
-                            data.select_dtypes(include=[np.number]).columns.values
+        numerical_columns = data.select_dtypes(include=[np.number]).columns.values if isinstance(numerical, bool) else numerical
         numerical_steps = [
             ("extract", Extract(numerical_columns))
-            ,("filter_variance", filter_variance(data[numerical_columns]
-            ,std_thresholds=thresholds.get("std")
+            ,("filter_variance", Filter_Std(std_thresholds=thresholds.get("std")
             ,inclusive=kwargs.get("numerical")))
         ]
         numerical_pipeline = Pipeline(steps=numerical_steps)
