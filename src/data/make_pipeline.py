@@ -24,3 +24,7 @@ class Extract(BaseEstimator, TransformerMixin):
 
     def transform(self, X: dd, y: dd=None):
         return self
+
+
+    def get_feature_names(self):
+        return self.column
