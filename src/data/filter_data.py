@@ -199,19 +199,19 @@ def filter_pipeline(data: dd, nulls: list or bool=True
         pipeline = FeatureUnion([null_pipeline, pipeline]) if pipeline else null_pipeline
 
     if numerical:
-        numerical_columns = numerical if len(numerical) > 0 else 
+        numerical_columns = numerical if len(numerical) > 0 else \
                             data.select_dtypes(include=[np.number]).columns.values
         numerical_steps = [
             ("extract", Extract(numerical_columns))
             ,("filter_variance", filter_variance(data[numerical_columns]
-            ,std_thresholds=thresholds.get("std"), 
+            ,std_thresholds=thresholds.get("std")
             ,inclusive=kwargs.get("numerical")))
         ]
         numerical_pipeline = Pipeline(steps=numerical_steps)
         pipeline = FeatureUnion([numerical_pipeline, pipeline]) if pipeline else numerical_pipeline
 
     if entropy:
-        categorical_columns = entropy if len(entropy) > 0 else 
+        categorical_columns = entropy if len(entropy) > 0 else \
                                 data.select_dtypes(exclude=[np.number], include=["object"])
         categorical_steps = [
             ("extract", Extract(categorical_columns))
