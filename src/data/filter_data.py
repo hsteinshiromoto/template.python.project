@@ -7,6 +7,7 @@ from pathlib import Path
 import dask.dataframe as dd
 import numpy as np
 import pandas as pd
+from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import FeatureUnion, Pipeline
 
 PROJECT_ROOT = Path(subprocess.Popen(['git', 'rev-parse', '--show-toplevel'], 
@@ -17,6 +18,31 @@ sys.path.append(str(PROJECT_ROOT))
 from src.make_logger import log_fun, make_logger
 from src.data.make_pipeline import Extract
 from tests.mock_dataset import mock_dataset
+
+
+class Filter_Nulls(BaseEstimator, TransformerMixin):
+    def __init__(self, nulls_threshold=None):
+        self.nulls_threshold = nulls_threshold
+
+
+    def fit(self, X: dd, y: dd=None):
+        summary_df = X.isnull().sum().compute()
+        summary_df = summary_df.to_frame(name="nulls_count")
+        summary_df["nulls_proportions"] = summary_df["nulls_count"] / X.shape[0].compute()
+        summary_df.sort_values(by="nulls_count", ascending=False, inplace=True)
+
+        mask_nulls = summary_df["nulls_proportions"] > self.nulls_threshold
+        summary_df.loc[mask_nulls, "filtered_nulls"]  = 1
+        summary_df.loc[~mask_nulls, "filtered_nulls"]  = 0
+        
+        self.removed_cols = list(summary_df[mask_nulls].index.values)
+
+        return X.drop(labels=self.removed_cols, axis=1)
+
+
+    def transform(self, X: dd, y: dd=None):
+        return X.drop(labels=self.removed_cols, axis=1)
+
 
 @log_fun
 def entropy(data, base: int=None) -> float:
@@ -58,41 +84,6 @@ def entropy(data, base: int=None) -> float:
         ent -= i * log(i, base)
 
     return ent
-
-
-@log_fun
-def filter_nulls(data: dd, nulls_threshold: float=0.75):
-    """
-    Filter data set based on proportion of missing values
-
-    Args:
-        data (dask.dataframe): Data set to be filtered
-        nulls_threshold (float, optional): Proportion of maximum number of missing values. Defaults to 0.75.
-
-    Example:
-        >>> data = dd.from_pandas(pd.DataFrame(np.random.rand(100, 20)), npartitions=1)
-        >>> filtered_data, summary = filter_nulls(data)
-        >>> isinstance(summary, pd.DataFrame)
-        True
-        >>> summary.shape[0] == 20
-        True
-
-    Returns:
-        Union[dask.dataframe, pd.DataFrame]: Filtered data, summary of missing values
-    """
-
-    summary_df = data.isnull().sum().compute()
-    summary_df = summary_df.to_frame(name="nulls_count")
-    summary_df["nulls_proportions"] = summary_df["nulls_count"] / data.shape[0].compute()
-    summary_df.sort_values(by="nulls_count", ascending=False, inplace=True)
-
-    mask_nulls = summary_df["nulls_proportions"] > nulls_threshold
-    summary_df.loc[mask_nulls, "filtered_nulls"]  = 1
-    summary_df.loc[~mask_nulls, "filtered_nulls"]  = 0
-    
-    removed_cols = list(summary_df[mask_nulls].index.values)
-
-    return data.drop(labels=removed_cols, axis=1)
 
 
 @log_fun
