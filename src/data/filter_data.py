@@ -21,10 +21,11 @@ from tests.mock_dataset import mock_dataset
 
 
 class Filter_Nulls(BaseEstimator, TransformerMixin):
+    @log_fun
     def __init__(self, nulls_threshold: float=0.75):
         self.nulls_threshold = nulls_threshold
 
-
+    @log_fun
     def fit(self, X: dd, y: dd=None):
         summary_df = X.isnull().sum().compute()
         summary_df = summary_df.to_frame(name="nulls_count")
@@ -39,17 +40,18 @@ class Filter_Nulls(BaseEstimator, TransformerMixin):
 
         return None
 
-
+    @log_fun
     def transform(self, X: dd, y: dd=None):
         return X.drop(labels=self.removed_cols, axis=1)
 
 
 class Filter_Std(BaseEstimator, TransformerMixin):
+    @log_fun
     def __init__(self, std_thresholds: list=[0, np.inf], inclusive: bool=False):
         self.std_thresholds = std_thresholds
         self.inclusive = inclusive
 
-
+    @log_fun
     def fit(self, X: dd, y: dd=None):
         stds = np.nanstd(X, axis=0)
 
@@ -69,18 +71,19 @@ class Filter_Std(BaseEstimator, TransformerMixin):
         
         return None
 
-
+    @log_fun
     def transform(self, X: dd, y: dd=None):
         return X.drop(labels=self.removed_cols, axis=1)
 
 
 class Filter_Entropy(BaseEstimator, TransformerMixin):
+    @log_fun
     def __init__(self, entropy_thresholds: list=[0, np.inf], 
-                inclusive: bool=False)
+                inclusive: bool=False):
         self.entropy_thresholds = entropy_thresholds
         self.inclusive = inclusive
 
-
+    @log_fun
     def fit(self, X: dd, y: dd=None):
         entropies_df = X.compute().apply(entropy, axis=0).to_frame(name="entropy")
 
@@ -94,22 +97,24 @@ class Filter_Entropy(BaseEstimator, TransformerMixin):
 
     return None
 
-
+    @log_fun
     def transform(self, X: dd, y: dd=None):
         return X.drop(labels=self.removed_cols, axis=1)
 
 
 class Filter_Duplicates(BaseEstimator, TransformerMixin):
+    @log_fun
     def __init__(self, subset: list=None):
         self.subset = subset
 
-
+    @log_fun
     def fit(self, X: dd, y: dd=None):
         return
 
-
+    @log_fun
     def transform(self, X: dd, y: dd=None):
         return datXa.drop_duplicates(subset=self.subset)
+
 
 @log_fun
 def entropy(data, base: int=None) -> float:
