@@ -73,6 +73,7 @@ class Filter_Std(BaseEstimator, TransformerMixin):
     def transform(self, X: dd, y: dd=None):
         return X.drop(labels=self.removed_cols, axis=1)
 
+
 class Filter_Entropy(BaseEstimator, TransformerMixin):
     def __init__(self, entropy_thresholds: list=[0, np.inf], 
                 inclusive: bool=False)
@@ -93,9 +94,22 @@ class Filter_Entropy(BaseEstimator, TransformerMixin):
 
     return None
 
+
     def transform(self, X: dd, y: dd=None):
         return X.drop(labels=self.removed_cols, axis=1)
 
+
+class Filter_Duplicates(BaseEstimator, TransformerMixin):
+    def __init__(self, subset: list=None):
+        self.subset = subset
+
+
+    def fit(self, X: dd, y: dd=None):
+        return
+
+
+    def transform(self, X: dd, y: dd=None):
+        return datXa.drop_duplicates(subset=self.subset)
 
 @log_fun
 def entropy(data, base: int=None) -> float:
@@ -137,11 +151,6 @@ def entropy(data, base: int=None) -> float:
         ent -= i * log(i, base)
 
     return ent
-
-
-def filter_duplicates(data: dd, subset: list=None):
-    
-    return data.drop_duplicates(subset=subset)
 
 
 @log_fun
