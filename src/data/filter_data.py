@@ -113,7 +113,7 @@ class Filter_Duplicates(BaseEstimator, TransformerMixin):
 
     @log_fun
     def transform(self, X: dd, y: dd=None):
-        return datXa.drop_duplicates(subset=self.subset)
+        return X.drop_duplicates(subset=self.subset)
 
 
 @log_fun
