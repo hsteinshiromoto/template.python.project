@@ -73,6 +73,29 @@ class Filter_Std(BaseEstimator, TransformerMixin):
     def transform(self, X: dd, y: dd=None):
         return X.drop(labels=self.removed_cols, axis=1)
 
+class Filter_Entropy(BaseEstimator, TransformerMixin):
+    def __init__(self, entropy_thresholds: list=[0, np.inf], 
+                inclusive: bool=False)
+        self.entropy_thresholds = entropy_thresholds
+        self.inclusive = inclusive
+
+
+    def fit(self, X: dd, y: dd=None):
+        entropies_df = X.compute().apply(entropy, axis=0).to_frame(name="entropy")
+
+        entropies_df.sort_values(by="entropy", inplace=True, ascending=False)
+
+        thresholds = [float(value) for value in self.entropy_thresholds]
+        mask_entropy = entropies_df["entropy"].between(min(thresholds), max(thresholds), inclusive=self.inclusive)
+        self.removed_cols = list(entropies_df.loc[~mask_entropy, "column_name"].values)
+        mask_removed = entropies_df["column_name"].isin(self.removed_cols)
+        entropies_df.loc[mask_removed, "filtered_entropy"]  = 1
+
+    return None
+
+    def transform(self, X: dd, y: dd=None):
+        return X.drop(labels=self.removed_cols, axis=1)
+
 
 @log_fun
 def entropy(data, base: int=None) -> float:
@@ -114,35 +137,6 @@ def entropy(data, base: int=None) -> float:
         ent -= i * log(i, base)
 
     return ent
-
-
-@log_fun
-def filter_entropy(data: dd, entropy_thresholds: list=[0, np.inf],
-                    inclusive: bool=False):
-    """
-    Filter data set based on entropy
-
-    Args:
-        data (dask.dataframe): Data set to be filtered
-        entropy_thresholds (list, optional): Entropy value thresholds used to filter the data. Defaults to [0, np.inf].
-        inclusive (bool, optional): Includes end points of the standard deviation thresholds. Defaults to False.
-
-    Returns:
-        Union[dask.dataframe, pd.DataFrame]: Filtered data, summary of numerical columns
-    """
-
-    entropies_df = data.compute().apply(entropy, axis=0).to_frame(name="entropy")
-
-    entropies_df.sort_values(by="entropy", inplace=True, ascending=False)
-
-    thresholds = [float(value) for value in entropy_thresholds]
-    mask_entropy = entropies_df["entropy"].between(min(thresholds), max(thresholds), inclusive=inclusive)
-    removed_cols = list(entropies_df.loc[~mask_entropy, "column_name"].values)
-    mask_removed = entropies_df["column_name"].isin(removed_cols)
-    entropies_df.loc[mask_removed, "filtered_entropy"]  = 1
-    entropies_df.loc[~mask_removed, "filtered_entropy"]  = 0
-    
-    return data.drop(labels=removed_cols, axis=1)
 
 
 def filter_duplicates(data: dd, subset: list=None):
