@@ -192,11 +192,11 @@ def filter_pipeline(data: dd, nulls: list or bool=True
         numerical_columns = data.select_dtypes(include=[np.number]).columns.values if isinstance(numerical, bool) else numerical
         numerical_steps = [
             ("extract", Extract(numerical_columns))
-            ,("filter_variance", Filter_Std(std_thresholds=thresholds.get("std")
+            ,("std_filter", Filter_Std(std_thresholds=thresholds.get("std")
             ,inclusive=kwargs.get("numerical")))
         ]
-        numerical_pipeline = Pipeline(steps=numerical_steps)
-        pipeline = FeatureUnion([numerical_pipeline, pipeline]) if pipeline else numerical_pipeline
+        std_filter_pipeline = Pipeline(steps=numerical_steps)
+        pipeline = FeatureUnion([("std_filter_pipeline", std_filter_pipeline), ("existing_pipeline", pipeline)]) if pipeline else std_filter_pipeline
 
     if entropy:
         categorical_columns = data.select_dtypes(exclude=[np.number], include=["object"]) if isinstance(entropy, bool) else entropy
@@ -205,8 +205,8 @@ def filter_pipeline(data: dd, nulls: list or bool=True
             ,("filter_variance", Filter_Entropy(entropy_thresholds=thresholds.get("std")
             ,inclusive=kwargs.get("entropy")))
         ]
-        categorical_pipeline = Pipeline(steps=categorical_steps)
-        pipeline = FeatureUnion([categorical_pipeline, pipeline]) if pipeline else categorical_pipeline
+        entropy_filter_pipeline = Pipeline(steps=categorical_steps)
+        pipeline = FeatureUnion([("entropy_filter_pipeline", entropy_filter_pipeline), ("existing_pipeline", pipeline)]) if pipeline else entropy_filter_pipeline
         
     return pipeline
 
