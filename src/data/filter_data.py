@@ -210,3 +210,17 @@ def filter_pipeline(data: dd, nulls: list or bool=True
         pipeline = FeatureUnion([categorical_pipeline, pipeline]) if pipeline else categorical_pipeline
         
     return pipeline
+
+
+def test_filter_pipeline():
+
+    data = dd.from_pandas(mock_dataset(), npartitions=1)
+    pipeline = filter_pipeline(data)
+
+    print(data)
+
+    return None
+
+
+if __name__ == "__main__":
+    test_filter_pipeline()
