@@ -202,8 +202,7 @@ def filter_pipeline(data: dd, nulls: list or bool=True
         categorical_columns = data.select_dtypes(exclude=[np.number], include=["object"]) if isinstance(entropy, bool) else entropy
         categorical_steps = [
             ("extract", Extract(categorical_columns))
-            ,("filter_variance", Filter_Entropy(data[categorical_columns]
-            ,entropy_thresholds=thresholds.get("std")
+            ,("filter_variance", Filter_Entropy(entropy_thresholds=thresholds.get("std")
             ,inclusive=kwargs.get("entropy")))
         ]
         categorical_pipeline = Pipeline(steps=categorical_steps)
