@@ -95,7 +95,7 @@ class Filter_Entropy(BaseEstimator, TransformerMixin):
         mask_removed = entropies_df["column_name"].isin(self.removed_cols)
         entropies_df.loc[mask_removed, "filtered_entropy"]  = 1
 
-    return None
+        return None
 
     @log_fun
     def transform(self, X: dd, y: dd=None):
