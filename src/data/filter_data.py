@@ -37,7 +37,7 @@ class Filter_Nulls(BaseEstimator, TransformerMixin):
         
         self.removed_cols = list(summary_df[mask_nulls].index.values)
 
-        return X.drop(labels=self.removed_cols, axis=1)
+        return None
 
 
     def transform(self, X: dd, y: dd=None):
@@ -67,7 +67,7 @@ class Filter_Std(BaseEstimator, TransformerMixin):
         stds_df.loc[mask_removed, "filtered_variance"]  = 1
         stds_df.loc[~mask_removed, "filtered_variance"]  = 0
         
-        return X.drop(labels=self.removed_cols, axis=1)
+        return None
 
 
     def transform(self, X: dd, y: dd=None):
