@@ -216,6 +216,8 @@ def test_filter_pipeline():
     data = dd.from_pandas(mock_dataset(), npartitions=1)
     pipeline = filter_pipeline(data)
 
+    assert isinstance(pipeline, Pipeline) or isinstance(pipeline, FeatureUnion)
+
     print(data)
 
     return None
