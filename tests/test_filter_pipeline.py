@@ -79,21 +79,30 @@ def test_nulls_composition():
     data = mock_dataset(specs)
     data = dd.from_pandas(data, npartitions=1)
 
-    # Define what columns will be removed
-    cols_to_be_removed = [col for col in data.columns.values if "float_" in col]
-    cols_to_be_removed.extend([col for col in data.columns.values if "integer_" in col])
+    # Define what columns will be selected.
+    # N.B. the float columns will be removed
+    selected_cols = [col for col in data.columns.values if "float_" in col]
+    selected_cols.extend([col for col in data.columns.values if "integer_" in col])
 
-    # Instantiate the pipeline
-    null_steps = [("extract", Extract(cols_to_be_removed))
+    # Define the pipeline steps
+    null_steps = [("extract", Extract(selected_cols))
                 ,("filter_nulls", Filter_Nulls())
                 ]
+
+    # Instantiate the pipeline object
     pipeline = Pipeline(null_steps)
 
+    # Fit and transform
     pipeline.fit(data)
     output = pipeline.transform(data)
-    print(output)
 
-    pass
+    # Test if the integer columns are in the data frame
+    assert len([col for col in output.columns.values if "integer_" in col]) > 0
+
+    # Test if the float columns have been removed
+    assert len([col for col in output.columns.values if "float_" in col]) == 0
+
+    return None
 
 def test_filter_pipeline():
 
