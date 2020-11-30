@@ -45,4 +45,4 @@ def test_Extract():
 
 
 if __name__ == "__main__":
-    test_filter_nulls()
+    pass
