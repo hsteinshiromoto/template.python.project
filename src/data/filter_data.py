@@ -76,6 +76,16 @@ class Filter_Std(BaseEstimator, TransformerMixin):
 
     @log_fun
     def fit(self, X: dd, y: dd=None):
+        """Calculate what columns should be removed, based on the defined thresholds
+
+        Args:
+            X (dd): Dataframe to be processed
+            y (dd, optional): Target. Defaults to None.
+
+        Returns:
+            None
+        """
+        # Calculate the standad deviation column-wisely
         stds = np.nanstd(X, axis=0)
 
         stds_df = pd.DataFrame.from_dict({"column_name": X.columns.values
@@ -83,9 +93,11 @@ class Filter_Std(BaseEstimator, TransformerMixin):
 
         stds_df.sort_values(by="std", inplace=True, ascending=False)
 
+        # Get thresholds and calculate what columns will be removed
         thresholds = [float(value) for value in self.std_thresholds]
         mask_variance = stds_df["std"].between(min(thresholds), max(thresholds), inclusive=self.inclusive)
 
+        # Get list of columns to be removed
         self.removed_cols = list(stds_df.loc[~mask_variance, "column_name"].values)
         mask_removed = stds_df["column_name"].isin(self.removed_cols)
         
@@ -118,12 +130,25 @@ class Filter_Entropy(BaseEstimator, TransformerMixin):
 
     @log_fun
     def fit(self, X: dd, y: dd=None):
+        """Calculate what columns should be removed, based on the defined thresholds
+
+        Args:
+            X (dd): Dataframe to be processed
+            y (dd, optional): Target. Defaults to None.
+
+        Returns:
+            None
+        """
+        # Calculate the entropy column-wisely
         entropies_df = X.compute().apply(entropy, axis=0).to_frame(name="entropy")
 
         entropies_df.sort_values(by="entropy", inplace=True, ascending=False)
 
+        # Get thresholds and calculate what columns will be removed
         thresholds = [float(value) for value in self.entropy_thresholds]
         mask_entropy = entropies_df["entropy"].between(min(thresholds), max(thresholds), inclusive=self.inclusive)
+
+        # Get list of columns to be removed
         self.removed_cols = list(entropies_df.loc[~mask_entropy, "column_name"].values)
         mask_removed = entropies_df["column_name"].isin(self.removed_cols)
         entropies_df.loc[mask_removed, "filtered_entropy"]  = 1
