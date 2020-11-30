@@ -34,14 +34,14 @@ def test_filter_nulls():
     cols_to_be_removed = [col for col in data.columns.values if "float_" in col]
 
     # Instantiate the pipeline
-    filter_nulls = Filter_Nulls()
-    filter_nulls.fit(data)
+    pipeline = Filter_Nulls()
+    pipeline.fit(data)
 
     # Get the name of columns that have been removed
-    removed_columns = filter_nulls.get_removed_columns()
+    removed_columns = pipeline.get_removed_columns()
 
     # Process the dataframe
-    output = filter_nulls.transform(data)
+    output = pipeline.transform(data)
 
     # Get set of names of columns that were note removed
     cols_not_removed = set(data.columns.values) - set(removed_columns)
