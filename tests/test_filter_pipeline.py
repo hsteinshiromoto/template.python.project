@@ -12,6 +12,7 @@ PROJECT_ROOT = Path(subprocess.Popen(['git', 'rev-parse', '--show-toplevel'],
 sys.path.append(str(PROJECT_ROOT))
 
 from src.data.filter_data import Filter_Nulls, Filter_Std, Filter_Entropy, filter_pipeline
+from src.base_pipeline import Extract
 from tests.mock_dataset import mock_dataset
 
 
@@ -63,6 +64,37 @@ def test_filter_entropy():
     pass
 
 
+def test_nulls_composition():
+    """
+    Tests the Filter_Nulls pipeline
+    """
+
+    # Define a mock dataset in which the float column has 80% of values missing
+    specs = {"float": [100, 1, 0.8]
+            ,"integer": [100, 1, 0.025]
+            ,"categorical": [100, 1, 0.1]
+            ,"boolean": [100, 1, 0]
+            ,"string": [100, 1, 0]
+            }
+    data = mock_dataset(specs)
+    data = dd.from_pandas(data, npartitions=1)
+
+    # Define what columns will be removed
+    cols_to_be_removed = [col for col in data.columns.values if "float_" in col]
+    cols_to_be_removed.extend([col for col in data.columns.values if "integer_" in col])
+
+    # Instantiate the pipeline
+    null_steps = [("extract", Extract(cols_to_be_removed))
+                ,("filter_nulls", Filter_Nulls())
+                ]
+    pipeline = Pipeline(null_steps)
+
+    pipeline.fit(data)
+    output = pipeline.transform(data)
+    print(output)
+
+    pass
+
 def test_filter_pipeline():
 
     data = dd.from_pandas(mock_dataset(), npartitions=1)
@@ -76,4 +108,4 @@ def test_filter_pipeline():
 
 
 if __name__ == "__main__":
-    test_filter_nulls()
+    test_nulls_composition()
