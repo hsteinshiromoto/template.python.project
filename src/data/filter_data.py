@@ -209,19 +209,3 @@ def filter_pipeline(data: dd, nulls: list or bool=True
         pipeline = FeatureUnion([("entropy_filter_pipeline", entropy_filter_pipeline), ("existing_pipeline", pipeline)]) if pipeline else entropy_filter_pipeline
         
     return pipeline
-
-
-def test_filter_pipeline():
-
-    data = dd.from_pandas(mock_dataset(), npartitions=1)
-    pipeline = filter_pipeline(data)
-
-    assert isinstance(pipeline, Pipeline) or isinstance(pipeline, FeatureUnion)
-
-    print(data)
-
-    return None
-
-
-if __name__ == "__main__":
-    test_filter_pipeline()
