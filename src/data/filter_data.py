@@ -27,11 +27,24 @@ class Filter_Nulls(BaseEstimator, TransformerMixin):
 
     @log_fun
     def fit(self, X: dd, y: dd=None):
+        """
+        Calculate what columns should be removed, based on the defined thresholds
+
+        Args:
+            X (dd): Dataframe to be processed
+            y (dd, optional): Target. Defaults to None.
+
+        Returns:
+            None
+        """
+
+        # Calculate number of missing rows in each column
         summary_df = X.isnull().sum().compute()
         summary_df = summary_df.to_frame(name="nulls_count")
         summary_df["nulls_proportions"] = summary_df["nulls_count"] / X.shape[0].compute()
         summary_df.sort_values(by="nulls_count", ascending=False, inplace=True)
 
+        # Select what columns should be removed, based on proportions
         mask_nulls = summary_df["nulls_proportions"] > self.nulls_threshold
         summary_df.loc[mask_nulls, "filtered_nulls"]  = 1
         summary_df.loc[~mask_nulls, "filtered_nulls"]  = 0
@@ -42,6 +55,16 @@ class Filter_Nulls(BaseEstimator, TransformerMixin):
 
     @log_fun
     def transform(self, X: dd, y: dd=None):
+        """
+        Remove columns computed in fit method
+
+        Args:
+            X (dd): Dataframe to be processed
+            y (dd, optional): Target. Defaults to None.
+
+        Returns:
+            (dd): Dataframe with columns removed
+        """
         return X.drop(labels=self.removed_cols, axis=1)
 
 
@@ -73,6 +96,16 @@ class Filter_Std(BaseEstimator, TransformerMixin):
 
     @log_fun
     def transform(self, X: dd, y: dd=None):
+        """
+        Remove columns computed in fit method
+
+        Args:
+            X (dd): Dataframe to be processed
+            y (dd, optional): Target. Defaults to None.
+
+        Returns:
+            (dd): Dataframe with columns removed
+        """
         return X.drop(labels=self.removed_cols, axis=1)
 
 
@@ -99,6 +132,16 @@ class Filter_Entropy(BaseEstimator, TransformerMixin):
 
     @log_fun
     def transform(self, X: dd, y: dd=None):
+        """
+        Remove columns computed in fit method
+
+        Args:
+            X (dd): Dataframe to be processed
+            y (dd, optional): Target. Defaults to None.
+
+        Returns:
+            (dd): Dataframe with columns removed
+        """
         return X.drop(labels=self.removed_cols, axis=1)
 
 
@@ -113,6 +156,16 @@ class Filter_Duplicates(BaseEstimator, TransformerMixin):
 
     @log_fun
     def transform(self, X: dd, y: dd=None):
+        """
+        Remove duplicated rows
+
+        Args:
+            X (dd): Dataframe to be processed
+            y (dd, optional): Target. Defaults to None.
+
+        Returns:
+            (dd): Dataframe with rows removed
+        """
         return X.drop_duplicates(subset=self.subset)
 
 
