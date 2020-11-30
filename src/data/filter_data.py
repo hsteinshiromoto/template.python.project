@@ -67,6 +67,16 @@ class Filter_Nulls(BaseEstimator, TransformerMixin):
         """
         return X.drop(labels=self.removed_cols, axis=1)
 
+    @log_fun
+    def get_removed_columns(self):
+        """
+        Get lists of removed columns
+
+        Returns:
+            (list): List of removed columns
+        """
+        return self.removed_cols
+
 
 class Filter_Std(BaseEstimator, TransformerMixin):
     @log_fun
@@ -120,6 +130,16 @@ class Filter_Std(BaseEstimator, TransformerMixin):
         """
         return X.drop(labels=self.removed_cols, axis=1)
 
+    @log_fun
+    def get_removed_columns(self):
+        """
+        Get lists of removed columns
+
+        Returns:
+            (list): List of removed columns
+        """
+        return self.removed_cols
+
 
 class Filter_Entropy(BaseEstimator, TransformerMixin):
     @log_fun
@@ -168,6 +188,16 @@ class Filter_Entropy(BaseEstimator, TransformerMixin):
             (dd): Dataframe with columns removed
         """
         return X.drop(labels=self.removed_cols, axis=1)
+
+    @log_fun
+    def get_removed_columns(self):
+        """
+        Get lists of removed columns
+
+        Returns:
+            (list): List of removed columns
+        """
+        return self.removed_cols
 
 
 class Filter_Duplicates(BaseEstimator, TransformerMixin):
