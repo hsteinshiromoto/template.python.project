@@ -15,11 +15,14 @@ sys.path.append(str(PROJECT_ROOT))
 
 class Extract(BaseEstimator, TransformerMixin):
     def __init__(self, column: list=None):
+        if not isinstance(column, list):
+            msg = f"Expected argument to be of type list. Got {type(column)}."
+            raise TypeError(msg)
         self.column = column
 
 
     def fit(self, X: dd, y: dd=None):
-        return X[self.column]
+        return self
 
 
     def transform(self, X: dd, y: dd=None):

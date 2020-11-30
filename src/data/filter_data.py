@@ -51,7 +51,7 @@ class Filter_Nulls(BaseEstimator, TransformerMixin):
         
         self.removed_cols = list(summary_df[mask_nulls].index.values)
 
-        return None
+        return self
 
     @log_fun
     def transform(self, X: dd, y: dd=None):
@@ -114,7 +114,7 @@ class Filter_Std(BaseEstimator, TransformerMixin):
         stds_df.loc[mask_removed, "filtered_variance"]  = 1
         stds_df.loc[~mask_removed, "filtered_variance"]  = 0
         
-        return None
+        return self
 
     @log_fun
     def transform(self, X: dd, y: dd=None):
@@ -173,7 +173,7 @@ class Filter_Entropy(BaseEstimator, TransformerMixin):
         mask_removed = entropies_df["column_name"].isin(self.removed_cols)
         entropies_df.loc[mask_removed, "filtered_entropy"]  = 1
 
-        return None
+        return self
 
     @log_fun
     def transform(self, X: dd, y: dd=None):
@@ -207,7 +207,7 @@ class Filter_Duplicates(BaseEstimator, TransformerMixin):
 
     @log_fun
     def fit(self, X: dd, y: dd=None):
-        return
+        return self
 
     @log_fun
     def transform(self, X: dd, y: dd=None):
