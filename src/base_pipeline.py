@@ -13,6 +13,14 @@ PROJECT_ROOT = Path(subprocess.Popen(['git', 'rev-parse', '--show-toplevel'],
 sys.path.append(str(PROJECT_ROOT))
 
 
+class EPipeline(Pipeline):
+    def __init__(self, steps: list, **kwargs):
+        super().__init__(steps=steps, **kwargs)
+
+    def get_feature_names(self):
+        return {name: step.get_feature_names() for name, step in self.steps}
+
+
 class Extract(BaseEstimator, TransformerMixin):
     def __init__(self, column: list=None):
         if not isinstance(column, list):
@@ -20,14 +28,11 @@ class Extract(BaseEstimator, TransformerMixin):
             raise TypeError(msg)
         self.column = column
 
-
     def fit(self, X: dd, y: dd=None):
         return self
 
-
     def transform(self, X: dd, y: dd=None):
         return X[self.column]
-
 
     def get_feature_names(self):
         return self.column
