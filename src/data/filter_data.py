@@ -29,20 +29,20 @@ class Filter_Nulls(BaseEstimator, TransformerMixin):
         TransformerMixin (TransformerMixin): Sci-kit learn object
 
     Returns:
-        Filter_Nulls: Instanted object
+        Filter_Nulls: Instantiated object
 
     Example:
-        >>> high_nulls = list(np.ones((50, 1)))
-        >>> high_nulls.extend(50*[np.nan])
-        >>> low_nulls = list(np.ones((99, 1)))
-        >>> low_nulls.append(np.nan)
-        >>> data = pd.DataFrame({"high_nulls": high_nulls, "low_nulls": low_nulls})
+        >>> high = list(np.ones((50, 1)))
+        >>> high.extend(50*[np.nan])
+        >>> low = list(np.ones((99, 1)))
+        >>> low.append(np.nan)
+        >>> data = pd.DataFrame({"high": high, "low": low})
         >>> data = dd.from_pandas(data, npartitions=1)
         >>> filter_nulls = Filter_Nulls(0.3)
         >>> filter_nulls.fit(data)
         Filter_Nulls(nulls_threshold=0.3)
         >>> output = filter_nulls.transform(data)
-        >>> "high_nulls" not in output.columns.values
+        >>> "high" not in output.columns.values
         True
     """
     @log_fun
@@ -103,6 +103,32 @@ class Filter_Nulls(BaseEstimator, TransformerMixin):
 
 
 class Filter_Std(BaseEstimator, TransformerMixin):
+    """
+    Filter columns according to the proportion of missing values
+
+    Args:
+        BaseEstimator (BaseEstimator): Sci-kit learn object
+        TransformerMixin (TransformerMixin): Sci-kit learn object
+
+    Returns:
+        Filter_Std: Instantiated object
+
+    Example:
+        >>> thresholds = [0.1, 1]
+        >>> data = pd.DataFrame.from_dict({"low" : np.random.normal(0, 0.01, (100, 1)).squeeze() \
+                                    ,"medium" : np.random.normal(0, np.mean(thresholds), (100, 1)).squeeze() \
+                                    ,"high" : np.random.normal(0, 1.1, (100, 1)).squeeze() \
+                                })
+        >>> data = dd.from_pandas(data, npartitions=1)
+        >>> filter_std = Filter_Std(thresholds)
+        >>> filter_std.fit(data)
+        Filter_Std(inclusive=False, std_thresholds=[0.1, 1])
+        >>> output = filter_std.transform(data)
+        >>> len(output.columns.values) == 1
+        True
+        >>> "medium" in output.columns.values
+        True
+    """
     @log_fun
     def __init__(self, std_thresholds: list=[0, np.inf], inclusive: bool=False):
         self.std_thresholds = std_thresholds
