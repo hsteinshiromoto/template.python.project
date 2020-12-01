@@ -166,7 +166,7 @@ def test_nulls_composition():
                 ]
 
     # Instantiate the pipeline object
-    pipeline = Pipeline(null_steps)
+    pipeline = EPipeline(null_steps)
 
     # Fit and transform
     pipeline.fit(data)
@@ -185,7 +185,7 @@ def test_filter_pipeline():
     data = dd.from_pandas(mock_dataset(), npartitions=1)
     pipeline = filter_pipeline(data)
 
-    assert isinstance(pipeline, Pipeline) or isinstance(pipeline, FeatureUnion)
+    assert isinstance(pipeline, EPipeline) or isinstance(pipeline, FeatureUnion)
 
     print(data)
 
@@ -193,4 +193,5 @@ def test_filter_pipeline():
 
 
 if __name__ == "__main__":
-    test_nulls_composition()
+    # test_filter_nulls()
+    test_filter_std()
