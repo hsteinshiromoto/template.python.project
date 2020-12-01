@@ -371,10 +371,10 @@ def make_filter_nulls_pipeline(data: dd, nulls: list or bool=True
 
 
 @log_fun
-def make_filter_std_pipeline(data: dd, numerical: list or bool=True
+def make_filter_std_pipeline(data: dd, numerical_columns: list or bool=True
                             ,thresholds: list=None, inclusive: bool=False):
 
-    selected_columns = data.select_dtypes(include=[np.number]).columns.values if isinstance(numerical, bool) else numerical
+    selected_columns = data.select_dtypes(include=[np.number]).columns.values if isinstance(numerical_columns, bool) else numerical_columns
     steps = [("extract", Extract(selected_columns))
         ,("std_filter", Filter_Std(std_thresholds=thresholds, inclusive=inclusive))
             ]
@@ -383,10 +383,10 @@ def make_filter_std_pipeline(data: dd, numerical: list or bool=True
 
 
 @log_fun
-def make_filter_entropy_pipeline(data: dd, entropy: list or bool=True
+def make_filter_entropy_pipeline(data: dd, categorical_columns: list or bool=True
                                 ,thresholds: list=None, inclusive: bool=False):
 
-    selected_columns = data.select_dtypes(exclude=[np.number], include=["object"]) if isinstance(entropy, bool) else entropy
+    selected_columns = data.select_dtypes(exclude=[np.number], include=["object"]) if isinstance(categorical_columns, bool) else categorical_columns
     steps = [("extract", Extract(selected_columns))
             ,("entropy_filter", Filter_Entropy(entropy_thresholds=thresholds
                                                 ,inclusive=inclusive))
@@ -397,8 +397,8 @@ def make_filter_entropy_pipeline(data: dd, entropy: list or bool=True
 
 @log_fun
 def filter_pipeline(data: dd, nulls: list or bool=True
-                    ,numerical: list or bool=True
-                    ,entropy: list or bool=True
+                    ,numerical_columns: list or bool=True
+                    ,categorical_columns: list or bool=True
                     ,thresholds: dict={}, save_interim: bool=False
                     ,pipeline: EPipeline=None, **kwargs) -> dd:
     """
@@ -419,10 +419,10 @@ def filter_pipeline(data: dd, nulls: list or bool=True
     if nulls:
         nulls_pipeline = make_filter_nulls_pipeline(data, nulls=nulls, threshold=thresholds.get("nulls"))
 
-    if numerical:
-        numerical_pipeline = make_filter_std_pipeline(data, numerical=numerical, thresholds=thresholds.get("numerical"), inclusive=kwargs.get("numerical"))
+    if numerical_columns:
+        numerical_pipeline = make_filter_std_pipeline(data, numerical_columns=numerical_columns, thresholds=thresholds.get("numerical"), inclusive=kwargs.get("numerical"))
 
-    if entropy:
-        categorical_pipeline = make_filter_entropy_pipeline(data, entropy=entropy, thresholds=thresholds.get("entropy"), inclusive=kwargs.get("entropy"))
+    if categorical_columns:
+        categorical_pipeline = make_filter_entropy_pipeline(data, categorical_columns=categorical_columns, thresholds=thresholds.get("entropy"), inclusive=kwargs.get("entropy"))
         
     return pipeline
