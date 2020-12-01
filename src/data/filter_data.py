@@ -21,6 +21,30 @@ from tests.mock_dataset import mock_dataset
 
 
 class Filter_Nulls(BaseEstimator, TransformerMixin):
+    """
+    Filter columns according to a the proportion of missing values
+
+    Args:
+        BaseEstimator (BaseEstimator): Sci-kit learn object
+        TransformerMixin (TransformerMixin): Sci-kit learn object
+
+    Returns:
+        Filter_Nulls: Instanted object
+
+    Example:
+        >>> high_nulls = list(np.ones((50, 1)))
+        >>> high_nulls.extend(50*[np.nan])
+        >>> low_nulls = list(np.ones((99, 1)))
+        >>> low_nulls.append(np.nan)
+        >>> data = pd.DataFrame({"high_nulls": high_nulls, "low_nulls": low_nulls})
+        >>> data = dd.from_pandas(data, npartitions=1)
+        >>> filter_nulls = Filter_Nulls(0.3)
+        >>> filter_nulls.fit(data)
+        Filter_Nulls(nulls_threshold=0.3)
+        >>> output = filter_nulls.transform(data)
+        >>> "high_nulls" not in output.columns.values
+        True
+    """
     @log_fun
     def __init__(self, nulls_threshold: float=0.75):
         self.nulls_threshold = nulls_threshold
