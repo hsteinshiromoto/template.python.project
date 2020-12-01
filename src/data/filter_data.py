@@ -104,7 +104,7 @@ class Filter_Nulls(BaseEstimator, TransformerMixin):
 
 class Filter_Std(BaseEstimator, TransformerMixin):
     """
-    Filter columns according to the proportion of missing values
+    Filter columns according to the standard deviation of the columns
 
     Args:
         BaseEstimator (BaseEstimator): Sci-kit learn object
@@ -192,6 +192,37 @@ class Filter_Std(BaseEstimator, TransformerMixin):
 
 
 class Filter_Entropy(BaseEstimator, TransformerMixin):
+    """
+    Filter columns according to the entropy of the columns
+
+    Args:
+        BaseEstimator (BaseEstimator): Sci-kit learn object
+        TransformerMixin (TransformerMixin): Sci-kit learn object
+
+    Returns:
+        Filter_Std: Instantiated object
+
+    Example:
+        >>> thresholds = [0.1, 0.9]
+        >>> medium = 50*["A"]
+        >>> medium.extend(50*["B"])
+        >>> high = []
+        >>> for item in ["A", "B", "C", "D"]: \
+            high.extend(25*[item])
+        >>> data = pd.DataFrame.from_dict({"low": 100*["A"] \
+                                        ,"medium": medium \
+                                        ,"high": high \
+                                        })
+        >>> data = dd.from_pandas(data, npartitions=1)
+        >>> filter_ent = Filter_Entropy(thresholds)
+        >>> filter_ent.fit(data)
+        Filter_Entropy(entropy_thresholds=[0.1, 0.9], inclusive=False)
+        >>> output = filter_ent.transform(data)
+        >>> len(output.columns.values) == 1
+        True
+        >>> "medium" in output.columns.values
+        True
+    """
     @log_fun
     def __init__(self, entropy_thresholds: list=[0, np.inf], 
                 inclusive: bool=False):
