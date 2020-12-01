@@ -388,7 +388,7 @@ def make_filter_entropy_pipeline(data: dd, entropy: list or bool=True
 
     selected_columns = data.select_dtypes(exclude=[np.number], include=["object"]) if isinstance(entropy, bool) else entropy
     steps = [("extract", Extract(selected_columns))
-            ,("filter_variance", Filter_Entropy(entropy_thresholds=thresholds
+            ,("entropy_filter", Filter_Entropy(entropy_thresholds=thresholds
                                                 ,inclusive=inclusive))
             ]
 
