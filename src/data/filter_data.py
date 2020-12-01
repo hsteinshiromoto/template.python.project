@@ -8,7 +8,7 @@ import dask.dataframe as dd
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.pipeline import FeatureUnion, Pipeline
+from sklearn.pipeline import FeatureUnion
 
 PROJECT_ROOT = Path(subprocess.Popen(['git', 'rev-parse', '--show-toplevel'], 
                                 stdout=subprocess.PIPE).communicate()[0].rstrip().decode('utf-8'))
@@ -16,7 +16,7 @@ DATA = PROJECT_ROOT / "data"
 sys.path.append(str(PROJECT_ROOT))
 
 from src.make_logger import log_fun, make_logger
-from src.base_pipeline import Extract
+from src.base_pipeline import EPipeline, Extract
 from tests.mock_dataset import mock_dataset
 
 
@@ -49,7 +49,7 @@ class Filter_Nulls(BaseEstimator, TransformerMixin):
         summary_df.loc[mask_nulls, "filtered_nulls"]  = 1
         summary_df.loc[~mask_nulls, "filtered_nulls"]  = 0
         
-        self.removed_cols = list(summary_df[mask_nulls].index.values)
+        self.feature_names = list(summary_df[mask_nulls].index.values)
 
         return self
 
@@ -65,17 +65,17 @@ class Filter_Nulls(BaseEstimator, TransformerMixin):
         Returns:
             (dd): Dataframe with columns removed
         """
-        return X.drop(labels=self.removed_cols, axis=1)
+        return X.drop(labels=self.feature_names, axis=1)
 
     @log_fun
-    def get_removed_columns(self):
+    def get_feature_names(self):
         """
         Get lists of removed columns
 
         Returns:
             (list): List of removed columns
         """
-        return self.removed_cols
+        return self.feature_names
 
 
 class Filter_Std(BaseEstimator, TransformerMixin):
@@ -108,8 +108,8 @@ class Filter_Std(BaseEstimator, TransformerMixin):
         mask_variance = stds_df["std"].between(min(thresholds), max(thresholds), inclusive=self.inclusive)
 
         # Get list of columns to be removed
-        self.removed_cols = list(stds_df.loc[~mask_variance, "column_name"].values)
-        mask_removed = stds_df["column_name"].isin(self.removed_cols)
+        self.feature_names = list(stds_df.loc[~mask_variance, "column_name"].values)
+        mask_removed = stds_df["column_name"].isin(self.feature_names)
         
         stds_df.loc[mask_removed, "filtered_variance"]  = 1
         stds_df.loc[~mask_removed, "filtered_variance"]  = 0
@@ -128,17 +128,17 @@ class Filter_Std(BaseEstimator, TransformerMixin):
         Returns:
             (dd): Dataframe with columns removed
         """
-        return X.drop(labels=self.removed_cols, axis=1)
+        return X.drop(labels=self.feature_names, axis=1)
 
     @log_fun
-    def get_removed_columns(self):
+    def get_feature_names(self):
         """
         Get lists of removed columns
 
         Returns:
             (list): List of removed columns
         """
-        return self.removed_cols
+        return self.feature_names
 
 
 class Filter_Entropy(BaseEstimator, TransformerMixin):
@@ -169,8 +169,8 @@ class Filter_Entropy(BaseEstimator, TransformerMixin):
         mask_entropy = entropies_df["entropy"].between(min(thresholds), max(thresholds), inclusive=self.inclusive)
 
         # Get list of columns to be removed
-        self.removed_cols = list(entropies_df.loc[~mask_entropy, "column_name"].values)
-        mask_removed = entropies_df["column_name"].isin(self.removed_cols)
+        self.feature_names = list(entropies_df.loc[~mask_entropy, "column_name"].values)
+        mask_removed = entropies_df["column_name"].isin(self.feature_names)
         entropies_df.loc[mask_removed, "filtered_entropy"]  = 1
 
         return self
@@ -187,17 +187,17 @@ class Filter_Entropy(BaseEstimator, TransformerMixin):
         Returns:
             (dd): Dataframe with columns removed
         """
-        return X.drop(labels=self.removed_cols, axis=1)
+        return X.drop(labels=self.feature_names, axis=1)
 
     @log_fun
-    def get_removed_columns(self):
+    def get_feature_names(self):
         """
         Get lists of removed columns
 
         Returns:
             (list): List of removed columns
         """
-        return self.removed_cols
+        return self.feature_names
 
 
 class Filter_Duplicates(BaseEstimator, TransformerMixin):
@@ -222,6 +222,16 @@ class Filter_Duplicates(BaseEstimator, TransformerMixin):
             (dd): Dataframe with rows removed
         """
         return X.drop_duplicates(subset=self.subset)
+    
+    @log_fun
+    def get_feature_names(self):
+        """
+        Get lists of removed columns
+
+        Returns:
+            (list): List of removed columns
+        """
+        return self.subset
 
 
 @log_fun
@@ -271,7 +281,7 @@ def filter_pipeline(data: dd, nulls: list or bool=True
                     ,numerical: list or bool=True
                     ,entropy: list or bool=True
                     ,thresholds: dict={}, save_interim: bool=False
-                    ,pipeline: Pipeline=None, **kwargs) -> dd:
+                    ,pipeline: EPipeline=None, **kwargs) -> dd:
     """
     Creates filter pipeline
 
@@ -282,7 +292,7 @@ def filter_pipeline(data: dd, nulls: list or bool=True
         entropy (list or bool, optional): Columns to be filtered. Defaults to True.
         thresholds (dict, optional): Low and high thresholds. Defaults to {}.
         save_interim (bool, optional): Save filtered data to interim folder. Defaults to False.
-        pipeline (Pipeline, optional): Built pipeline. Defaults to None.
+        pipeline (EPipeline, optional): Built pipeline. Defaults to None.
 
     Returns:
         dd: [description]
@@ -293,7 +303,7 @@ def filter_pipeline(data: dd, nulls: list or bool=True
         ("extract", Extract(null_columns))
         ,("filter_nulls", Filter_Nulls(thresholds.get("nulls")))
         ]
-        null_pipeline = Pipeline(null_steps)
+        null_pipeline = EPipeline(null_steps)
         pipeline = FeatureUnion([null_pipeline, pipeline]) if pipeline else null_pipeline
 
     if numerical:
@@ -303,7 +313,7 @@ def filter_pipeline(data: dd, nulls: list or bool=True
             ,("std_filter", Filter_Std(std_thresholds=thresholds.get("std")
             ,inclusive=kwargs.get("numerical")))
         ]
-        std_filter_pipeline = Pipeline(steps=numerical_steps)
+        std_filter_pipeline = EPipeline(steps=numerical_steps)
         pipeline = FeatureUnion([("std_filter_pipeline", std_filter_pipeline), ("existing_pipeline", pipeline)]) if pipeline else std_filter_pipeline
 
     if entropy:
@@ -313,7 +323,7 @@ def filter_pipeline(data: dd, nulls: list or bool=True
             ,("filter_variance", Filter_Entropy(entropy_thresholds=thresholds.get("std")
             ,inclusive=kwargs.get("entropy")))
         ]
-        entropy_filter_pipeline = Pipeline(steps=categorical_steps)
+        entropy_filter_pipeline = EPipeline(steps=categorical_steps)
         pipeline = FeatureUnion([("entropy_filter_pipeline", entropy_filter_pipeline), ("existing_pipeline", pipeline)]) if pipeline else entropy_filter_pipeline
         
     return pipeline
