@@ -58,7 +58,82 @@ def test_filter_nulls():
 
 
 def test_filter_std():
-    pass
+    """
+    Tests the Filter_Std class in a EPipeline
+
+    Returns:
+        None
+    """
+
+    specs = {"float": [100, 1, 0.8]
+        ,"integer": [100, 1, 0.025]
+        ,"categorical": [100, 1, 0.1]
+        ,"boolean": [100, 1, 0]
+        ,"string": [100, 1, 0]
+            }
+
+    # Test 1: No columns are removed
+    mock_data = mock_dataset(specs)
+    mock_data.drop(columns=[col for col in mock_data.columns.values if "float_" in col], inplace=True)
+
+    std = 1
+
+    data = pd.DataFrame.from_dict({"float" : list(np.random.normal(0, std, (mock_data.shape[0], 1)).squeeze())})
+    data = data.merge(mock_data, left_index=True, right_index=True)
+    data = dd.from_pandas(data, npartitions=1)
+
+    # Instantiate the pipeline
+    pipeline = Filter_Std()
+    pipeline.fit(data.select_dtypes(include=[np.number]))
+    output = pipeline.transform(data.select_dtypes(include=[np.number]))
+
+    # Get the name of columns that have been removed
+    removed_columns = pipeline.get_feature_names()
+
+    assert not removed_columns
+
+    assert len(set(data.select_dtypes(include=[np.number]).columns.values) - set(output.columns.values)) == 0
+
+    # Test 2: The Float_0 column is removed
+
+    ## Make the dataset
+    mock_data = mock_dataset(specs)
+    mock_data.drop(columns=[col for col in mock_data.columns.values if "float_" in col], inplace=True)
+
+    thresholds = [0.1, 1]
+
+    data = pd.DataFrame.from_dict({"float_0" : list(np.random.normal(0, np.mean(thresholds), (mock_data.shape[0], 1)).squeeze())
+                                    ,"float_1" : list(np.random.normal(0, 0.01, (mock_data.shape[0], 1)).squeeze())
+                                    ,"float_2" : list(np.random.normal(0, 1.1, (mock_data.shape[0], 1)).squeeze())
+                                })
+    data = data.merge(mock_data, left_index=True, right_index=True)
+    data = dd.from_pandas(data, npartitions=1)
+
+    ## Columns that shall be removed and remain
+    cols_to_be_removed = ["float_1", "float_2"]
+    cols_to_remain = ["float_0"]
+
+    ## Create steps for pipeline: select float columns and filter
+    steps = [("extract", Extract(["float_0", "float_1", "float_2"]))
+            ,("filter_std", Filter_Std(thresholds))
+            ]
+    pipeline = EPipeline(steps=steps)
+    pipeline.fit(data)
+    output = pipeline.transform(data)
+
+    # Get the name of columns that have been removed by Filter_Std method
+    removed_columns = pipeline.get_feature_names()["filter_std"]
+
+    # Process the dataframe
+    output = pipeline.transform(data)
+
+    # Test if the columns that would be removed were actually removed by the pipeline
+    assert len(set(cols_to_be_removed).symmetric_difference(removed_columns)) == 0
+
+    # Test if the columns that should remain were not removed
+    assert len(set(cols_to_remain) - set(output.columns.values)) == 0
+
+    return None
 
 
 def test_filter_entropy():
