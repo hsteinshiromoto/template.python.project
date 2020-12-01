@@ -161,7 +161,8 @@ class Filter_Entropy(BaseEstimator, TransformerMixin):
         """
         # Calculate the entropy column-wisely
         entropies_df = X.compute().apply(entropy, axis=0).to_frame(name="entropy")
-
+        entropies_df.reset_index(inplace=True)
+        entropies_df.rename(columns={"index": "column_name"}, inplace=True)
         entropies_df.sort_values(by="entropy", inplace=True, ascending=False)
 
         # Get thresholds and calculate what columns will be removed
