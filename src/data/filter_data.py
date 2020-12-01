@@ -22,7 +22,7 @@ from tests.mock_dataset import mock_dataset
 
 class Filter_Nulls(BaseEstimator, TransformerMixin):
     """
-    Filter columns according to a the proportion of missing values
+    Filter columns according to the proportion of missing values
 
     Args:
         BaseEstimator (BaseEstimator): Sci-kit learn object
