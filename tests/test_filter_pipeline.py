@@ -121,23 +121,80 @@ def test_filter_std():
     pipeline.fit(data)
     output = pipeline.transform(data)
 
-    # Get the name of columns that have been removed by Filter_Std method
+    ## Get the name of columns that have been removed by Filter_Std method
     removed_columns = pipeline.get_feature_names()["filter_std"]
 
-    # Process the dataframe
+    ## Process the dataframe
     output = pipeline.transform(data)
 
-    # Test if the columns that would be removed were actually removed by the pipeline
+    ## Test if the columns that would be removed were actually removed by the pipeline
     assert len(set(cols_to_be_removed).symmetric_difference(removed_columns)) == 0
 
-    # Test if the columns that should remain were not removed
+    ## Test if the columns that should remain were not removed
     assert len(set(cols_to_remain) - set(output.columns.values)) == 0
 
     return None
 
 
 def test_filter_entropy():
-    pass
+    """
+    Tests the Filter_Entropy class in a EPipeline
+
+    Returns:
+        None
+    """
+
+    specs = {"float": [100, 1, 0.8]
+        ,"integer": [100, 1, 0.025]
+        ,"categorical": [100, 1, 0.1]
+        ,"boolean": [100, 1, 0]
+        ,"string": [100, 1, 0]
+            }
+
+    # Test: columns with low and high entropies will be removes
+    data = mock_dataset(specs)
+
+    thresholds = [0.1, 0.9]
+
+    one_entropy = 50*["A"]
+    one_entropy.extend(50*["B"])
+    non_removed_entropy = []
+    for item in ["A", "B", "C", "D"]:
+        non_removed_entropy.extend(25*[item])
+
+    entropy_df = pd.DataFrame.from_dict({"low_entropy": data.shape[0]*["A"]
+                                        ,"intermediate_entropy": one_entropy
+                                        ,"high_entropy": non_removed_entropy
+                                        })
+
+    data = data.merge(entropy_df, left_index=True, right_index=True)
+    data = dd.from_pandas(data, npartitions=1)
+
+    ## Columns that shall be removed and remain
+    cols_to_be_removed = ["low_entropy", "high_entropy"]
+    cols_to_remain = ["intermediate_entropy"]
+
+    ## Create steps for pipeline: select float columns and filter
+    steps = [("extract", Extract(["low_entropy", "intermediate_entropy", "high_entropy"]))
+            ,("filter_entropy", Filter_Entropy(thresholds))
+            ]
+    pipeline = EPipeline(steps=steps)
+    pipeline.fit(data)
+    output = pipeline.transform(data)
+
+    ## Get the name of columns that have been removed by Filter_Std method
+    removed_columns = pipeline.get_feature_names()["filter_entropy"]
+
+    ## Process the dataframe
+    output = pipeline.transform(data)
+
+    ## Test if the columns that would be removed were actually removed by the pipeline
+    assert len(set(cols_to_be_removed).symmetric_difference(removed_columns)) == 0
+
+    ## Test if the columns that should remain were not removed
+    assert len(set(cols_to_remain) - set(output.columns.values)) == 0
+
+    return None
 
 
 def test_nulls_composition():
