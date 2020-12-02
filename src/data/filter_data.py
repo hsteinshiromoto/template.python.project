@@ -416,13 +416,15 @@ def filter_pipeline(data: dd, nulls: list or bool=True
     Returns:
         dd: [description]
     """
+    pipe_dict = {}
+
     if nulls:
-        nulls_pipeline = make_filter_nulls_pipeline(data, nulls=nulls, threshold=thresholds.get("nulls"))
+        pipe_dict["nulls_pipeline"] = make_filter_nulls_pipeline(data, nulls=nulls, threshold=thresholds.get("nulls"))
 
     if numerical_columns:
-        numerical_pipeline = make_filter_std_pipeline(data, numerical_columns=numerical_columns, thresholds=thresholds.get("numerical"), inclusive=kwargs.get("numerical"))
+        pipe_dict["std_pipeline"] = make_filter_std_pipeline(data, numerical_columns=numerical_columns, thresholds=thresholds.get("numerical"), inclusive=kwargs.get("numerical"))
 
     if categorical_columns:
-        categorical_pipeline = make_filter_entropy_pipeline(data, categorical_columns=categorical_columns, thresholds=thresholds.get("entropy"), inclusive=kwargs.get("entropy"))
+        pipe_dict["entropy_pipeline"] = make_filter_entropy_pipeline(data, categorical_columns=categorical_columns, thresholds=thresholds.get("entropy"), inclusive=kwargs.get("entropy"))
         
-    return pipeline
+    return pipe_dict
