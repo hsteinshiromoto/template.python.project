@@ -361,6 +361,33 @@ def entropy(data, base: int=None) -> float:
 @log_fun
 def make_filter_nulls_pipeline(data: dd, null_columns: list or bool=True
                                 ,threshold: float=None):
+    """
+    Makes pipeline to filter columns according to missing values
+
+    Args:
+        data (dd): Data frame to be filtered
+        null_columns (listorbool, optional): Columns to subset the filtering. Defaults to True.
+        threshold (float, optional): Maximum proportion of missing values missing. Defaults to None.
+
+    Returns:
+        EPipeline: Pipeline to filter data frame
+
+    Example:
+        >>> high = list(np.ones((50, 1)))
+        >>> high.extend(50*[np.nan])
+        >>> low = list(np.ones((99, 1)))
+        >>> low.append(np.nan)
+        >>> remaining_col = list(np.ones((100, 1)))
+        >>> data = pd.DataFrame({"high": high, "low": low, "remain": remaining_col})
+        >>> data = dd.from_pandas(data, npartitions=1)
+        >>> filter_nulls = make_filter_nulls_pipeline(data, null_columns=["high", "low"], threshold=0.3)
+        >>> _ = filter_nulls.fit(data)
+        >>> output = filter_nulls.transform(data)
+        >>> "high" not in output.columns.values
+        True
+        >>> len(output.columns.values) == 1
+        True
+    """
 
     selected_columns = data.columns.values if isinstance(null_columns, bool) else null_columns
     steps = [("extract", Extract(selected_columns))
