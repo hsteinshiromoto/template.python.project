@@ -359,10 +359,10 @@ def entropy(data, base: int=None) -> float:
 
 
 @log_fun
-def make_filter_nulls_pipeline(data: dd, nulls: list or bool=True
+def make_filter_nulls_pipeline(data: dd, null_columns: list or bool=True
                                 ,threshold: float=None):
 
-    selected_columns = data.columns.values if isinstance(nulls, bool) else nulls
+    selected_columns = data.columns.values if isinstance(null_columns, bool) else null_columns
     steps = [("extract", Extract(selected_columns))
             ,("filter_nulls", Filter_Nulls(threshold))
             ]
@@ -396,7 +396,7 @@ def make_filter_entropy_pipeline(data: dd, categorical_columns: list or bool=Tru
 
 
 @log_fun
-def filter_pipeline(data: dd, nulls: list or bool=True
+def filter_pipeline(data: dd, null_columns: list or bool=True
                     ,numerical_columns: list or bool=True
                     ,categorical_columns: list or bool=True
                     ,thresholds: dict={}, save_interim: bool=False
@@ -418,8 +418,8 @@ def filter_pipeline(data: dd, nulls: list or bool=True
     """
     pipe_dict = {}
 
-    if nulls:
-        pipe_dict["nulls_pipeline"] = make_filter_nulls_pipeline(data, nulls=nulls, threshold=thresholds.get("nulls"))
+    if null_columns:
+        pipe_dict["nulls_pipeline"] = make_filter_nulls_pipeline(data, null_columns=null_columns, threshold=thresholds.get("nulls"))
 
     if numerical_columns:
         pipe_dict["std_pipeline"] = make_filter_std_pipeline(data, numerical_columns=numerical_columns, thresholds=thresholds.get("numerical"), inclusive=kwargs.get("numerical"))
