@@ -400,7 +400,18 @@ def make_filter_nulls_pipeline(data: dd, null_columns: list or bool=True
 @log_fun
 def make_filter_std_pipeline(data: dd, numerical_columns: list or bool=True
                             ,thresholds: list=None, inclusive: bool=False):
+    """
+    Makes pipeline to filter columns according to standard deviation
 
+    Args:
+        data (dd): Data frame to be filtered
+        numerical_columns (list or bool, optional): Columns to subset the filtering. Defaults to True.
+        thresholds (list, optional): Interval of std values to filter. Defaults to None.
+        inclusive (bool, optional):  Includes or not the interval boundaries. Defaults to False.
+
+    Returns:
+        EPipeline: Pipeline to filter data frame
+    """
     selected_columns = data.select_dtypes(include=[np.number]).columns.values if isinstance(numerical_columns, bool) else numerical_columns
     steps = [("extract", Extract(selected_columns))
         ,("std_filter", Filter_Std(std_thresholds=thresholds, inclusive=inclusive))
