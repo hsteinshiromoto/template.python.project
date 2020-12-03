@@ -3,7 +3,7 @@ import sys
 from datetime import datetime
 from math import e, log
 from pathlib import Path
-
+from typeguard import typechecked
 import dask.dataframe as dd
 import numpy as np
 import pandas as pd
@@ -130,7 +130,7 @@ class Filter_Std(BaseEstimator, TransformerMixin):
         True
     """
     @log_fun
-    def __init__(self, std_thresholds: list=[0, np.inf], inclusive: bool=False):
+    def __init__(self, std_thresholds: list[float]=[0, np.inf], inclusive: bool=False):
         self.std_thresholds = std_thresholds
         self.inclusive = inclusive
 
@@ -224,7 +224,7 @@ class Filter_Entropy(BaseEstimator, TransformerMixin):
         True
     """
     @log_fun
-    def __init__(self, entropy_thresholds: list=[0, np.inf], 
+    def __init__(self, entropy_thresholds: list[float]=[0, np.inf], 
                 inclusive: bool=False):
         self.entropy_thresholds = entropy_thresholds
         self.inclusive = inclusive
@@ -284,7 +284,7 @@ class Filter_Entropy(BaseEstimator, TransformerMixin):
 
 class Filter_Duplicates(BaseEstimator, TransformerMixin):
     @log_fun
-    def __init__(self, subset: list=None):
+    def __init__(self, subset: list[str]=None):
         self.subset = subset
 
     @log_fun
@@ -358,8 +358,9 @@ def entropy(data, base: int=None) -> float:
     return ent
 
 
+@typechecked
 @log_fun
-def make_filter_nulls_pipeline(data: dd, null_columns: list or bool=True
+def make_filter_nulls_pipeline(data: dd, null_columns: list[str] or bool=True
                                 ,threshold: float=None):
     """
     Makes pipeline to filter columns according to missing values
@@ -398,8 +399,8 @@ def make_filter_nulls_pipeline(data: dd, null_columns: list or bool=True
 
 
 @log_fun
-def make_filter_std_pipeline(data: dd, numerical_columns: list or bool=True
-                            ,thresholds: list=None, inclusive: bool=False):
+def make_filter_std_pipeline(data: dd, numerical_columns: list[str] or bool=True
+                            ,thresholds: list[float]=None, inclusive: bool=False):
     """
     Makes pipeline to filter columns according to standard deviation
 
@@ -421,8 +422,8 @@ def make_filter_std_pipeline(data: dd, numerical_columns: list or bool=True
 
 
 @log_fun
-def make_filter_entropy_pipeline(data: dd, categorical_columns: list or bool=True
-                                ,thresholds: list=None, inclusive: bool=False):
+def make_filter_entropy_pipeline(data: dd, categorical_columns: list[str] or bool=True
+                                ,thresholds: list[float]=None, inclusive: bool=False):
 
     selected_columns = data.select_dtypes(exclude=[np.number], include=["object"]) if isinstance(categorical_columns, bool) else categorical_columns
     steps = [("extract", Extract(selected_columns))
@@ -434,9 +435,9 @@ def make_filter_entropy_pipeline(data: dd, categorical_columns: list or bool=Tru
 
 
 @log_fun
-def filter_pipeline(data: dd, null_columns: list or bool=True
-                    ,numerical_columns: list or bool=True
-                    ,categorical_columns: list or bool=True
+def filter_pipeline(data: dd, null_columns: list[str] or bool=True
+                    ,numerical_columns: list[str] or bool=True
+                    ,categorical_columns: list[str] or bool=True
                     ,thresholds: dict={}, save_interim: bool=False
                     ,pipeline: EPipeline=None, **kwargs) -> dd:
     """
