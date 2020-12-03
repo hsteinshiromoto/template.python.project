@@ -45,10 +45,12 @@ class Filter_Nulls(BaseEstimator, TransformerMixin):
         >>> "high" not in output.columns.values
         True
     """
+    @typechecked
     @log_fun
     def __init__(self, nulls_threshold: float=0.75):
         self.nulls_threshold = nulls_threshold
 
+    @typechecked
     @log_fun
     def fit(self, X: dd, y: dd=None):
         """
@@ -77,6 +79,7 @@ class Filter_Nulls(BaseEstimator, TransformerMixin):
 
         return self
 
+    @typechecked
     @log_fun
     def transform(self, X: dd, y: dd=None):
         """
@@ -91,6 +94,7 @@ class Filter_Nulls(BaseEstimator, TransformerMixin):
         """
         return X.drop(labels=self.feature_names, axis=1)
 
+    @typechecked
     @log_fun
     def get_feature_names(self):
         """
@@ -129,11 +133,13 @@ class Filter_Std(BaseEstimator, TransformerMixin):
         >>> "medium" in output.columns.values
         True
     """
+    @typechecked
     @log_fun
     def __init__(self, std_thresholds: list[float]=[0, np.inf], inclusive: bool=False):
         self.std_thresholds = std_thresholds
         self.inclusive = inclusive
 
+    @typechecked
     @log_fun
     def fit(self, X: dd, y: dd=None):
         """Calculate what columns should be removed, based on the defined thresholds
@@ -166,6 +172,7 @@ class Filter_Std(BaseEstimator, TransformerMixin):
         
         return self
 
+    @typechecked
     @log_fun
     def transform(self, X: dd, y: dd=None):
         """
@@ -180,6 +187,7 @@ class Filter_Std(BaseEstimator, TransformerMixin):
         """
         return X.drop(labels=self.feature_names, axis=1)
 
+    @typechecked
     @log_fun
     def get_feature_names(self):
         """
@@ -223,12 +231,14 @@ class Filter_Entropy(BaseEstimator, TransformerMixin):
         >>> "medium" in output.columns.values
         True
     """
+    @typechecked
     @log_fun
     def __init__(self, entropy_thresholds: list[float]=[0, np.inf], 
                 inclusive: bool=False):
         self.entropy_thresholds = entropy_thresholds
         self.inclusive = inclusive
 
+    @typechecked
     @log_fun
     def fit(self, X: dd, y: dd=None):
         """Calculate what columns should be removed, based on the defined thresholds
@@ -257,6 +267,7 @@ class Filter_Entropy(BaseEstimator, TransformerMixin):
 
         return self
 
+    @typechecked
     @log_fun
     def transform(self, X: dd, y: dd=None):
         """
@@ -271,6 +282,7 @@ class Filter_Entropy(BaseEstimator, TransformerMixin):
         """
         return X.drop(labels=self.feature_names, axis=1)
 
+    @typechecked
     @log_fun
     def get_feature_names(self):
         """
@@ -283,14 +295,17 @@ class Filter_Entropy(BaseEstimator, TransformerMixin):
 
 
 class Filter_Duplicates(BaseEstimator, TransformerMixin):
+    @typechecked
     @log_fun
     def __init__(self, subset: list[str]=None):
         self.subset = subset
 
+    @typechecked
     @log_fun
     def fit(self, X: dd, y: dd=None):
         return self
 
+    @typechecked
     @log_fun
     def transform(self, X: dd, y: dd=None):
         """
@@ -305,6 +320,7 @@ class Filter_Duplicates(BaseEstimator, TransformerMixin):
         """
         return X.drop_duplicates(subset=self.subset)
     
+    @typechecked
     @log_fun
     def get_feature_names(self):
         """
@@ -316,6 +332,7 @@ class Filter_Duplicates(BaseEstimator, TransformerMixin):
         return self.subset
 
 
+@typechecked
 @log_fun
 def entropy(data, base: int=None) -> float:
     """
@@ -398,6 +415,7 @@ def make_filter_nulls_pipeline(data: dd, null_columns: list[str] or bool=True
     return EPipeline(steps)
 
 
+@typechecked
 @log_fun
 def make_filter_std_pipeline(data: dd, numerical_columns: list[str] or bool=True
                             ,thresholds: list[float]=None, inclusive: bool=False):
@@ -421,6 +439,7 @@ def make_filter_std_pipeline(data: dd, numerical_columns: list[str] or bool=True
     return EPipeline(steps)
 
 
+@typechecked
 @log_fun
 def make_filter_entropy_pipeline(data: dd, categorical_columns: list[str] or bool=True
                                 ,thresholds: list[float]=None, inclusive: bool=False):
@@ -434,6 +453,7 @@ def make_filter_entropy_pipeline(data: dd, categorical_columns: list[str] or boo
     return EPipeline(steps)
 
 
+@typechecked
 @log_fun
 def filter_pipeline(data: dd, null_columns: list[str] or bool=True
                     ,numerical_columns: list[str] or bool=True
