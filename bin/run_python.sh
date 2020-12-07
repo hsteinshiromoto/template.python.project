@@ -12,8 +12,8 @@ fi
 if [[ $1 = "requirements" ]]; then
  	echo ">>> Installing Required Modules .."
  	cd /usr/local/bin/
-	python -m pip install -U pip setuptools wheel
-	python -m pip install -r /usr/local/requirements.txt
+	pip3 install --upgrade pip setuptools wheel
+	pip3 install -r /usr/local/requirements.txt
 	echo ">>> Done!"
 fi
 
