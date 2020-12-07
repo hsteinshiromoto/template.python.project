@@ -20,6 +20,7 @@ from src.base_pipeline import EPipeline, Extract
 from tests.mock_dataset import mock_dataset
 
 
+@typechecked
 class Filter_Nulls(BaseEstimator, TransformerMixin):
     """
     Filter columns according to the proportion of missing values
@@ -39,18 +40,15 @@ class Filter_Nulls(BaseEstimator, TransformerMixin):
         >>> data = pd.DataFrame({"high": high, "low": low})
         >>> data = dd.from_pandas(data, npartitions=1)
         >>> filter_nulls = Filter_Nulls(0.3)
-        >>> filter_nulls.fit(data)
-        Filter_Nulls(nulls_threshold=0.3)
+        >>> _ = filter_nulls.fit(data)
         >>> output = filter_nulls.transform(data)
         >>> "high" not in output.columns.values
         True
     """
-    @typechecked
     @log_fun
     def __init__(self, nulls_threshold: float=0.75):
         self.nulls_threshold = nulls_threshold
 
-    @typechecked
     @log_fun
     def fit(self, X: dd, y: dd=None):
         """
@@ -79,7 +77,6 @@ class Filter_Nulls(BaseEstimator, TransformerMixin):
 
         return self
 
-    @typechecked
     @log_fun
     def transform(self, X: dd, y: dd=None):
         """
@@ -94,7 +91,6 @@ class Filter_Nulls(BaseEstimator, TransformerMixin):
         """
         return X.drop(labels=self.feature_names, axis=1)
 
-    @typechecked
     @log_fun
     def get_feature_names(self):
         """
@@ -106,6 +102,7 @@ class Filter_Nulls(BaseEstimator, TransformerMixin):
         return self.feature_names
 
 
+@typechecked
 class Filter_Std(BaseEstimator, TransformerMixin):
     """
     Filter columns according to the standard deviation of the columns
@@ -133,13 +130,11 @@ class Filter_Std(BaseEstimator, TransformerMixin):
         >>> "medium" in output.columns.values
         True
     """
-    @typechecked
     @log_fun
     def __init__(self, std_thresholds: list[float]=[0, np.inf], inclusive: bool=False):
         self.std_thresholds = std_thresholds
         self.inclusive = inclusive
 
-    @typechecked
     @log_fun
     def fit(self, X: dd, y: dd=None):
         """Calculate what columns should be removed, based on the defined thresholds
@@ -172,7 +167,6 @@ class Filter_Std(BaseEstimator, TransformerMixin):
         
         return self
 
-    @typechecked
     @log_fun
     def transform(self, X: dd, y: dd=None):
         """
@@ -187,7 +181,6 @@ class Filter_Std(BaseEstimator, TransformerMixin):
         """
         return X.drop(labels=self.feature_names, axis=1)
 
-    @typechecked
     @log_fun
     def get_feature_names(self):
         """
@@ -199,6 +192,7 @@ class Filter_Std(BaseEstimator, TransformerMixin):
         return self.feature_names
 
 
+@typechecked
 class Filter_Entropy(BaseEstimator, TransformerMixin):
     """
     Filter columns according to the entropy of the columns
@@ -223,22 +217,19 @@ class Filter_Entropy(BaseEstimator, TransformerMixin):
                                         })
         >>> data = dd.from_pandas(data, npartitions=1)
         >>> filter_ent = Filter_Entropy(thresholds)
-        >>> filter_ent.fit(data)
-        Filter_Entropy(entropy_thresholds=[0.1, 0.9], inclusive=False)
+        >>> _ = filter_ent.fit(data)
         >>> output = filter_ent.transform(data)
         >>> len(output.columns.values) == 1
         True
         >>> "medium" in output.columns.values
         True
     """
-    @typechecked
     @log_fun
     def __init__(self, entropy_thresholds: list[float]=[0, np.inf], 
                 inclusive: bool=False):
         self.entropy_thresholds = entropy_thresholds
         self.inclusive = inclusive
 
-    @typechecked
     @log_fun
     def fit(self, X: dd, y: dd=None):
         """Calculate what columns should be removed, based on the defined thresholds
@@ -267,7 +258,6 @@ class Filter_Entropy(BaseEstimator, TransformerMixin):
 
         return self
 
-    @typechecked
     @log_fun
     def transform(self, X: dd, y: dd=None):
         """
@@ -282,7 +272,6 @@ class Filter_Entropy(BaseEstimator, TransformerMixin):
         """
         return X.drop(labels=self.feature_names, axis=1)
 
-    @typechecked
     @log_fun
     def get_feature_names(self):
         """
@@ -294,18 +283,16 @@ class Filter_Entropy(BaseEstimator, TransformerMixin):
         return self.feature_names
 
 
+@typechecked
 class Filter_Duplicates(BaseEstimator, TransformerMixin):
-    @typechecked
     @log_fun
     def __init__(self, subset: list[str]=None):
         self.subset = subset
 
-    @typechecked
     @log_fun
     def fit(self, X: dd, y: dd=None):
         return self
 
-    @typechecked
     @log_fun
     def transform(self, X: dd, y: dd=None):
         """
@@ -320,7 +307,6 @@ class Filter_Duplicates(BaseEstimator, TransformerMixin):
         """
         return X.drop_duplicates(subset=self.subset)
     
-    @typechecked
     @log_fun
     def get_feature_names(self):
         """
