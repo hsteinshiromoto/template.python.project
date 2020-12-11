@@ -80,10 +80,10 @@ class Get_Raw_Data(BaseEstimator, TransformerMixin):
     @log_fun
     def get_feature_names(self):
         """
-        Get lists of removed columns
+        Get lists of loaded columns
 
         Returns:
-            (list): List of removed columns
+            (list): List of loaded columns
         """
         return self.meta_data["columns_name"].values
 
