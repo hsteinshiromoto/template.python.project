@@ -154,6 +154,41 @@ class Split_Train_Test(BaseEstimator, TransformerMixin):
         return None
 
 
+@typechecked
+class Split_Time(BaseEstimator, TransformerMixin):
+    @log_fun
+    def __init__(self, split_date: str, time_dim_col: str):
+        self.split_date = split_date
+        self.time_dim_col = time_dim_col
+    
+    @log_fun
+    def fit(self, X_train: dd, X_test: dd, y_train=None, y_test=None):
+        self.mask_train_in_time = X_train[self.time_dim_col] <= self.split_date
+        self.mask_test_in_time = X_test[self.time_dim_col] <= self.split_date
+
+        return self
+
+    @log_fun
+    def transform(self, X_train: dd, X_test: dd, y_train=None, y_test=None):
+        X = {"train": X_train[self.mask_train_in_time]
+        ,"in-sample_out-time": X_train[~self.mask_train_in_time]
+        ,"out-sample_in-time": X_test[self.mask_test_in_time]
+        ,"out-sample_out-time": X_test[~self.mask_test_in_time]
+        }
+
+        y = {"train": y_train[self.mask_train_in_time]
+            ,"in-sample_out-time": y_train[~self.mask_train_in_time]
+            ,"out-sample_in-time": y_test[self.mask_test_in_time]
+            ,"out-sample_out-time": y_test[~self.mask_test_in_time]
+            }
+
+    return X, y
+        
+    @log_fun
+    def get_feature_names(self):
+        return None
+
+
 @log_fun
 @typechecked
 def date_parser(array, format: str="%Y-%m-%d"):
@@ -174,28 +209,6 @@ def date_parser(array, format: str="%Y-%m-%d"):
     """
 
     return pd.to_datetime(array, format=format)
-
-
-@log_fun
-def time_split(X_train: dd, y_train: dd, X_test: dd, y_test: dd,
-                split_date: str, time_dim_col: str):
-
-    mask_train_in_time = X_train[time_dim_col] <= split_date
-    mask_test_in_time = X_test[time_dim_col] <= split_date
-
-    X = {"train": X_train[mask_train_in_time]
-        ,"in-sample_out-time": X_train[~mask_train_in_time]
-        ,"out-sample_in-time": X_test[mask_test_in_time]
-        ,"out-sample_out-time": X_test[~mask_test_in_time]
-        }
-
-    y = {"train": y_train[mask_train_in_time]
-        ,"in-sample_out-time": y_train[~mask_train_in_time]
-        ,"out-sample_in-time": y_test[mask_test_in_time]
-        ,"out-sample_out-time": y_test[~mask_test_in_time]
-        }
-
-    return X, y
 
 
 @click.command()
@@ -225,6 +238,7 @@ def main(basename, save_interim, from_interim):
     split_steps = [
         ("split_predictors_target", Split_Predictors_Target())
         ,("split_train_test", Split_Train_Test(train_size))
+        ,("split_time", Split_Time(split_date, time_dim_col))
     ]
 
     # Time Split
