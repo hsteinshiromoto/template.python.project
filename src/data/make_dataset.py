@@ -11,8 +11,9 @@ import numpy as np
 import pandas as pd
 import pretty_errors
 from dotenv import find_dotenv, load_dotenv
-from sklearn.pipeline import Pipeline
+from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.model_selection import train_test_split
+from sklearn.base import BaseEstimator, TransformerMixin
 
 PROJECT_ROOT = Path(subprocess.Popen(['git', 'rev-parse', '--show-toplevel'], 
                                 stdout=subprocess.PIPE).communicate()[0].rstrip().decode('utf-8'))
@@ -21,11 +22,74 @@ DATA = PROJECT_ROOT / "data"
 sys.path.append(PROJECT_ROOT)
 
 from src.base import get_settings
-from src.data.filter_data import filter_data
+from src.data.filter_data import filter_variance, filter_entropy, filter_nulls, filter_duplicates
 from src.make_logger import log_fun, make_logger
+from src.data.make_pipeline import Extract
+
+
+@typechecked
+class Get_Raw_Data(BaseEstimator, TransformerMixin):
+    @log_fun
+    def __init__(self, basename: Path, path: Path=DATA / "raw"):
+        self.basename = basename
+        self.path = path
+
+    @log_fun
+    def fit(self, meta_data: pd.DataFrame, y=None):
+        try:
+            ignore_mask = meta_data["ignore"] == True
+
+        except KeyError:
+            ignore_mask = [False for i in range(meta_data.shape[0])]
+
+        self.meta_data = meta_data[~ignore_mask]
+
+        return self
+
+    @log_fun
+    def transform(self, X: dd, y=None):
+        if self.basename.suffix == "csv":
+        
+            # Identify datetime columns
+            mask_datetime = self.meta_data["python_dtypes"] == "datetime64[ns]"
+            datetime_columns = list(self.meta_data[mask_datetime, "python_dtypes"].values)
+
+            # Create dict with column name and data type
+            dtypes_mapping = {zip(self.meta_data.loc[~mask_datetime, "column_name"].values, 
+                            self.meta_data.loc[~mask_datetime, "python_dtypes"].values)}
+
+            # Load data file
+            data = dd.read_csv(str(self.path / self.basename), parse_dates=datetime_columns
+                                ,date_parser=date_parser, dtypes=dtypes_mapping)
+
+        elif self.basename.suffix == "parquet":
+            data = dd.read_parquet(str(self.path / self.basename), 
+                                    columns=self.meta_data["columns_name"].values)
+
+        elif self.basename.suffix == "sql":
+            msg = "Read queries are not implemented yet."
+            raise NotImplementedError(msg)
+
+        else:
+            msg = f"Wrong file format. Expected either: csv, parquet or sql. \
+                    Got {Path(self.basename)}."
+            raise ValueError(msg)
+
+        return data
+        
+    @log_fun
+    def get_feature_names(self):
+        """
+        Get lists of removed columns
+
+        Returns:
+            (list): List of removed columns
+        """
+        return self.meta_data["columns_name"].values
 
 
 @log_fun
+@typechecked
 def date_parser(array, format: str="%Y-%m-%d"):
     """Converts array with dates to datetime format
 
