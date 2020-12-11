@@ -170,7 +170,7 @@ def main(basename, save_interim, from_interim):
     time_dim_col = settings["features"]["time_dimension"]
 
     ## Metadata
-    meta_data = pd.read_csv(str(DATA / "meta" / f"{basename}"))
+    
 
     ## Data
     raw_data = get_raw_data(basename, meta_data)
@@ -193,7 +193,7 @@ def main(basename, save_interim, from_interim):
     # Time Split
     X, y = time_split(X_train, X_test, y_train, y_test, split_date, time_dim_col)
 
-    #! Todo: Start sklearn pipeline here. Ref: https://ml.dask.org/compose.html
+    #TODO: Start sklearn pipeline here. Ref: https://ml.dask.org/compose.html
 
 if __name__ == '__main__':
     logger = make_logger(__file__)
