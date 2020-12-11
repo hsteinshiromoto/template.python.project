@@ -234,14 +234,14 @@ def main(basename, save_interim, from_interim):
         ,("get_raw_data", Get_Raw_Data(basename))
     ]
 
+    # TODO: Create Filter Data Steps
+
     # Splits
     split_steps = [
         ("split_predictors_target", Split_Predictors_Target())
         ,("split_train_test", Split_Train_Test(train_size))
         ,("split_time", Split_Time(split_date, time_dim_col))
     ]
-
-    #TODO: Start sklearn pipeline here. Ref: https://ml.dask.org/compose.html
 
 if __name__ == '__main__':
     logger = make_logger(__file__)
