@@ -169,15 +169,10 @@ def main(basename, save_interim, from_interim):
     split_date = settings["train"]["split_date"]
     time_dim_col = settings["features"]["time_dimension"]
 
-    ## Metadata
-    
-
-    ## Data
-    raw_data = get_raw_data(basename, meta_data)
-
-    steps = [
+    # Read data steps
+    read_data_steps = [
         ("get_meta_data", Get_Meta_Data(basename))
-        ,
+        ,("get_raw_data", Get_Raw_Data(basename))
     ]
 
 
