@@ -111,28 +111,6 @@ def date_parser(array, format: str="%Y-%m-%d"):
 
 
 @log_fun
-def get_raw_data(basename: Path, meta_data: pd.DataFrame, path: Path=DATA / "raw"):
-    """
-    Reads raw data
-
-    Args:
-        basename (Path): Filename
-        meta_data (pd.DataFrame): Data frame describing the raw data
-        path (Path, optional): Path to raw data. Defaults to DATA/"raw".
-
-    Raises:
-        NotImplementedError: SQL queries are not yet implemented
-        ValueError: Only csv, parquet, and SQL are accepted at the moment
-
-    Returns:
-        dask.dataframe: Raw dataframe
-    """
-
-    try:
-        ignore_mask = meta_data["ignore"] == True
-
-    except KeyError:
-        ignore_mask = [False for i in range(meta_data.shape[0])]
 
     meta_data = meta_data[~ignore_mask]
 
