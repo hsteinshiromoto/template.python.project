@@ -132,6 +132,28 @@ class Split_Predictors_Target(BaseEstimator, TransformerMixin):
         return None
 
 
+@typechecked
+class Split_Train_Test(BaseEstimator, TransformerMixin):
+    @log_fun
+    def __init__(self, train_size: float):
+        self.train_size = train_size
+    
+    @log_fun
+    def fit(self, X=None, y=None):
+        return self
+
+    @log_fun
+    def transform(self, X: dd, y: dd):
+        X_train, X_test, y_train, y_test = train_test_split(X, y, 
+                                                        train_size=train_size)
+
+        return X_train, X_test, y_train, y_test
+        
+    @log_fun
+    def get_feature_names(self):
+        return None
+
+
 @log_fun
 @typechecked
 def date_parser(array, format: str="%Y-%m-%d"):
@@ -202,11 +224,8 @@ def main(basename, save_interim, from_interim):
     # Splits
     split_steps = [
         ("split_predictors_target", Split_Predictors_Target())
+        ,("split_train_test", Split_Train_Test(train_size))
     ]
-
-    # Train-Test Split
-    X_train, X_test, y_train, y_test = train_test_split(X, y, 
-                                                        train_size=train_size)
 
     # Time Split
     X, y = time_split(X_train, X_test, y_train, y_test, split_date, time_dim_col)
