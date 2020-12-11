@@ -108,6 +108,30 @@ class Get_Meta_Data(BaseEstimator, TransformerMixin):
         return None
 
 
+@typechecked
+class Split_Predictors_Target(BaseEstimator, TransformerMixin):
+    @log_fun
+    def __init__(self):
+        pass
+    
+    @log_fun
+    def fit(self, meta_data: pd.DataFrame, y=None):
+        mask_target = meta_data["is_model_target"] == True
+        self.target = meta_data.loc[mask_target, "column_name"].values
+
+        return self
+
+    @log_fun
+    def transform(self, data: dd, y=None):
+        X = data[~self.target]
+        y = data[self.target]
+        return X, y
+        
+    @log_fun
+    def get_feature_names(self):
+        return None
+
+
 @log_fun
 @typechecked
 def date_parser(array, format: str="%Y-%m-%d"):
@@ -175,12 +199,10 @@ def main(basename, save_interim, from_interim):
         ,("get_raw_data", Get_Raw_Data(basename))
     ]
 
-
-    # Target-predictor split
-    mask_target = meta_data["is_model_target"] == True
-    target = meta_data.loc[mask_target, "column_name"].values
-    y = data[target]
-    X = data[~target]
+    # Splits
+    split_steps = [
+        ("split_predictors_target", Split_Predictors_Target())
+    ]
 
     # Train-Test Split
     X_train, X_test, y_train, y_test = train_test_split(X, y, 
