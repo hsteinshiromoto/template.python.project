@@ -3,20 +3,21 @@ import sys
 from datetime import datetime
 from math import e, log
 from pathlib import Path
-from typeguard import typechecked
+
 import dask.dataframe as dd
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import FeatureUnion
+from typeguard import typechecked
 
 PROJECT_ROOT = Path(subprocess.Popen(['git', 'rev-parse', '--show-toplevel'], 
                                 stdout=subprocess.PIPE).communicate()[0].rstrip().decode('utf-8'))
 DATA = PROJECT_ROOT / "data"
 sys.path.append(str(PROJECT_ROOT))
 
-from src.make_logger import log_fun, make_logger
 from src.base_pipeline import EPipeline, Extract
+from src.make_logger import log_fun, make_logger
 from tests.mock_dataset import mock_dataset
 
 
@@ -50,7 +51,7 @@ class Filter_Nulls(BaseEstimator, TransformerMixin):
         self.nulls_threshold = nulls_threshold
 
     @log_fun
-    def fit(self, X: dd, y: dd=None):
+    def fit(self, X: dd, y=None):
         """
         Calculate what columns should be removed, based on the defined thresholds
 
@@ -78,7 +79,7 @@ class Filter_Nulls(BaseEstimator, TransformerMixin):
         return self
 
     @log_fun
-    def transform(self, X: dd, y: dd=None):
+    def transform(self, X: dd, y=None):
         """
         Remove columns computed in fit method
 
@@ -122,8 +123,7 @@ class Filter_Std(BaseEstimator, TransformerMixin):
                                 })
         >>> data = dd.from_pandas(data, npartitions=1)
         >>> filter_std = Filter_Std(thresholds)
-        >>> filter_std.fit(data)
-        Filter_Std(inclusive=False, std_thresholds=[0.1, 1])
+        >>> _ = filter_std.fit(data)
         >>> output = filter_std.transform(data)
         >>> len(output.columns.values) == 1
         True
@@ -136,7 +136,7 @@ class Filter_Std(BaseEstimator, TransformerMixin):
         self.inclusive = inclusive
 
     @log_fun
-    def fit(self, X: dd, y: dd=None):
+    def fit(self, X: dd, y=None):
         """Calculate what columns should be removed, based on the defined thresholds
 
         Args:
@@ -168,7 +168,7 @@ class Filter_Std(BaseEstimator, TransformerMixin):
         return self
 
     @log_fun
-    def transform(self, X: dd, y: dd=None):
+    def transform(self, X: dd, y=None):
         """
         Remove columns computed in fit method
 
@@ -231,7 +231,7 @@ class Filter_Entropy(BaseEstimator, TransformerMixin):
         self.inclusive = inclusive
 
     @log_fun
-    def fit(self, X: dd, y: dd=None):
+    def fit(self, X: dd, y=None):
         """Calculate what columns should be removed, based on the defined thresholds
 
         Args:
@@ -259,7 +259,7 @@ class Filter_Entropy(BaseEstimator, TransformerMixin):
         return self
 
     @log_fun
-    def transform(self, X: dd, y: dd=None):
+    def transform(self, X: dd, y=None):
         """
         Remove columns computed in fit method
 
@@ -290,11 +290,11 @@ class Filter_Duplicates(BaseEstimator, TransformerMixin):
         self.subset = subset
 
     @log_fun
-    def fit(self, X: dd, y: dd=None):
+    def fit(self, X: dd, y=None):
         return self
 
     @log_fun
-    def transform(self, X: dd, y: dd=None):
+    def transform(self, X: dd, y=None):
         """
         Remove duplicated rows
 
