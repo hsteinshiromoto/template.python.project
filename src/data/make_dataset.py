@@ -88,6 +88,26 @@ class Get_Raw_Data(BaseEstimator, TransformerMixin):
         return self.meta_data["columns_name"].values
 
 
+@typechecked
+class Get_Meta_Data(BaseEstimator, TransformerMixin):
+    @log_fun
+    def __init__(self, basename: Path, path: Path=DATA / "meta"):
+        self.basename = basename
+        self.path = path
+
+    @log_fun
+    def fit(self, X=None, y=None):
+        return self
+
+    @log_fun
+    def transform(self, X=None, y=None):
+        return pd.read_csv(str(self.path / f"{self.basename}"))
+        
+    @log_fun
+    def get_feature_names(self):
+        return None
+
+
 @log_fun
 @typechecked
 def date_parser(array, format: str="%Y-%m-%d"):
