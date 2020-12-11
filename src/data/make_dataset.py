@@ -2,8 +2,8 @@
 import logging
 import subprocess
 import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 import click
 import dask.dataframe as dd
@@ -11,9 +11,9 @@ import numpy as np
 import pandas as pd
 import pretty_errors
 from dotenv import find_dotenv, load_dotenv
-from sklearn.pipeline import Pipeline, FeatureUnion
-from sklearn.model_selection import train_test_split
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import FeatureUnion, Pipeline
 from typeguard import typechecked
 
 PROJECT_ROOT = Path(subprocess.Popen(['git', 'rev-parse', '--show-toplevel'], 
@@ -23,8 +23,8 @@ DATA = PROJECT_ROOT / "data"
 sys.path.append(PROJECT_ROOT)
 
 from src.base import get_settings
-from src.make_logger import log_fun, make_logger
 from src.base_pipeline import Extract
+from src.make_logger import log_fun, make_logger
 
 
 @typechecked
@@ -47,7 +47,7 @@ class Get_Raw_Data(BaseEstimator, TransformerMixin):
         return self
 
     @log_fun
-    def transform(self, X: dd, y=None):
+    def transform(self, X=None, y=None):
         if self.basename.suffix == "csv":
         
             # Identify datetime columns
@@ -111,55 +111,6 @@ def date_parser(array, format: str="%Y-%m-%d"):
 
 
 @log_fun
-
-    meta_data = meta_data[~ignore_mask]
-
-    if basename.suffix == "csv":
-    
-        # Identify datetime columns
-        mask_datetime = meta_data["python_dtypes"] == "datetime64[ns]"
-        datetime_columns = list(meta_data[mask_datetime, "python_dtypes"].values)
-
-        # Create dict with column name and data type
-        dtypes_mapping = {zip(meta_data.loc[~mask_datetime, "column_name"].values, 
-                        meta_data.loc[~mask_datetime, "python_dtypes"].values)}
-
-        # Load data file
-        data = dd.read_csv(str(path / basename), parse_dates=datetime_columns
-                            ,date_parser=date_parser, dtypes=dtypes_mapping)
-
-    elif basename.suffix == "parquet":
-        data = dd.read_parquet(str(path / basename), 
-                                columns=meta_data["columns_name"].values)
-
-    elif basename.suffix == "sql":
-        msg = "Read queries are not implemented yet."
-        raise NotImplementedError(msg)
-
-    else:
-        msg = f"Wrong file format. Expected either: csv, parquet or sql. \
-                Got {Path(basename)}."
-        raise ValueError(msg)
-
-    return data
-
-
-@log_fun
-def make_pipeline(data: dd, target: str):
-
-    default_pipeline_dict = {"numerical": []
-                            ,"categorical": []
-                            ,"datetime": []
-                            ,"train_test_split": []}
-
-    
-
-
-
-    pass
-
-
-@log_fun
 def time_split(X_train: dd, y_train: dd, X_test: dd, y_test: dd,
                 split_date: str, time_dim_col: str):
 
@@ -184,30 +135,29 @@ def time_split(X_train: dd, y_train: dd, X_test: dd, y_test: dd,
 @click.command()
 @click.argument('basename', type=click.Path())
 @click.argument('save_interim', type=bool, default=True)
-@click.argument('from_interim', type=str, default=None)
 def main(basename, save_interim, from_interim):
     """ Runs data processing scripts to turn raw data from (../raw) into
         cleaned data ready to be analyzed (saved in ../processed).
     """
-    # Load Settings
+    # Load
+
+    ## Settings
     settings = get_settings()
     filter_thresholds = settings["thresholds"]
     train_size = settings["train"]["train_test_split_size"]
     train_size = settings["train"]["train_test_split_date"]
+    split_date = settings["train"]["split_date"]
     time_dim_col = settings["features"]["time_dimension"]
 
-    # Load Metadata
+    ## Metadata
     meta_data = pd.read_csv(str(DATA / "meta" / f"{basename}"))
 
-    # Load Data
-    if not from_interim:
-        raw_data = get_raw_data(basename, meta_data)
+    ## Data
+    raw_data = get_raw_data(basename, meta_data)
 
-        # Filter Data
-        data = filter_data(raw_data, nulls=True, numerical=True, entropy=True)
+    # Make Pipeline
 
-    else:
-        data = dd.read_parquet(DATA / "interim" / f"{from_interim}")
+    # Filter
 
 
     # Target-predictor split
