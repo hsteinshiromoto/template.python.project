@@ -175,9 +175,10 @@ def main(basename, save_interim, from_interim):
     ## Data
     raw_data = get_raw_data(basename, meta_data)
 
-    # Make Pipeline
-
-    # Filter
+    steps = [
+        ("get_meta_data", Get_Meta_Data(basename))
+        ,
+    ]
 
 
     # Target-predictor split
