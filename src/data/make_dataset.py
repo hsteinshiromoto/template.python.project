@@ -241,9 +241,6 @@ def main(basename, save_interim, from_interim):
         ,("split_time", Split_Time(split_date, time_dim_col))
     ]
 
-    # Time Split
-    X, y = time_split(X_train, X_test, y_train, y_test, split_date, time_dim_col)
-
     #TODO: Start sklearn pipeline here. Ref: https://ml.dask.org/compose.html
 
 if __name__ == '__main__':
