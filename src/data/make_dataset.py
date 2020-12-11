@@ -101,7 +101,7 @@ class Get_Meta_Data(BaseEstimator, TransformerMixin):
 
     @log_fun
     def transform(self, X=None, y=None):
-        return pd.read_csv(str(self.path / f"{self.basename}"))
+        return pd.read_csv(str(self.path / self.basename))
         
     @log_fun
     def get_feature_names(self):
