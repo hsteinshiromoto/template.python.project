@@ -14,6 +14,7 @@ from dotenv import find_dotenv, load_dotenv
 from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.model_selection import train_test_split
 from sklearn.base import BaseEstimator, TransformerMixin
+from typeguard import typechecked
 
 PROJECT_ROOT = Path(subprocess.Popen(['git', 'rev-parse', '--show-toplevel'], 
                                 stdout=subprocess.PIPE).communicate()[0].rstrip().decode('utf-8'))
@@ -22,9 +23,8 @@ DATA = PROJECT_ROOT / "data"
 sys.path.append(PROJECT_ROOT)
 
 from src.base import get_settings
-from src.data.filter_data import filter_variance, filter_entropy, filter_nulls, filter_duplicates
 from src.make_logger import log_fun, make_logger
-from src.data.make_pipeline import Extract
+from src.base_pipeline import Extract
 
 
 @typechecked
