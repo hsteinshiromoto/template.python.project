@@ -405,6 +405,7 @@ def make_filter_nulls_pipeline(data: dd, null_columns: list[str] or bool=True
 @log_fun
 def make_filter_std_pipeline(data: dd, numerical_columns: list[str] or bool=True
                             ,thresholds: list[float]=None, inclusive: bool=False):
+    #TODO: write unit tests
     """
     Makes pipeline to filter columns according to standard deviation
 
@@ -429,7 +430,7 @@ def make_filter_std_pipeline(data: dd, numerical_columns: list[str] or bool=True
 @log_fun
 def make_filter_entropy_pipeline(data: dd, categorical_columns: list[str] or bool=True
                                 ,thresholds: list[float]=None, inclusive: bool=False):
-
+    #TODO: write unit tests
     selected_columns = data.select_dtypes(exclude=[np.number], include=["object"]) if isinstance(categorical_columns, bool) else categorical_columns
     steps = [("extract", Extract(selected_columns))
             ,("entropy_filter", Filter_Entropy(entropy_thresholds=thresholds
@@ -446,6 +447,7 @@ def filter_pipeline(data: dd, null_columns: list[str] or bool=True
                     ,categorical_columns: list[str] or bool=True
                     ,thresholds: dict={}, save_interim: bool=False
                     ,pipeline: EPipeline=None, **kwargs) -> dd:
+    #TODO: write unit tests
     """
     Creates filter pipeline
 
