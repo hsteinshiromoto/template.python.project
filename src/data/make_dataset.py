@@ -29,6 +29,7 @@ from src.make_logger import log_fun, make_logger
 
 @typechecked
 class Get_Raw_Data(BaseEstimator, TransformerMixin):
+    # TODO: add tests and comments
     @log_fun
     def __init__(self, basename: Path, path: Path=DATA / "raw"):
         self.basename = basename
@@ -90,6 +91,7 @@ class Get_Raw_Data(BaseEstimator, TransformerMixin):
 
 @typechecked
 class Get_Meta_Data(BaseEstimator, TransformerMixin):
+    # TODO: add tests and comments
     @log_fun
     def __init__(self, basename: Path, path: Path=DATA / "meta"):
         self.basename = basename
@@ -110,6 +112,7 @@ class Get_Meta_Data(BaseEstimator, TransformerMixin):
 
 @typechecked
 class Split_Predictors_Target(BaseEstimator, TransformerMixin):
+    # TODO: add tests and comments
     @log_fun
     def __init__(self):
         pass
@@ -134,6 +137,7 @@ class Split_Predictors_Target(BaseEstimator, TransformerMixin):
 
 @typechecked
 class Split_Train_Test(BaseEstimator, TransformerMixin):
+    # TODO: add tests and comments
     @log_fun
     def __init__(self, train_size: float):
         self.train_size = train_size
@@ -156,6 +160,7 @@ class Split_Train_Test(BaseEstimator, TransformerMixin):
 
 @typechecked
 class Split_Time(BaseEstimator, TransformerMixin):
+    # TODO: add tests and comments
     @log_fun
     def __init__(self, split_date: str, time_dim_col: str):
         self.split_date = split_date
