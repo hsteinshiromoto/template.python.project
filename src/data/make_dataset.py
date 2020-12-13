@@ -149,7 +149,7 @@ class Split_Train_Test(BaseEstimator, TransformerMixin):
     @log_fun
     def transform(self, X: dd, y: dd):
         X_train, X_test, y_train, y_test = train_test_split(X, y, 
-                                                        train_size=train_size)
+                                                        train_size=self.train_size)
 
         return X_train, X_test, y_train, y_test
         
