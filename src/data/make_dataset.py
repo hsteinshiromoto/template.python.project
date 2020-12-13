@@ -45,23 +45,22 @@ class Get_Raw_Data(BaseEstimator, TransformerMixin):
 
         self.meta_data = meta_data[~ignore_mask]
 
+        # Identify datetime columns
+        mask_datetime = self.meta_data["python_dtypes"] == "datetime64[ns]"
+        self.datetime_columns = list(self.meta_data[mask_datetime, "python_dtypes"].values)
+
+        # Create dict with column name and data type
+        self.dtypes_mapping = {zip(self.meta_data.loc[~mask_datetime, "column_name"].values, 
+                        self.meta_data.loc[~mask_datetime, "python_dtypes"].values)}
+
         return self
 
     @log_fun
     def transform(self, X=None, y=None):
         if self.basename.suffix == "csv":
-        
-            # Identify datetime columns
-            mask_datetime = self.meta_data["python_dtypes"] == "datetime64[ns]"
-            datetime_columns = list(self.meta_data[mask_datetime, "python_dtypes"].values)
-
-            # Create dict with column name and data type
-            dtypes_mapping = {zip(self.meta_data.loc[~mask_datetime, "column_name"].values, 
-                            self.meta_data.loc[~mask_datetime, "python_dtypes"].values)}
-
             # Load data file
-            data = dd.read_csv(str(self.path / self.basename), parse_dates=datetime_columns
-                                ,date_parser=date_parser, dtypes=dtypes_mapping)
+            data = dd.read_csv(str(self.path / self.basename), parse_dates=self.datetime_columns
+                                ,date_parser=date_parser, dtypes=self.dtypes_mapping)
 
         elif self.basename.suffix == "parquet":
             data = dd.read_parquet(str(self.path / self.basename), 
