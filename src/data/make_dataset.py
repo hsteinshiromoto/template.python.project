@@ -25,6 +25,7 @@ sys.path.append(PROJECT_ROOT)
 from src.base import get_settings
 from src.base_pipeline import Extract
 from src.make_logger import log_fun, make_logger
+from tests.mock_dataset import mock_dataset
 
 
 @typechecked
@@ -90,7 +91,34 @@ class Get_Raw_Data(BaseEstimator, TransformerMixin):
 
 @typechecked
 class Get_Meta_Data(BaseEstimator, TransformerMixin):
-    # TODO: add tests and comments
+    """
+    Load meta data
+
+    Args:
+        BaseEstimator ([type]): [description]
+        TransformerMixin ([type]): [description]
+
+    Returns:
+        [type]: [description]
+
+    Example:
+        >>> specs = {"float": [100, 1, 0.05] \
+                    ,"integer": [100, 1, 0.025] \
+                    ,"categorical": [100, 1, 0.1] \
+                    ,"boolean": [100, 1, 0] \
+                    ,"string": [100, 1, 0] \
+                    ,"datetime": [100, 1, 0] \
+                    }
+        >>> df, meta_data = mock_dataset(specs=specs, meta_data=True)
+        >>> basename = Path("meta_mock.csv")
+        >>> path = PROJECT_ROOT / "data" / "meta"
+        >>> meta_data.to_csv(str(path / f"{basename}"), index=False)
+        >>> gmd = Get_Meta_Data(basename, path)
+        >>> _ = gmd.fit()
+        >>> loaded_meta_data = gmd.transform()
+        >>> meta_data.equals(loaded_meta_data)
+        True
+    """
     @log_fun
     def __init__(self, basename: Path, path: Path=DATA / "meta"):
         self.basename = basename
