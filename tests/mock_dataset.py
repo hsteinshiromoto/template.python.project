@@ -18,6 +18,7 @@ def mock_dataset(specs: dict=None, meta_data: bool=False):
     Returns:
         pd.DataFrame: mock pandas dataframe
 
+    # TODO: Test metadata
     Example:
         >>> specs = {"float": [100, 1, 0.05] \
                     ,"integer": [100, 1, 0.025] \
@@ -46,7 +47,6 @@ def mock_dataset(specs: dict=None, meta_data: bool=False):
         >>> len(set(["float_0", "integer_0", "categorical_0", "boolean_0", "string_0", "datetime_0"]).symmetric_difference(set(list(meta_data['column_name'].values)))) == 0
         True
     """
-
     # 1. Build specs, in case needed
     if not specs:
         # Format of specs dict: {data_type: [nrows, ncols, nnulls]}
@@ -92,14 +92,19 @@ def mock_dataset(specs: dict=None, meta_data: bool=False):
             mask = df[col].sample(frac=col_spec[2]).index
             df.loc[mask, col] = np.nan
 
-    # 4. Get meta data
     if not meta_data:
         return df
+
+    # 4. Get meta data
+
+    meta_data_dtype_map = {"float": float, "integer": int
+    ,"categorical": "object", "string": str, "datetime": "datetime64[ns]"
+    ,"boolean": bool}
 
     meta_data_dict = {"column_name": [], "python_dtype": []}
     for col in df.columns.values:
         meta_data_dict["column_name"].append(col)
-        meta_data_dict["python_dtype"].append(col.split("_")[0])
+        meta_data_dict["python_dtype"].append(meta_data_dtype_map[col.split("_")[0]])
 
     meta_data = pd.DataFrame.from_dict(meta_data_dict)
 
