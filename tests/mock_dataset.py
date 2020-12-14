@@ -1,7 +1,10 @@
-import pandas as pd
-import numpy as np
+from datetime import datetime
 from pprint import pprint
+
+import numpy as np
+import pandas as pd
 from typeguard import typechecked
+
 
 @typechecked
 def mock_dataset(specs: dict=None, meta_data: bool=False):
@@ -21,11 +24,12 @@ def mock_dataset(specs: dict=None, meta_data: bool=False):
                     ,"categorical": [100, 1, 0.1] \
                     ,"boolean": [100, 1, 0] \
                     ,"string": [100, 1, 0] \
+                    ,"datetime": [100, 1, 0] \
                     }
         >>> df, meta_data = mock_dataset(specs, True)
         >>> df.shape[0] == 100
         True
-        >>> df.shape[1] == 5
+        >>> df.shape[1] == 6
         True
         >>> df.isnull().sum()["float_0"] / df.shape[0] == 0.05
         True
@@ -37,7 +41,9 @@ def mock_dataset(specs: dict=None, meta_data: bool=False):
         True
         >>> df.isnull().sum()["string_0"] / df.shape[0] == 0
         True
-        >>> len(set(["float_0", "integer_0", "categorical_0", "boolean_0", "string_0"]).symmetric_difference(set(list(meta_data['column_name'].values)))) == 0
+        >>> df.isnull().sum()["datetime_0"] / df.shape[0] == 0
+        True
+        >>> len(set(["float_0", "integer_0", "categorical_0", "boolean_0", "string_0", "datetime_0"]).symmetric_difference(set(list(meta_data['column_name'].values)))) == 0
         True
     """
 
@@ -49,6 +55,7 @@ def mock_dataset(specs: dict=None, meta_data: bool=False):
                 ,"categorical": [100, np.random.randint(1, 4), 0.75]
                 ,"boolean": [100, np.random.randint(1, 4), np.random.rand()]
                 ,"string": [100, np.random.randint(1, 4), np.random.rand()]
+                ,"datetime": [100, np.random.randint(1, 4), np.random.rand()]
                 }
 
     # 2. Build values of the data frame
@@ -74,6 +81,9 @@ def mock_dataset(specs: dict=None, meta_data: bool=False):
             for count in range(col_spec[1]):
                 values[f"{col_type}_{count}"] = ["".join(category.flatten()) for category in np.random.choice(["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "X", "Y", "W", "Z"], size=(col_spec[0], col_spec[0]))]
 
+        elif col_type == "datetime":
+            values[f"{col_type}_{count}"] = list(pd.date_range(datetime.today(), periods=col_spec[0]))
+
     df = pd.DataFrame.from_dict(values)
 
     # 3. Add nulls according to the proportion specified
@@ -83,16 +93,15 @@ def mock_dataset(specs: dict=None, meta_data: bool=False):
             df.loc[mask, col] = np.nan
 
     # 4. Get meta data
-    if meta_data:
-        meta_data_dict = {"column_name": [], "python_dtype": []}
-        for col in df.columns.values:
-            meta_data_dict["column_name"].append(col)
-            meta_data_dict["python_dtype"].append(col.split("_")[0])
-
-        meta_data = pd.DataFrame.from_dict(meta_data_dict)
-
-        return df, meta_data
-
-    else:
+    if not meta_data:
         return df
+
+    meta_data_dict = {"column_name": [], "python_dtype": []}
+    for col in df.columns.values:
+        meta_data_dict["column_name"].append(col)
+        meta_data_dict["python_dtype"].append(col.split("_")[0])
+
+    meta_data = pd.DataFrame.from_dict(meta_data_dict)
+
+    return df, meta_data
 
