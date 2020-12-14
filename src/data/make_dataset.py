@@ -46,12 +46,12 @@ class Get_Raw_Data(BaseEstimator, TransformerMixin):
         self.meta_data = meta_data[~ignore_mask]
 
         # Identify datetime columns
-        mask_datetime = self.meta_data["python_dtypes"] == "datetime64[ns]"
-        self.datetime_columns = list(self.meta_data[mask_datetime, "python_dtypes"].values)
+        mask_datetime = self.meta_data["python_dtype"] == "datetime"
+        self.datetime_columns = list(self.meta_data[mask_datetime, "python_dtype"].values)
 
         # Create dict with column name and data type
         self.dtypes_mapping = {zip(self.meta_data.loc[~mask_datetime, "column_name"].values, 
-                        self.meta_data.loc[~mask_datetime, "python_dtypes"].values)}
+                        self.meta_data.loc[~mask_datetime, "python_dtype"].values)}
 
         return self
 
