@@ -95,11 +95,11 @@ class Get_Meta_Data(BaseEstimator, TransformerMixin):
     Load meta data
 
     Args:
-        BaseEstimator ([type]): [description]
-        TransformerMixin ([type]): [description]
+        BaseEstimator (BaseEstimator): Sci-kit learn object
+        TransformerMixin (TransformerMixin): Sci-kit learn object
 
     Returns:
-        [type]: [description]
+        Get_Meta_Data: Instantiated object
 
     Example:
         >>> specs = {"float": [100, 1, 0.05] \
@@ -121,9 +121,16 @@ class Get_Meta_Data(BaseEstimator, TransformerMixin):
         >>> Path.unlink(path / f"{basename}")
     """
     @log_fun
-    def __init__(self, basename: Path, path: Path=DATA / "meta"):
+    def __init__(self, basename: Path, path: Path=DATA / "meta", meta_data_dtype_map: dict={}):
         self.basename = basename
         self.path = path
+        if not meta_data_dtype_map: 
+            self.meta_data_dtype_map = {"float": float, "integer": int
+                                        ,"categorical": "object", "string": str
+                                        ,"datetime": "datetime64[ns]", "boolean": bool}
+
+        else:
+            self.meta_data_dtype_map = meta_data_dtype_map
 
     @log_fun
     def fit(self, X=None, y=None):
@@ -131,7 +138,14 @@ class Get_Meta_Data(BaseEstimator, TransformerMixin):
 
     @log_fun
     def transform(self, X=None, y=None):
-        return pd.read_csv(str(self.path / self.basename))
+
+        meta_data = pd.read_csv(str(self.path / self.basename))
+
+        for dtype in meta_data["python_dtype"].drop_duplicates():
+            mask = meta_data["python_dtype"] == dtype
+            meta_data.loc[mask, "python_dtype"] = self.meta_data_dtype_map[dtype]
+
+        return meta_data
         
     @log_fun
     def get_feature_names(self):
