@@ -1,13 +1,16 @@
 import pandas as pd
 import numpy as np
 from pprint import pprint
+from typeguard import typechecked
 
-def mock_dataset(specs: dict=None,):
+@typechecked
+def mock_dataset(specs: dict=None, meta_data: bool=False):
     """
     Create mock pandas dataframe
 
     Args:
         specs (dict, optional): Specifications of the data frame. Defaults to None.
+        meta_data (bool, optional): Return meta data as pandas dataframe
 
     Returns:
         pd.DataFrame: mock pandas dataframe
@@ -19,7 +22,7 @@ def mock_dataset(specs: dict=None,):
                     ,"boolean": [100, 1, 0] \
                     ,"string": [100, 1, 0] \
                     }
-        >>> df = mock_dataset(specs)
+        >>> df, meta_data = mock_dataset(specs, True)
         >>> df.shape[0] == 100
         True
         >>> df.shape[1] == 5
@@ -33,6 +36,8 @@ def mock_dataset(specs: dict=None,):
         >>> df.isnull().sum()["boolean_0"] / df.shape[0] == 0
         True
         >>> df.isnull().sum()["string_0"] / df.shape[0] == 0
+        True
+        >>> len(set(["float_0", "integer_0", "categorical_0", "boolean_0", "string_0"]).symmetric_difference(set(list(meta_data['column_name'].values)))) == 0
         True
     """
 
@@ -77,5 +82,17 @@ def mock_dataset(specs: dict=None,):
             mask = df[col].sample(frac=col_spec[2]).index
             df.loc[mask, col] = np.nan
 
-    return df
+    # 4. Get meta data
+    if meta_data:
+        meta_data_dict = {"column_name": [], "python_dtype": []}
+        for col in df.columns.values:
+            meta_data_dict["column_name"].append(col)
+            meta_data_dict["python_dtype"].append(col.split("_")[0])
+
+        meta_data = pd.DataFrame.from_dict(meta_data_dict)
+
+        return df, meta_data
+
+    else:
+        return df
 
