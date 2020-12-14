@@ -39,6 +39,7 @@ class Extract(BaseEstimator, TransformerMixin):
         TransformerMixin (TransformerMixin): Sci-kit learn TransformerMixin class
     """
     def __init__(self, column: list=None):
+        super().__init__()
         if not isinstance(column, list):
             msg = f"Expected argument to be of type list. Got {type(column)}."
             raise TypeError(msg)
