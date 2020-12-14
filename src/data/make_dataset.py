@@ -118,6 +118,7 @@ class Get_Meta_Data(BaseEstimator, TransformerMixin):
         >>> loaded_meta_data = gmd.transform()
         >>> meta_data.equals(loaded_meta_data)
         True
+        >>> Path.unlink(path / f"{basename}")
     """
     @log_fun
     def __init__(self, basename: Path, path: Path=DATA / "meta"):
