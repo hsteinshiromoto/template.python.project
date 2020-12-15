@@ -121,7 +121,7 @@ class Get_Raw_Data(BaseEstimator, TransformerMixin):
         Returns:
             (list): List of loaded columns
         """
-        return self.meta_data["columns_name"].values
+        return self.load_columns
 
 
 @typechecked
