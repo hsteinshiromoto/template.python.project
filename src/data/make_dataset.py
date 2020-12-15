@@ -30,7 +30,40 @@ from tests.mock_dataset import mock_dataset
 
 @typechecked
 class Get_Raw_Data(BaseEstimator, TransformerMixin):
-    # TODO: add tests and comments
+    """
+    Load raw data
+
+    Args:
+        BaseEstimator (BaseEstimator): Sci-kit learn object
+        TransformerMixin (TransformerMixin): Sci-kit learn object
+
+    Raises:
+        NotImplementedError: Not ready to be used with SQL queries
+        ValueError: when file extensions that are not sql, csv or parquet
+
+    Returns:
+        Get_Raw_Data: Instantiated object
+
+    Example:
+        >>> specs = {"float": [100, 1, 0.05] \
+                    ,"int": [100, 1, 0.025] \
+                    ,"categorical": [100, 1, 0.1] \
+                    ,"bool": [100, 1, 0] \
+                    ,"str": [100, 1, 0] \
+                    ,"datetime": [100, 1, 0] \
+                    }
+        >>> df, meta_data = mock_dataset(specs=specs, meta_data=True)
+        >>> basename = Path("data.csv")
+        >>> path = PROJECT_ROOT / "data" / "raw"
+        >>> df.to_csv(str(path / f"{basename}"), index=False)
+        >>> grd = Get_Raw_Data(basename)
+        >>> _ = grd.fit(meta_data)
+        >>> loaded_df = grd.transform()
+        >>> len(set(df.columns.values) - set(loaded_df.compute().columns.values)) == 0
+        True
+        >>> df.shape == loaded_df.compute().shape
+        True
+    """
     @log_fun
     def __init__(self, basename: Path, path: Path=DATA / "raw"):
         self.basename = basename
@@ -38,36 +71,38 @@ class Get_Raw_Data(BaseEstimator, TransformerMixin):
 
     @log_fun
     def fit(self, meta_data: pd.DataFrame, y=None):
-        try:
-            ignore_mask = meta_data["ignore"] == True
+        # Convert metadata
 
-        except KeyError:
-            ignore_mask = [False for i in range(meta_data.shape[0])]
+        # Due to nans, read numerical data as float and boolean as object
+        meta_data_dtypes_map = {"float": float, "int": float, "bool": "object", "str": str}
 
-        self.meta_data = meta_data[~ignore_mask]
+        mask = meta_data["python_dtype"].isin(list(meta_data_dtypes_map.keys()))
+        meta_data.loc[mask, "python_dtype"] = meta_data.loc[mask, "python_dtype"].map(meta_data_dtypes_map)
 
         # Identify datetime columns
-        mask_datetime = self.meta_data["python_dtype"] == "datetime"
-        self.datetime_columns = list(self.meta_data[mask_datetime, "python_dtype"].values)
+        mask_datetime = meta_data["python_dtype"] == "datetime64[ns]"
+        self.datetime_columns = list(meta_data.loc[mask_datetime, "column_name"].values)
 
         # Create dict with column name and data type
-        self.dtypes_mapping = {zip(self.meta_data.loc[~mask_datetime, "column_name"].values, 
-                        self.meta_data.loc[~mask_datetime, "python_dtype"].values)}
+        self.dtypes_mapping = pd.Series(meta_data.loc[~mask_datetime, "python_dtype"].values,
+        index=meta_data.loc[~mask_datetime, "column_name"].values).to_dict()
+
+        self.load_columns = meta_data["column_name"].values
 
         return self
 
     @log_fun
     def transform(self, X=None, y=None):
-        if self.basename.suffix == "csv":
+        if self.basename.suffix == ".csv":
             # Load data file
             data = dd.read_csv(str(self.path / self.basename), parse_dates=self.datetime_columns
-                                ,date_parser=date_parser, dtypes=self.dtypes_mapping)
+                                ,date_parser=date_parser, dtype=self.dtypes_mapping)
 
-        elif self.basename.suffix == "parquet":
+        elif self.basename.suffix == ".parquet":
             data = dd.read_parquet(str(self.path / self.basename), 
-                                    columns=self.meta_data["columns_name"].values)
+                                    columns=self.load_columns)
 
-        elif self.basename.suffix == "sql":
+        elif self.basename.suffix == ".sql":
             msg = "Read queries are not implemented yet."
             raise NotImplementedError(msg)
 
