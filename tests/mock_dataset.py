@@ -21,10 +21,10 @@ def mock_dataset(specs: dict=None, meta_data: bool=False):
     # TODO: Test metadata
     Example:
         >>> specs = {"float": [100, 1, 0.05] \
-                    ,"integer": [100, 1, 0.025] \
+                    ,"int": [100, 1, 0.025] \
                     ,"categorical": [100, 1, 0.1] \
-                    ,"boolean": [100, 1, 0] \
-                    ,"string": [100, 1, 0] \
+                    ,"bool": [100, 1, 0] \
+                    ,"str": [100, 1, 0] \
                     ,"datetime": [100, 1, 0] \
                     }
         >>> df, meta_data = mock_dataset(specs, True)
@@ -51,10 +51,10 @@ def mock_dataset(specs: dict=None, meta_data: bool=False):
     if not specs:
         # Format of specs dict: {data_type: [nrows, ncols, nnulls]}
         specs = {"float": [100, np.random.randint(1, 4), np.random.rand()]
-                ,"integer": [100, np.random.randint(1, 4), np.random.rand()]
+                ,"int": [100, np.random.randint(1, 4), np.random.rand()]
                 ,"categorical": [100, np.random.randint(1, 4), 0.75]
-                ,"boolean": [100, np.random.randint(1, 4), np.random.rand()]
-                ,"string": [100, np.random.randint(1, 4), np.random.rand()]
+                ,"bool": [100, np.random.randint(1, 4), np.random.rand()]
+                ,"str": [100, np.random.randint(1, 4), np.random.rand()]
                 ,"datetime": [100, np.random.randint(1, 4), np.random.rand()]
                 }
 
@@ -65,7 +65,7 @@ def mock_dataset(specs: dict=None, meta_data: bool=False):
             for count in range(col_spec[1]):
                 values[f"{col_type}_{count}"] = np.random.rand(col_spec[0], 1).flatten()
 
-        elif col_type == "integer":
+        elif col_type == "int":
             for count in range(col_spec[1]):
                 values[f"{col_type}_{count}"] = np.random.randint(np.random.randint(1e6), size=col_spec[0]).flatten()
 
@@ -73,11 +73,11 @@ def mock_dataset(specs: dict=None, meta_data: bool=False):
             for count in range(col_spec[1]):
                 values[f"{col_type}_{count}"] = ["".join(category.flatten()) for category in np.random.choice(["A", "B", "C", "D"], size=(col_spec[0], 3))]
 
-        elif col_type == "boolean":
+        elif col_type == "bool":
             for count in range(col_spec[1]):
                 values[f"{col_type}_{count}"] = [bool(item) for item in np.random.randint(2, size=col_spec[0])]
 
-        elif col_type == "string":
+        elif col_type == "str":
             for count in range(col_spec[1]):
                 values[f"{col_type}_{count}"] = ["".join(category.flatten()) for category in np.random.choice(["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "X", "Y", "W", "Z"], size=(col_spec[0], col_spec[0]))]
 
@@ -97,9 +97,9 @@ def mock_dataset(specs: dict=None, meta_data: bool=False):
 
     # 4. Get meta data
 
-    meta_data_dtype_map = {"float": float, "integer": int
-    ,"categorical": "object", "string": str, "datetime": "datetime64[ns]"
-    ,"boolean": bool}
+    meta_data_dtype_map = {"float": "float", "int": "int"
+    ,"categorical": "object", "str": "str", "datetime": "datetime64[ns]"
+    ,"bool": "bool"}
 
     meta_data_dict = {"column_name": [], "python_dtype": []}
     for col in df.columns.values:
