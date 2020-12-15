@@ -74,7 +74,8 @@ class Get_Raw_Data(BaseEstimator, TransformerMixin):
     def fit(self, meta_data: pd.DataFrame, y=None):
         # Convert metadata
 
-        # Due to nans, read numerical data as float and boolean as object
+        # Due to nans, we need to read numerical data as float and boolean as object
+        # TODO: Convert to int and float according to the nulls filter
         meta_data_dtypes_map = {"float": float, "int": float, "bool": "object", "str": str}
 
         mask = meta_data["python_dtype"].isin(list(meta_data_dtypes_map.keys()))
