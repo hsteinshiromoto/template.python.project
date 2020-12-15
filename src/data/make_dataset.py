@@ -177,22 +177,38 @@ class Get_Meta_Data(BaseEstimator, TransformerMixin):
 
 @typechecked
 class Split_Predictors_Target(BaseEstimator, TransformerMixin):
-    # TODO: add tests and comments
+    """
+    Splits data set into predictors and target
+
+    Args:
+        BaseEstimator (BaseEstimator): Sci-kit learn object
+        TransformerMixin (TransformerMixin): Sci-kit learn object
+
+    Returns:
+        Split_Predictors_Target: Instantiated object
+
+    Example:
+        >>> data = pd.DataFrame.from_dict({"predictor": np.random.rand(100, 1).flatten(), "target": np.random.rand(100, 1).flatten()})
+        >>> spt = Split_Predictors_Target("target")
+        >>> _ = spt.fit()
+        >>> X, y = spt.transform(data)
+        >>> ("target" not in X.columns.values) and ("predictor" in X.columns.values)
+        True
+        >>> ("predictor" not in y.columns.values) and ("target" in y.columns.values)
+        True
+    """
     @log_fun
-    def __init__(self):
-        pass
+    def __init__(self, target_col: str):
+        self.target_col = target_col
     
     @log_fun
-    def fit(self, meta_data: pd.DataFrame, y=None):
-        mask_target = meta_data["is_model_target"] == True
-        self.target = meta_data.loc[mask_target, "column_name"].values
-
+    def fit(self, X=None, y=None):
         return self
 
     @log_fun
     def transform(self, data: dd, y=None):
-        X = data[~self.target]
-        y = data[self.target]
+        X = data.loc[:, data.columns != self.target_col]
+        y = data[[self.target_col]]
         return X, y
         
     @log_fun
@@ -348,7 +364,7 @@ def main(basename, save_interim, from_interim):
     split_date = settings["train"]["split_date"]
     time_dim_col = settings["features"]["time_dimension"]
 
-    
+    steps = make_get_data_steps(basename)
 
     # TODO: Create Filter Data Steps
 
