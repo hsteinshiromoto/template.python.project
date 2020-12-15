@@ -220,7 +220,26 @@ class Split_Predictors_Target(BaseEstimator, TransformerMixin):
 
 @typechecked
 class Split_Train_Test(BaseEstimator, TransformerMixin):
-    # TODO: add tests and comments
+    """
+    Splits train test sets
+
+    Args:
+        BaseEstimator (BaseEstimator): Sci-kit learn object
+        TransformerMixin (TransformerMixin): Sci-kit learn object
+
+    Returns:
+        Split_Predictors_Target: Instantiated object
+
+    Example:
+        >>> X, y = np.random.rand(100, 1).flatten(), np.random.rand(100, 1).flatten()
+        >>> stt = Split_Train_Test(0.75)
+        >>> _ = stt.fit()
+        >>> X_train, X_test, y_train, y_test = stt.transform(X, y)
+        >>> (X_train.reshape(-1, 1).shape[1] == X_test.reshape(-1, 1).shape[1]) and (y_train.reshape(-1, 1).shape[1] == y_test.reshape(-1, 1).shape[1])
+        True
+        >>> (X_test.reshape(-1, 1).shape[0] + X_train.reshape(-1, 1).shape[0] == 100) and (y_test.reshape(-1, 1).shape[0] + y_train.reshape(-1, 1).shape[0] == 100)
+        True
+    """
     @log_fun
     def __init__(self, train_size: float):
         self.train_size = train_size
