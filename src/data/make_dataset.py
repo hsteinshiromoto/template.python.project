@@ -209,11 +209,13 @@ class Split_Predictors_Target(BaseEstimator, TransformerMixin):
     def transform(self, data: dd, y=None):
         X = data.loc[:, data.columns != self.target_col]
         y = data[[self.target_col]]
+
+        self.predictors = X.columns.values
         return X, y
         
     @log_fun
     def get_feature_names(self):
-        return None
+        return self.predictors, self.target_col
 
 
 @typechecked
