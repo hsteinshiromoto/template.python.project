@@ -292,6 +292,7 @@ def make_get_data_steps(basename: Path) -> list:
         list: Steps to read raw data set
 
     Example:
+        >>> # Mock a data set
         >>> specs = {"float": [100, 1, 0.05] \
                     ,"int": [100, 1, 0.025] \
                     ,"categorical": [100, 1, 0.1] \
@@ -304,14 +305,22 @@ def make_get_data_steps(basename: Path) -> list:
         >>> path = PROJECT_ROOT / "data"
         >>> meta_data.to_csv(str(path / "meta" / f"{basename}"), index=False)
         >>> df.to_csv(str(path / "raw" / f"{basename}"), index=False)
+        >>> # Get the steps to get the data and instantiate the EPipeline
         >>> steps = make_get_data_steps(basename)
         >>> get_data_pipeline = EPipeline(steps)
+        >>> # Fit and transform the pipeline
         >>> _ = get_data_pipeline.fit(None)
         >>> data = get_data_pipeline.transform(None)
+        >>> # Test if raw data loaded by pipeline is what was expected
         >>> len(set(df.columns.values) - set(data.compute().columns.values)) == 0
         True
         >>> df.shape == data.compute().shape
         True
+        >>> # Test if metada data loaded by pipeline is what was expected
+        >>> loaded_meta_data = get_data_pipeline.named_steps['get_meta_data'].transform()
+        >>> meta_data.equals(loaded_meta_data)
+        True
+        >>> # Delete mock data sets
         >>> Path.unlink(path / "raw" / f"{basename}")
         >>> Path.unlink(path / "meta" / f"{basename}")
     """
