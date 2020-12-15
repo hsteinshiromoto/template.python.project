@@ -63,6 +63,7 @@ class Get_Raw_Data(BaseEstimator, TransformerMixin):
         True
         >>> df.shape == loaded_df.compute().shape
         True
+        >>> Path.unlink(path / f"{basename}")
     """
     @log_fun
     def __init__(self, basename: Path, path: Path=DATA / "raw"):
