@@ -103,10 +103,10 @@ class Get_Meta_Data(BaseEstimator, TransformerMixin):
 
     Example:
         >>> specs = {"float": [100, 1, 0.05] \
-                    ,"integer": [100, 1, 0.025] \
+                    ,"int": [100, 1, 0.025] \
                     ,"categorical": [100, 1, 0.1] \
-                    ,"boolean": [100, 1, 0] \
-                    ,"string": [100, 1, 0] \
+                    ,"bool": [100, 1, 0] \
+                    ,"str": [100, 1, 0] \
                     ,"datetime": [100, 1, 0] \
                     }
         >>> df, meta_data = mock_dataset(specs=specs, meta_data=True)
@@ -121,16 +121,11 @@ class Get_Meta_Data(BaseEstimator, TransformerMixin):
         >>> Path.unlink(path / f"{basename}")
     """
     @log_fun
-    def __init__(self, basename: Path, path: Path=DATA / "meta", meta_data_dtype_map: dict={}):
+    def __init__(self, basename: Path, path: Path=DATA / "meta"):
         self.basename = basename
         self.path = path
-        if not meta_data_dtype_map: 
-            self.meta_data_dtype_map = {"float": float, "integer": int
-                                        ,"categorical": "object", "string": str
-                                        ,"datetime": "datetime64[ns]", "boolean": bool}
 
-        else:
-            self.meta_data_dtype_map = meta_data_dtype_map
+        pass
 
     @log_fun
     def fit(self, X=None, y=None):
@@ -138,14 +133,7 @@ class Get_Meta_Data(BaseEstimator, TransformerMixin):
 
     @log_fun
     def transform(self, X=None, y=None):
-
-        meta_data = pd.read_csv(str(self.path / self.basename))
-
-        for dtype in meta_data["python_dtype"].drop_duplicates():
-            mask = meta_data["python_dtype"] == dtype
-            meta_data.loc[mask, "python_dtype"] = self.meta_data_dtype_map[dtype]
-
-        return meta_data
+        return pd.read_csv(str(self.path / self.basename))
         
     @log_fun
     def get_feature_names(self):
