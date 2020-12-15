@@ -160,8 +160,6 @@ class Get_Meta_Data(BaseEstimator, TransformerMixin):
         self.basename = basename
         self.path = path
 
-        pass
-
     @log_fun
     def fit(self, X=None, y=None):
         return self
