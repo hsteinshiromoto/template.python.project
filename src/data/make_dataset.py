@@ -23,7 +23,7 @@ DATA = PROJECT_ROOT / "data"
 sys.path.append(PROJECT_ROOT)
 
 from src.base import get_settings
-from src.base_pipeline import Extract
+from src.base_pipeline import Extract, EPipeline
 from src.make_logger import log_fun, make_logger
 from tests.mock_dataset import mock_dataset
 
@@ -281,6 +281,47 @@ def date_parser(array, format: str="%Y-%m-%d"):
     return pd.to_datetime(array, format=format)
 
 
+def make_get_data_steps(basename: Path) -> list:
+    """
+    Make the steps to be followed in the pipeline to read raw and meta data
+
+    Args:
+        basename (Path): Basename of the file to be read
+
+    Returns:
+        list: Steps to read raw data set
+
+    Example:
+        >>> specs = {"float": [100, 1, 0.05] \
+                    ,"int": [100, 1, 0.025] \
+                    ,"categorical": [100, 1, 0.1] \
+                    ,"bool": [100, 1, 0] \
+                    ,"str": [100, 1, 0] \
+                    ,"datetime": [100, 1, 0] \
+                    }
+        >>> df, meta_data = mock_dataset(specs=specs, meta_data=True)
+        >>> basename = Path("data.csv")
+        >>> path = PROJECT_ROOT / "data"
+        >>> meta_data.to_csv(str(path / "meta" / f"{basename}"), index=False)
+        >>> df.to_csv(str(path / "raw" / f"{basename}"), index=False)
+        >>> steps = make_get_data_steps(basename)
+        >>> get_data_pipeline = EPipeline(steps)
+        >>> _ = get_data_pipeline.fit(None)
+        >>> data = get_data_pipeline.transform(None)
+        >>> len(set(df.columns.values) - set(data.compute().columns.values)) == 0
+        True
+        >>> df.shape == data.compute().shape
+        True
+        >>> Path.unlink(path / "raw" / f"{basename}")
+        >>> Path.unlink(path / "meta" / f"{basename}")
+    """
+
+    # Read data steps
+    return [("get_meta_data", Get_Meta_Data(basename))
+            ,("get_raw_data", Get_Raw_Data(basename))
+            ]
+
+
 @click.command()
 @click.argument('basename', type=click.Path())
 @click.argument('save_interim', type=bool, default=True)
@@ -298,11 +339,7 @@ def main(basename, save_interim, from_interim):
     split_date = settings["train"]["split_date"]
     time_dim_col = settings["features"]["time_dimension"]
 
-    # Read data steps
-    read_data_steps = [
-        ("get_meta_data", Get_Meta_Data(basename))
-        ,("get_raw_data", Get_Raw_Data(basename))
-    ]
+    
 
     # TODO: Create Filter Data Steps
 
