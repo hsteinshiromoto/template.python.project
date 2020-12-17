@@ -434,10 +434,13 @@ def make_split_steps(settings: dict) -> list:
                                                 ,time_dim_col=time_dim_col)))
 
     return steps
+
+
+@log_fun
 @click.command()
 @click.argument('basename', type=click.Path())
 @click.argument('save_interim', type=bool, default=True)
-def main(basename, save_interim, from_interim):
+def main(basename: Path, save_interim: bool):
     """ Runs data processing scripts to turn raw data from (../raw) into
         cleaned data ready to be analyzed (saved in ../processed).
     """
@@ -445,22 +448,13 @@ def main(basename, save_interim, from_interim):
 
     ## Settings
     settings = get_settings()
-    filter_thresholds = settings["thresholds"]
-    train_size = settings["train"]["train_test_split_size"]
-    train_size = settings["train"]["train_test_split_date"]
-    split_date = settings["train"]["split_date"]
-    time_dim_col = settings["features"]["time_dimension"]
 
-    steps = make_get_data_steps(basename)
+    steps_dict = {"get_data": make_get_data_steps(basename)
+                ,"split_data": make_split_steps(settings)
+    }
 
-    # TODO: Create Filter Data Steps
+    return None
 
-    # Splits
-    split_steps = [
-        ("split_predictors_target", Split_Predictors_Target())
-        ,("split_train_test", Split_Train_Test(train_size))
-        ,("split_time", Split_Time(split_date, time_dim_col))
-    ]
 
 if __name__ == '__main__':
     logger = make_logger(__file__)
