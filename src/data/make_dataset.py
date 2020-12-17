@@ -441,9 +441,7 @@ def make_split_steps(settings: dict) -> list:
 @click.argument('basename', type=click.Path())
 @click.argument('save_interim', type=bool, default=True)
 def main(basename: Path, save_interim: bool):
-    """ Runs data processing scripts to turn raw data from (../raw) into
-        cleaned data ready to be analyzed (saved in ../processed).
-    """
+    # TODO: add doc, tests
     # Load
 
     ## Settings
