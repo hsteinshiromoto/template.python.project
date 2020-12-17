@@ -354,6 +354,8 @@ def date_parser(array, format: str="%Y-%m-%d"):
     return pd.to_datetime(array, format=format)
 
 
+@log_fun
+@typechecked
 def make_get_data_steps(basename: Path) -> list:
     """
     Make the steps to be followed in the pipeline to read raw and meta data
@@ -405,6 +407,7 @@ def make_get_data_steps(basename: Path) -> list:
 
 
 @log_fun
+@typechecked
 def make_split_steps(settings: dict) -> list:
     """
     Make the steps split data set into training and test
