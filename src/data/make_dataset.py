@@ -404,6 +404,36 @@ def make_get_data_steps(basename: Path) -> list:
             ]
 
 
+@log_fun
+def make_split_steps(settings: dict) -> list:
+    """
+    Make the steps split data set into training and test
+
+    Args:
+        settings (dict): Model build settings
+
+    Returns:
+        list: Steps for splitting the data set
+
+    Example:
+    # TODO: 
+    """
+
+    target_column = settings["train"]["target_col"]
+    train_test_split_size = settings["train"]["train_test_split_size"]
+
+    steps = [("split_predictors_target", Split_Predictors_Target(target_column))
+            ,("split_train_test", Split_Train_Test(train_test_split_size))
+            ]
+
+    if settings["features"]["time_dimension"]:
+        split_date = settings["train"]["split_date"]
+        time_dim_col = settings["features"]["time_dimension"]
+
+        steps.append(("split_time", Split_Time(split_date=split_date
+                                                ,time_dim_col=time_dim_col)))
+
+    return steps
 @click.command()
 @click.argument('basename', type=click.Path())
 @click.argument('save_interim', type=bool, default=True)
