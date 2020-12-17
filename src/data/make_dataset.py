@@ -262,7 +262,43 @@ class Split_Train_Test(BaseEstimator, TransformerMixin):
 
 @typechecked
 class Split_Time(BaseEstimator, TransformerMixin):
-    # TODO: add tests and comments
+    """
+    Splits data according to a certain date
+
+    Args:
+        BaseEstimator (BaseEstimator): Sci-kit learn object
+        TransformerMixin (TransformerMixin): Sci-kit learn object
+
+    Returns:
+        Split_Predictors_Target: Instantiated object
+
+    Example:
+        >>> specs = {"float": [100, 1, 0.05] \
+                    ,"int": [100, 1, 0.025] \
+                    ,"categorical": [100, 1, 0.1] \
+                    ,"bool": [100, 1, 0] \
+                    ,"str": [100, 1, 0] \
+                    ,"datetime": [100, 1, 0] \
+                    }
+        >>> df, meta_data = mock_dataset(specs=specs, meta_data=True)
+        >>> spt = Split_Predictors_Target("str_0")
+        >>> _ = spt.fit()
+        >>> X, y = spt.transform(df)
+        >>> stt = Split_Train_Test(0.75)
+        >>> _ = stt.fit()
+        >>> X_train, X_test, y_train, y_test = stt.transform(X, y)
+        >>> st = Split_Time(split_date=f"{df['datetime_0'].describe()['top'].date()}", time_dim_col="datetime_0")
+        >>> _ = st.fit(X_train, X_test)
+        >>> X, y = st.transform(X_train, X_test, y_train, y_test)
+        >>> X["train"].shape[0] == y["train"].shape[0]
+        True
+        >>> X["in-sample_out-time"].shape[0] == y["in-sample_out-time"].shape[0]
+        True
+        >>> X["out-sample_in-time"].shape[0] == y["out-sample_in-time"].shape[0]
+        True
+        >>> X["out-sample_out-time"].shape[0] == y["out-sample_out-time"].shape[0]
+        True
+    """
     @log_fun
     def __init__(self, split_date: str, time_dim_col: str):
         self.split_date = split_date
@@ -276,7 +312,7 @@ class Split_Time(BaseEstimator, TransformerMixin):
         return self
 
     @log_fun
-    def transform(self, X_train: dd, X_test: dd, y_train=None, y_test=None):
+    def transform(self, X_train: dd, X_test: dd, y_train: dd, y_test: dd):
         X = {"train": X_train[self.mask_train_in_time]
         ,"in-sample_out-time": X_train[~self.mask_train_in_time]
         ,"out-sample_in-time": X_test[self.mask_test_in_time]
