@@ -356,7 +356,7 @@ def date_parser(array, format: str="%Y-%m-%d"):
 
 @log_fun
 @typechecked
-def make_get_data_steps(basename: Path) -> list:
+def make_base_steps(basename: Path, settings: dict) -> list:
     """
     Make the steps to be followed in the pipeline to read raw and meta data
 
@@ -399,16 +399,18 @@ def make_get_data_steps(basename: Path) -> list:
         >>> Path.unlink(path / "raw" / f"{basename}")
         >>> Path.unlink(path / "meta" / f"{basename}")
     """
+    target_column = settings["train"]["target_col"]
 
     # Read data steps
     return [("get_meta_data", Get_Meta_Data(basename))
             ,("get_raw_data", Get_Raw_Data(basename))
+            ,("split_predictors_target", Split_Predictors_Target(target_column))
             ]
 
 
 @log_fun
 @typechecked
-def make_split_steps(settings: dict) -> list:
+def make_train_test_split_steps(settings: dict) -> list:
     """
     Make the steps split data set into training and test
 
@@ -422,12 +424,9 @@ def make_split_steps(settings: dict) -> list:
     # TODO: 
     """
 
-    target_column = settings["train"]["target_col"]
     train_test_split_size = settings["train"]["train_test_split_size"]
 
-    steps = [("split_predictors_target", Split_Predictors_Target(target_column))
-            ,("split_train_test", Split_Train_Test(train_test_split_size))
-            ]
+    steps = [("split_train_test", Split_Train_Test(train_test_split_size))]
 
     if settings["features"]["time_dimension"]:
         split_date = settings["train"]["split_date"]
@@ -450,8 +449,8 @@ def main(basename: Path, save_interim: bool):
     ## Settings
     settings = get_settings()
 
-    steps_dict = {"get_data": make_get_data_steps(basename)
-                ,"split_data": make_split_steps(settings)
+    steps_dict = {"base": make_base_steps(basename, settings)
+                ,"split_data": make_train_test_split_steps(settings)
     }
 
     return None
@@ -459,5 +458,4 @@ def main(basename: Path, save_interim: bool):
 
 if __name__ == '__main__':
     logger = make_logger(__file__)
-
     main()
