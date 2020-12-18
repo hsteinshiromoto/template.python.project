@@ -219,7 +219,7 @@ class Filter_Entropy(BaseEstimator, TransformerMixin):
         >>> filter_ent = Filter_Entropy(thresholds)
         >>> _ = filter_ent.fit(data)
         >>> output = filter_ent.transform(data)
-        >>> len(output.columns.values) == 1
+        >>> (output.shape[1] == 1)
         True
         >>> "medium" in output.columns.values
         True
@@ -241,8 +241,10 @@ class Filter_Entropy(BaseEstimator, TransformerMixin):
         Returns:
             None
         """
+        subset = X.select_dtypes(exclude=[np.number, "datetime64[ns]"])
+
         # Calculate the entropy column-wisely
-        entropies_df = X.compute().apply(entropy, axis=0).to_frame(name="entropy")
+        entropies_df = subset.compute().apply(entropy, axis=0).to_frame(name="entropy")
         entropies_df.reset_index(inplace=True)
         entropies_df.rename(columns={"index": "column_name"}, inplace=True)
         entropies_df.sort_values(by="entropy", inplace=True, ascending=False)
