@@ -125,9 +125,7 @@ class Filter_Std(BaseEstimator, TransformerMixin):
         >>> filter_std = Filter_Std(thresholds)
         >>> _ = filter_std.fit(data)
         >>> output = filter_std.transform(data)
-        >>> len(output.columns.values) == 1
-        True
-        >>> "medium" in output.columns.values
+        >>> (output.shape[1] == 1) & ("medium" in output.columns.values)
         True
     """
     @log_fun
@@ -146,10 +144,12 @@ class Filter_Std(BaseEstimator, TransformerMixin):
         Returns:
             None
         """
-        # Calculate the standad deviation column-wisely
-        stds = np.nanstd(X, axis=0)
+        subset = X.select_dtypes(include=[np.number])
 
-        stds_df = pd.DataFrame.from_dict({"column_name": X.columns.values
+        # Calculate the standad deviation column-wisely
+        stds = np.nanstd(subset, axis=0)
+
+        stds_df = pd.DataFrame.from_dict({"column_name": subset.columns.values
                                         ,"std": stds})
 
         stds_df.sort_values(by="std", inplace=True, ascending=False)
