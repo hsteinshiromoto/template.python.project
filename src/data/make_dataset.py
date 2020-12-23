@@ -24,6 +24,7 @@ sys.path.append(PROJECT_ROOT)
 
 from src.base import get_settings
 from src.base_pipeline import Extract, EPipeline
+from src.data.filter_data import Filter_Nulls, Filter_Entropy, Filter_Std
 from src.make_logger import log_fun, make_logger
 from tests.mock_dataset import mock_dataset
 
@@ -367,6 +368,7 @@ def make_base_steps(basename: Path, settings: dict) -> list:
         list: Steps to read raw data set
 
     Example:
+        # TODO: update unittests
         >>> # Mock a data set
         >>> specs = {"float": [100, 1, 0.05] \
                     ,"int": [100, 1, 0.025] \
@@ -439,17 +441,27 @@ def make_train_test_split_steps(settings: dict) -> list:
 
 
 @log_fun
+@typechecked
+def make_filter_cols_steps(settings: dict) -> list:
+
+    return [("filter_nulls", Filter_Nulls())
+            ,("filter_entropy", Filter_Entropy())
+            ,("filter_std", Filter_Std())]
+
+
+@log_fun
 @click.command()
 @click.argument('basename', type=click.Path())
 @click.argument('save_interim', type=bool, default=True)
-def main(basename: Path, save_interim: bool):
-    # TODO: add doc, tests
+def main(basename: Path, save_interim: bool, steps: list=["base"]):
+    
     # Load
 
     ## Settings
     settings = get_settings()
 
     steps_dict = {"base": make_base_steps(basename, settings)
+                ,"filter_cols": make_filter_cols_steps(settings)
                 ,"split_data": make_train_test_split_steps(settings)
     }
 
