@@ -5,6 +5,7 @@ import matplotlib
 from matplotlib.collections import PatchCollection
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from mpl_toolkits.axes_grid1 import make_axes_locatable, axes_size
@@ -134,3 +135,49 @@ def heatmap_4d(volume: pd.DataFrame, probabilities: pd.DataFrame
     fig.tight_layout()
     
     return heatmap, legend
+
+
+#! Todo: Add tests. Improve code
+def plot_target_proba(feature: str, probability_column_name: str, volume: str, 
+                    data: pd.DataFrame):
+
+    # Instantiate plotting objects
+    fig, (proba, vol) = plt.subplots(nrows=2)
+
+    # Plotting probabilities
+    proba.plot(data.index, data[probability_column_name], linestyle="-", 
+                marker="o")
+    proba.set_title(f"{probability_column_name} vs {feature}")
+    proba.set_ylabel(probability_column_name)
+
+    # Plotting volumes
+    vol = sns.barplot(data.index, data[volume])
+    vol.set_xlabel(feature)
+
+    x = list(data[feature].astype(str).values)
+    x[-1] = f"{data[feature].max().left}+"
+    plt.xticks(data.index, x, rotation=45)   
+
+    return proba, vol
+
+
+#! Todo: Add tests. Improve code
+def plot_time_series(feature: str, datetime_column_name: str, volume: str, 
+                    data: pd.DataFrame):
+
+    # Instantiate plotting objects
+    fig, (proba, vol) = plt.subplots(nrows=2)
+
+    # Plotting probabilities
+    proba.plot(data[datetime_column_name], data[feature], linestyle="-", marker="o")
+    proba.set_title(f"{feature}")
+    proba.set_ylabel(feature)
+    proba.set_xticklabels([])
+
+    # Plotting volumes
+    vol = sns.barplot(data[datetime_column_name], data[volume].values)
+    vol.set_xlabel(datetime_column_name)
+    x_dates = data[datetime_column_name].dt.strftime('%Y-%m-%d').sort_values()
+    vol.set_xticklabels(labels=x_dates, rotation=45)
+
+    return proba, vol
