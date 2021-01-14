@@ -251,4 +251,4 @@ def test_filter_pipeline():
 
 if __name__ == "__main__":
     # test_filter_nulls()
-    test_filter_std()
+    test_filter_entropy()
