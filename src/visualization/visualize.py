@@ -136,6 +136,51 @@ def heatmap_4d(volume: pd.DataFrame, probabilities: pd.DataFrame
     return heatmap, legend
 
 
+def line_bar_plot(x: str, y_line: str, y_bar: str, data: pd.DataFrame, figsize=(20, 10)):
+
+    # Instantiate plotting objects
+    fig, (line, bar) = plt.subplots(nrows=2, figsize=figsize)
+
+    x_axis = data[x]
+    x_axis_min, x_axis_max = x_axis.min(), x_axis.max()
+    x_len = x_axis.shape[0]
+    y_line_min, y_line_max = data[y_line].min(), data[y_line].max()
+
+    # Line plot
+    line.plot(x_axis, data[y_line], linestyle="-", marker="o", label=x)
+    line.plot(x_axis, x_len*[data[y_line].max()], linestyle=":", label="max")
+    line.plot(x_axis, x_len*[data[y_line].min()], linestyle=":", label="min")
+    line.set_title(f"Plot of {y_line} vs {x}")
+    line.set_ylabel(y_line)
+    line.set_xticklabels([])
+
+    # Ensure that the axis ticks only show up on the bottom and left of the plot.    
+    # Ticks on the right and top of the plot are generally unnecessary chartjunk.    
+    line.get_xaxis().tick_bottom()    
+    line.get_yaxis().tick_left()    
+    
+    # Limit the range of the plot to only where the data is.    
+    # Avoid unnecessary whitespace.    
+    # line.set_ylim(y_line_min, y_line_min)    
+    # line.set_xlim(x_axis_min, x_axis_max)    
+
+    # Bar plot
+    bar = sns.barplot(x_axis, data[y_bar])
+    bar.set_xlabel(x)
+    bar.set_ylabel(y_bar)
+
+    line.spines['right'].set_visible(False)
+    line.spines['left'].set_visible(False)
+    line.spines['top'].set_visible(False)
+    line.spines['bottom'].set_visible(False)
+
+    # Remove the tick marks; they are unnecessary with the tick lines we just plotted.    
+    plt.tick_params(axis="both", which="both", bottom="off", top="off",    
+                    labelbottom="on", left="off", right="off", labelleft="on")   
+
+    return line, bar
+
+
 #! Todo: Add tests. Improve code
 def plot_prior_proba(feature: str, prior_proba_column_name: str, volume: str,
                     data: pd.DataFrame, bins: np.array=None):
