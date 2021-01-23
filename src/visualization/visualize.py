@@ -142,14 +142,18 @@ def line_bar_plot(x: str, y_line: str, y_bar: str, data: pd.DataFrame, figsize=(
     fig, (line, bar) = plt.subplots(nrows=2, figsize=figsize)
 
     x_axis = data[x]
-    x_axis_min, x_axis_max = x_axis.min(), x_axis.max()
     x_len = x_axis.shape[0]
-    y_line_min, y_line_max = data[y_line].min(), data[y_line].max()
 
     # Line plot
+    y_line_stats = data[y_line].describe()
+
     line.plot(x_axis, data[y_line], linestyle="-", marker="o", label=x)
-    line.plot(x_axis, x_len*[data[y_line].max()], linestyle=":", label="max")
-    line.plot(x_axis, x_len*[data[y_line].min()], linestyle=":", label="min")
+    line.plot(x_axis, x_len*[y_line_stats["max"]], linestyle=":", color="black", alpha=0.25, label="max")
+    line.text(x_axis.values[-1], y_line_stats["max"], "max", fontsize=14, color="black")  
+    line.plot(x_axis, x_len*[y_line_stats["mean"]], linestyle="--", color="black", alpha=0.25, label="mean")
+    line.text(x_axis.values[-1], y_line_stats["mean"], "mean", fontsize=14, color="black")  
+    line.plot(x_axis, x_len*[y_line_stats["min"]], linestyle=":", color="black", alpha=0.25, label="min")
+    line.text(x_axis.values[-1], y_line_stats["min"], "min", fontsize=14, color="black")  
     line.set_title(f"Plot of {y_line} vs {x}")
     line.set_ylabel(y_line)
     line.set_xticklabels([])
@@ -159,24 +163,36 @@ def line_bar_plot(x: str, y_line: str, y_bar: str, data: pd.DataFrame, figsize=(
     line.get_xaxis().tick_bottom()    
     line.get_yaxis().tick_left()    
     
-    # Limit the range of the plot to only where the data is.    
-    # Avoid unnecessary whitespace.    
-    # line.set_ylim(y_line_min, y_line_min)    
-    # line.set_xlim(x_axis_min, x_axis_max)    
-
-    # Bar plot
-    bar = sns.barplot(x_axis, data[y_bar])
-    bar.set_xlabel(x)
-    bar.set_ylabel(y_bar)
-
     line.spines['right'].set_visible(False)
     line.spines['left'].set_visible(False)
     line.spines['top'].set_visible(False)
     line.spines['bottom'].set_visible(False)
 
     # Remove the tick marks; they are unnecessary with the tick lines we just plotted.    
-    plt.tick_params(axis="both", which="both", bottom="off", top="off",    
-                    labelbottom="on", left="off", right="off", labelleft="on")   
+    line.tick_params(axis='both', which='both',length=0)
+    
+    # line_yticklabels = [f"{y_line_stats["min"]:.2f}", y_line_stats["25%"], y_line_stats["50%"], y_line_stats["75%"], y_line_stats["max"]]
+    # line_yticks = range(len(line_yticklabels))
+    # line.set_yticks(line_yticks, minor=True)
+    # line.set(xticks=[], yticks=line_yticks, xticklabels=[], yticklabels=line_yticklabels)
+
+    # Bar plot
+    bar = sns.barplot(x_axis, data[y_bar])
+    bar.set_xlabel(x)
+    bar.set_ylabel(y_bar)
+
+    # Ensure that the axis ticks only show up on the bottom and left of the plot.    
+    # Ticks on the right and top of the plot are generally unnecessary chartjunk.    
+    bar.get_xaxis().tick_bottom()    
+    bar.get_yaxis().tick_left()    
+    
+    bar.spines['right'].set_visible(False)
+    bar.spines['left'].set_visible(False)
+    bar.spines['top'].set_visible(False)
+    bar.spines['bottom'].set_visible(False)
+
+    # Remove the tick marks; they are unnecessary with the tick lines we just plotted.    
+    bar.tick_params(axis='both', which='both',length=0)
 
     return line, bar
 
