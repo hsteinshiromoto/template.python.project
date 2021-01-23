@@ -197,88 +197,12 @@ def line_bar_plot(x: str, y_line: str, y_bar: str, data: pd.DataFrame, figsize=(
     # Remove the tick marks; they are unnecessary with the tick lines we just plotted.    
     bar.tick_params(axis='both', which='both',length=0)
 
-    return line, bar
-
-
-#! Todo: Add tests. Improve code
-def plot_prior_proba(feature: str, prior_proba_column_name: str, volume: str,
-                    data: pd.DataFrame, bins: np.array=None):
-    """Plot prior probability of a feature
-
-    Args:
-        feature (str): Feature to be plotted
-        prior_proba_column_name (str): Column containing the prior probability
-        volume (str): Volume of data available in each feature value / bin
-        data (pd.DataFrame): Dataframe containing the features to be plotted
-        bins (np.array, optional): Bins used in to calculate prior probability. Defaults to None.
-
-    Returns:
-        [matplotlib]: prior probability and barplot
-    """
-
-    # Instantiate plotting objects
-    fig, (proba, vol) = plt.subplots(nrows=2)
-
-    # Plotting probabilities
-    proba.plot(data[feature], data[prior_proba_column_name], linestyle="-", 
-                marker="o")
-    proba.set_title(f"{prior_proba_column_name} vs {feature}")
-    proba.set_ylabel(prior_proba_column_name)
-
-    # Plotting volumes
-    vol = sns.barplot(data.index, data[volume])
-    vol.set_xlabel(feature)
-
-    # Adjust xticks
-    x = list(data[feature].astype(str).values)
-    if bins:
-        x[-1] = f"{data[feature].max().left}+"
-    plt.xticks(data.index, x, rotation=45)   
-
-    return proba, vol
-
-
-@typechecked
-def plot_time_series(feature: str, datetime_column_name: str, 
-                    data: pd.DataFrame, volume: str=None):
-    #! Add tests
-    """Plots a time series of a given feature
-
-    Args:
-        feature (str): Feature to be plotted
-        datetime_column_name (str): Name of the datetime column used to plot
-        data (pd.DataFrame): Dataframe containing the features to be plotted
-        volume (str, optional): A second feature to be plotted in a bar plot. Defaults to None.
-
-    Returns:
-        [matplotlib]: time series and barplot
-    """
-
-    # Instantiate plotting objects
-    if volume:
-        fig, (proba, vol) = plt.subplots(nrows=2)
-
-    else:
-        fig, proba = plt.subplots()
-
-    # Plotting probabilities
-    proba.plot(data[datetime_column_name], data[feature], linestyle="-", marker="o")
-    proba.set_title(f"Time Series Plot of {feature}")
-    proba.set_ylabel(feature)
-    
-    if volume:
-        proba.set_xticklabels([])
-
-        # Plotting volumes
-        vol = sns.barplot(data[datetime_column_name], data[volume].values)
-        vol.set_xlabel(datetime_column_name)
-        vol.set_ylabel("Volume")
+    # TODO: automatically findout the xaxis dtype to format as follows
+    if dtype == "interval":
+        x_axis.values[-1] = f"{x_axis.max().left}+"
+        plt.xticks(data[x], x_axis, rotation=45)   
+    elif dtype == "datetime64[ns]":
         x_dates = data[datetime_column_name].dt.strftime('%Y-%m-%d').sort_values()
         vol.set_xticklabels(labels=x_dates, rotation=45)
 
-        return proba, vol
-
-    else:
-        proba.set_xlabel(datetime_column_name)
-
-        return proba
+    return line, bar
