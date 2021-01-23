@@ -146,14 +146,17 @@ def line_bar_plot(x: str, y_line: str, y_bar: str, data: pd.DataFrame, figsize=(
 
     # Line plot
     y_line_stats = data[y_line].describe()
+    line_iqr = y_line_stats["75%"] - y_line_stats["25%"]
+    y_line_max = min(y_line_stats["75%"] + 1.5*line_iqr, y_line_stats["max"])
+    y_line_min = max(y_line_stats["25%"] - 1.5*line_iqr, y_line_stats["min"])
 
     line.plot(x_axis, data[y_line], linestyle="-", marker="o", label=x)
-    line.plot(x_axis, x_len*[y_line_stats["max"]], linestyle=":", color="black", alpha=0.25, label="max")
-    line.text(x_axis.values[-1], y_line_stats["max"], "max", fontsize=14, color="black")  
+    line.plot(x_axis, x_len*[y_line_max], linestyle=":", color="black", alpha=0.25, label="max")
+    line.text(x_axis.values[-1], y_line_max, "max", fontsize=14, color="black")  
     line.plot(x_axis, x_len*[y_line_stats["mean"]], linestyle="--", color="black", alpha=0.25, label="mean")
     line.text(x_axis.values[-1], y_line_stats["mean"], "mean", fontsize=14, color="black")  
-    line.plot(x_axis, x_len*[y_line_stats["min"]], linestyle=":", color="black", alpha=0.25, label="min")
-    line.text(x_axis.values[-1], y_line_stats["min"], "min", fontsize=14, color="black")  
+    line.plot(x_axis, x_len*[y_line_min], linestyle=":", color="black", alpha=0.25, label="min")
+    line.text(x_axis.values[-1], y_line_min, "min", fontsize=14, color="black")  
     line.set_title(f"Plot of {y_line} vs {x}")
     line.set_ylabel(y_line)
     line.set_xticklabels([])
