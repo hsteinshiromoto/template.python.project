@@ -137,24 +137,38 @@ def heatmap_4d(volume: pd.DataFrame, probabilities: pd.DataFrame
 
 
 #! Todo: Add tests. Improve code
-def plot_target_proba(feature: str, probability_column_name: str, volume: str, 
-                    data: pd.DataFrame):
+def plot_prior_proba(feature: str, prior_proba_column_name: str, volume: str,
+                    data: pd.DataFrame, bins: np.array=None):
+    """Plot prior probability of a feature
+
+    Args:
+        feature (str): Feature to be plotted
+        prior_proba_column_name (str): Column containing the prior probability
+        volume (str): Volume of data available in each feature value / bin
+        data (pd.DataFrame): Dataframe containing the features to be plotted
+        bins (np.array, optional): Bins used in to calculate prior probability. Defaults to None.
+
+    Returns:
+        [matplotlib]: prior probability and barplot
+    """
 
     # Instantiate plotting objects
     fig, (proba, vol) = plt.subplots(nrows=2)
 
     # Plotting probabilities
-    proba.plot(data.index, data[probability_column_name], linestyle="-", 
+    proba.plot(data[feature], data[prior_proba_column_name], linestyle="-", 
                 marker="o")
-    proba.set_title(f"{probability_column_name} vs {feature}")
-    proba.set_ylabel(probability_column_name)
+    proba.set_title(f"{prior_proba_column_name} vs {feature}")
+    proba.set_ylabel(prior_proba_column_name)
 
     # Plotting volumes
     vol = sns.barplot(data.index, data[volume])
     vol.set_xlabel(feature)
 
+    # Adjust xticks
     x = list(data[feature].astype(str).values)
-    x[-1] = f"{data[feature].max().left}+"
+    if bins:
+        x[-1] = f"{data[feature].max().left}+"
     plt.xticks(data.index, x, rotation=45)   
 
     return proba, vol
@@ -169,8 +183,8 @@ def plot_time_series(feature: str, datetime_column_name: str,
     Args:
         feature (str): Feature to be plotted
         datetime_column_name (str): Name of the datetime column used to plot
-        data (pd.DataFrame): Dataframe contaning the features to be plotted
-        volume (str, optional): A second feature to be plotted in a bar plot
+        data (pd.DataFrame): Dataframe containing the features to be plotted
+        volume (str, optional): A second feature to be plotted in a bar plot. Defaults to None.
 
     Returns:
         [matplotlib]: time series and barplot
