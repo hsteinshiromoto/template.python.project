@@ -1,10 +1,12 @@
+import subprocess
+import sys
+from pathlib import Path
+from typing import Union
+
+import dask.dataframe as dd
 import numpy as np
 import pandas as pd
-import dask.dataframe as dd
-
-from typing import Union
-import sys
-import subprocess
+from typeguard import typechecked
 
 PROJECT_ROOT = Path(subprocess.Popen(['git', 'rev-parse', '--show-toplevel'], 
                                 stdout=subprocess.PIPE).communicate()[0].rstrip().decode('utf-8'))
@@ -12,12 +14,14 @@ DATA = PROJECT_ROOT / "data"
 
 sys.path.append(PROJECT_ROOT)
 
-
 from tests.mock_dataset import mock_dataset
 
+
+@typechecked
 def bin_and_agg(feature: str, bin_feature: str, data: pd.DataFrame
                 ,bins: Union[np.array, str]=None, func: str="count"):
-    """Aggregate feature according to bins
+    """Aggregate feature according to bins. Use to Freedman-Diaconis Estimator 
+    calculate bins [1].
 
     Args:
         feature (str): Feature to be aggregated
@@ -29,6 +33,9 @@ def bin_and_agg(feature: str, bin_feature: str, data: pd.DataFrame
     Returns:
         pd.DataFrame: binarized and aggregated data
 
+    Src:
+        [1] https://stats.stackexchange.com/questions/798/calculating-optimal-number-of-bins-in-a-histogram
+
     Example:
         >>> specs = {"float": [100, 1, 0] \
                         ,"int": [100, 1, 0] \
@@ -37,12 +44,9 @@ def bin_and_agg(feature: str, bin_feature: str, data: pd.DataFrame
                         ,"str": [100, 1, 0] \
                         ,"datetime": [100, 1, 0] \
                         }
-        >>> df, meta_data = mock_dataset(specs=specs, meta_data=True)
-        >>> 
+        >>> data, meta_data = mock_dataset(specs=specs, meta_data=True)
+        >>> df = bin_and_agg("int", "float", data)
     """
-
-    # Use to Freedman Diaconis Estimator calculate bins
-    # src: https://stats.stackexchange.com/questions/798/calculating-optimal-number-of-bins-in-a-histogram
 
     if not bins:
         bins = np.histogram_bin_edges(data[bin_feature].values, bins="fd")
@@ -55,8 +59,3 @@ def bin_and_agg(feature: str, bin_feature: str, data: pd.DataFrame
                     }
 
     return return_dict[func].reset_index().to_frame(name=func)
-
-
-def summarize_continuous(feature: str, data: pd.DataFrame):
-
-    pass
