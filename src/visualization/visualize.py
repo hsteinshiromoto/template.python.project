@@ -199,8 +199,6 @@ def line_bar_plot(x: str, y_line: str, y_bar: str, data: pd.DataFrame, figsize=(
 
     line.set_xlim(x_axis.min(), x_axis.max())
 
-
-    # TODO: automatically findout the xaxis dtype to format as follows
     if "interval" in str(data[x].dtype).lower():
         x_axis.values[-1] = f"{x_axis.max().left}+"
         plt.xticks(data[x], x_axis, rotation=45)   
