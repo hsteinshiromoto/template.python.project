@@ -149,9 +149,11 @@ def line_bar_plot(x: str, y_line: str, y_bar: str, data: pd.DataFrame
 
     Returns:
         matplotlib axis objects: line and bar plots
-    """
 
-    # [1] https://stackoverflow.com/questions/55650458/seaborn-subpots-share-x-axis-between-line-and-bar-chart
+    References:
+        [1] https://stackoverflow.com/questions/55650458/
+            seaborn-subpots-share-x-axis-between-line-and-bar-chart
+    """
 
     # Instantiate plotting objects
     fig, (line, bar) = plt.subplots(nrows=2, figsize=figsize)
