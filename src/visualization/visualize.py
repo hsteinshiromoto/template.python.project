@@ -224,7 +224,17 @@ def line_bar_plot(x: str, y_line: str, y_bar: str, data: pd.DataFrame
     return line, bar
 
 
-def hist_box(feature: str, data: pd.DataFrame, figsize=(20, 10)):
+def hist_box(feature: str, data: pd.DataFrame, figsize: tuple=(20, 10)):
+    """Plots histogram and box
+
+    Args:
+        feature (str): Feature to be plotted
+        data (pd.DataFrame): Dataframe containing the feature
+        figsize (tuple, optional): Size of figure. Defaults to (20, 10).
+
+    Returns:
+        matplotlib axis objects: line and bar plots
+    """
 
     # Instantiate plotting objects
     fig, (hist, box) = plt.subplots(nrows=2, figsize=figsize, sharex=True
