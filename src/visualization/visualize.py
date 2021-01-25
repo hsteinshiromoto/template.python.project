@@ -196,21 +196,56 @@ def line_bar_plot(x: str, y_line: str, y_bar: str, data: pd.DataFrame, figsize=(
 
     # Remove the tick marks; they are unnecessary with the tick lines we just plotted.    
     line.tick_params(axis='both', which='both',length=0)
-    
-    # line_yticklabels = [f"{y_line_stats["min"]:.2f}", y_line_stats["25%"], y_line_stats["50%"], y_line_stats["75%"], y_line_stats["max"]]
-    # line_yticks = range(len(line_yticklabels))
-    # line.set_yticks(line_yticks, minor=True)
-    # line.set(xticks=[], yticks=line_yticks, xticklabels=[], yticklabels=line_yticklabels)
 
     line.set_xlim(x_axis.min(), x_axis.max())
 
 
     # TODO: automatically findout the xaxis dtype to format as follows
-    # if dtype == "interval":
-    #     x_axis.values[-1] = f"{x_axis.max().left}+"
-    #     plt.xticks(data[x], x_axis, rotation=45)   
-    # elif dtype == "datetime64[ns]":
-    #     x_dates = data[datetime_column_name].dt.strftime('%Y-%m-%d').sort_values()
-    #     vol.set_xticklabels(labels=x_dates, rotation=45)
+    if "interval" in data[x].dtype.lower():
+        x_axis.values[-1] = f"{x_axis.max().left}+"
+        plt.xticks(data[x], x_axis, rotation=45)   
+    elif data[x].dtype == "datetime64[ns]":
+        x_dates = data[datetime_column_name].dt.strftime('%Y-%m-%d').sort_values()
+        vol.set_xticklabels(labels=x_dates, rotation=45)
 
     return line, bar
+
+
+def hist_box(feature: str, data: pd.DataFrame, figsize=(20, 10)):
+
+    # Instantiate plotting objects
+    fig, (hist, box) = plt.subplots(nrows=2, figsize=figsize, sharex=True
+                                    ,gridspec_kw={'height_ratios': [0.75, 0.25]})
+
+    hist = sns.histplot(data[feature], ax=hist)
+
+    # Ensure that the axis ticks only show up on the bottom and left of the plot.    
+    # Ticks on the right and top of the plot are generally unnecessary chartjunk.    
+    hist.get_xaxis().tick_bottom()    
+    hist.get_yaxis().tick_left()    
+    
+    hist.spines['right'].set_visible(False)
+    hist.spines['left'].set_visible(False)
+    hist.spines['top'].set_visible(False)
+    hist.spines['bottom'].set_visible(False)
+
+    # Remove the tick marks; they are unnecessary with the tick lines we just plotted.    
+    hist.tick_params(axis='both', which='both',length=0)
+    hist.set_title(f"Plot of the Distribution of {feature}")
+
+    box = sns.boxplot(data[feature], ax=box)
+
+    # Ensure that the axis ticks only show up on the bottom and left of the plot.    
+    # Ticks on the right and top of the plot are generally unnecessary chartjunk.    
+    box.get_xaxis().tick_bottom()    
+    box.get_yaxis().tick_left()    
+    
+    box.spines['right'].set_visible(False)
+    box.spines['left'].set_visible(False)
+    box.spines['top'].set_visible(False)
+    box.spines['bottom'].set_visible(False)
+
+    # Remove the tick marks; they are unnecessary with the tick lines we just plotted.    
+    box.tick_params(axis='both', which='both',length=0)
+
+    return hist, box
