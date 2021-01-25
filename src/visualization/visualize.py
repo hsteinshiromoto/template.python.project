@@ -201,12 +201,12 @@ def line_bar_plot(x: str, y_line: str, y_bar: str, data: pd.DataFrame, figsize=(
 
 
     # TODO: automatically findout the xaxis dtype to format as follows
-    if "interval" in data[x].dtype.lower():
+    if "interval" in str(data[x].dtype).lower():
         x_axis.values[-1] = f"{x_axis.max().left}+"
         plt.xticks(data[x], x_axis, rotation=45)   
     elif data[x].dtype == "datetime64[ns]":
-        x_dates = data[datetime_column_name].dt.strftime('%Y-%m-%d').sort_values()
-        vol.set_xticklabels(labels=x_dates, rotation=45)
+        x_dates = data[x].dt.strftime('%Y-%m-%d').sort_values()
+        bar.set_xticklabels(labels=x_dates, rotation=45)
 
     return line, bar
 
