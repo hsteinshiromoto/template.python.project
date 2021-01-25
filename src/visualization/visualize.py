@@ -136,7 +136,20 @@ def heatmap_4d(volume: pd.DataFrame, probabilities: pd.DataFrame
     return heatmap, legend
 
 
-def line_bar_plot(x: str, y_line: str, y_bar: str, data: pd.DataFrame, figsize=(20, 10)):
+def line_bar_plot(x: str, y_line: str, y_bar: str, data: pd.DataFrame
+                ,figsize: tuple=(20, 10)):
+    """Plot line and bars
+
+    Args:
+        x (str): The shared x axis
+        y_line (str): Values to be plotted in line
+        y_bar (str): Values to be plotted in bars
+        data (pd.DataFrame): Dataframe containing the above features
+        figsize (tuple, optional): Size of the figure. Defaults to (20, 10).
+
+    Returns:
+        matplotlib axis objects: line and bar plots
+    """
 
     # [1] https://stackoverflow.com/questions/55650458/seaborn-subpots-share-x-axis-between-line-and-bar-chart
 
