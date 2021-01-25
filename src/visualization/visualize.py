@@ -138,13 +138,35 @@ def heatmap_4d(volume: pd.DataFrame, probabilities: pd.DataFrame
 
 def line_bar_plot(x: str, y_line: str, y_bar: str, data: pd.DataFrame, figsize=(20, 10)):
 
+    # [1] https://stackoverflow.com/questions/55650458/seaborn-subpots-share-x-axis-between-line-and-bar-chart
+
     # Instantiate plotting objects
     fig, (line, bar) = plt.subplots(nrows=2, figsize=figsize)
 
     x_axis = data[x]
     x_len = x_axis.shape[0]
 
+    # Bar plot
+    bar = sns.barplot(x_axis, data[y_bar])
+    bar.set_xlabel(x)
+    bar.set_ylabel(y_bar)
+
+
+    # Ensure that the axis ticks only show up on the bottom and left of the plot.    
+    # Ticks on the right and top of the plot are generally unnecessary chartjunk.    
+    bar.get_xaxis().tick_bottom()    
+    bar.get_yaxis().tick_left()    
+    
+    bar.spines['right'].set_visible(False)
+    bar.spines['left'].set_visible(False)
+    bar.spines['top'].set_visible(False)
+    bar.spines['bottom'].set_visible(False)
+
+    # Remove the tick marks; they are unnecessary with the tick lines we just plotted.    
+    bar.tick_params(axis='both', which='both',length=0)
+
     # Line plot
+    # Needs to come after bar plot to align x [1]
     y_line_stats = data[y_line].describe()
     line_iqr = y_line_stats["75%"] - y_line_stats["25%"]
     y_line_max = min(y_line_stats["75%"] + 1.5*line_iqr, y_line_stats["max"])
@@ -160,6 +182,7 @@ def line_bar_plot(x: str, y_line: str, y_bar: str, data: pd.DataFrame, figsize=(
     line.set_title(f"Plot of {y_line} vs {x}")
     line.set_ylabel(y_line)
     line.set_xticklabels([])
+    line.set_xlim(x_axis.min(), x_axis.max())
 
     # Ensure that the axis ticks only show up on the bottom and left of the plot.    
     # Ticks on the right and top of the plot are generally unnecessary chartjunk.    
@@ -179,30 +202,15 @@ def line_bar_plot(x: str, y_line: str, y_bar: str, data: pd.DataFrame, figsize=(
     # line.set_yticks(line_yticks, minor=True)
     # line.set(xticks=[], yticks=line_yticks, xticklabels=[], yticklabels=line_yticklabels)
 
-    # Bar plot
-    bar = sns.barplot(x_axis, data[y_bar])
-    bar.set_xlabel(x)
-    bar.set_ylabel(y_bar)
+    line.set_xlim(x_axis.min(), x_axis.max())
 
-    # Ensure that the axis ticks only show up on the bottom and left of the plot.    
-    # Ticks on the right and top of the plot are generally unnecessary chartjunk.    
-    bar.get_xaxis().tick_bottom()    
-    bar.get_yaxis().tick_left()    
-    
-    bar.spines['right'].set_visible(False)
-    bar.spines['left'].set_visible(False)
-    bar.spines['top'].set_visible(False)
-    bar.spines['bottom'].set_visible(False)
-
-    # Remove the tick marks; they are unnecessary with the tick lines we just plotted.    
-    bar.tick_params(axis='both', which='both',length=0)
 
     # TODO: automatically findout the xaxis dtype to format as follows
-    if dtype == "interval":
-        x_axis.values[-1] = f"{x_axis.max().left}+"
-        plt.xticks(data[x], x_axis, rotation=45)   
-    elif dtype == "datetime64[ns]":
-        x_dates = data[datetime_column_name].dt.strftime('%Y-%m-%d').sort_values()
-        vol.set_xticklabels(labels=x_dates, rotation=45)
+    # if dtype == "interval":
+    #     x_axis.values[-1] = f"{x_axis.max().left}+"
+    #     plt.xticks(data[x], x_axis, rotation=45)   
+    # elif dtype == "datetime64[ns]":
+    #     x_dates = data[datetime_column_name].dt.strftime('%Y-%m-%d').sort_values()
+    #     vol.set_xticklabels(labels=x_dates, rotation=45)
 
     return line, bar
