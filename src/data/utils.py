@@ -97,8 +97,56 @@ def aggregate_continuous(feature: str, data: pd.DataFrame
     """
 
     summary = bin_and_agg(feature, data, secondary_feature=secondary_feature)
+    summary[f"proportion_{secondary_feature}"] = 100.0*summary[f"count_{secondary_feature}"] / summary[f"count_{secondary_feature}"].sum()
     summary[f"mean_{secondary_feature}"] = bin_and_agg(feature, data, 
                         secondary_feature=secondary_feature, func="mean")
+
+    summary[f"cum_count_{secondary_feature}"] = summary[f"count_{secondary_feature}"].cumsum()
+    summary[f"cum_proportion_{secondary_feature}"] = 100.0 * summary[f"cum_count_{secondary_feature}"] / summary[f"count_{secondary_feature}"].sum()
+
+    return summary
+
+
+@log_fun
+@typechecked
+def aggregate_discrete(feature: str, data: pd.DataFrame
+                        ,secondary_feature: str=None):
+    """Aggregates continuous feature into bins and summarize statistics
+
+    Args:
+        feature (str): Feature binarized and aggregated.
+        data (pd.DataFrame): Dataframe containing both features
+        secondary_feature (str): Feature that is aggregated
+
+    Returns:
+        pd.DataFrame: binarized and aggregated data
+
+    Example:
+        >>> specs = {"float": [100, 1, 0] \
+                        ,"int": [100, 1, 0] \
+                        ,"categorical": [100, 1, 0] \
+                        ,"bool": [100, 1, 0] \
+                        ,"str": [100, 1, 0] \
+                        ,"datetime": [100, 1, 0] \
+                        }
+        >>> data, meta_data = mock_dataset(specs=specs, meta_data=True)
+        >>> df = aggregate_discrete(feature="float_0", data=data, secondary_feature="int_0")
+    """
+
+    secondary_feature = secondary_feature or feature
+
+    return_dict = {"count": data.groupby(feature)[secondary_feature].count()
+                    ,"sum": data.groupby(feature)[secondary_feature].sum()
+                    ,"mean": data.groupby(feature)[secondary_feature].mean()
+                    ,"min": data.groupby(feature)[secondary_feature].min()
+                    ,"max": data.groupby(feature)[secondary_feature].max()
+                    }
+
+    summary = return_dict["count"].to_frame(name=f"count_{secondary_feature}")
+    summary[f"proportion_{secondary_feature}"] = 100.0*summary[f"count_{secondary_feature}"] / summary[f"count_{secondary_feature}"].sum()
+
+    if data[secondary_feature].dtype == np.number:
+        summary[f"mean_{secondary_feature}"] = return_dict["mean"]
 
     summary[f"cum_count_{secondary_feature}"] = summary[f"count_{secondary_feature}"].cumsum()
     summary[f"cum_proportion_{secondary_feature}"] = 100.0 * summary[f"cum_count_{secondary_feature}"] / summary[f"count_{secondary_feature}"].sum()
