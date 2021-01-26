@@ -33,7 +33,7 @@ def make_aggregate_dict(by, secondary_feature: str, data: pd.DataFrame):
 @log_fun
 @typechecked
 def bin_and_agg(feature: str, data: pd.DataFrame, secondary_feature: str=None
-                ,bins: Union[np.array, str]=None, func: str="count"):
+                ,bins_boundaries: Union[np.array, str, bool]=True, func: str="count"):
     """Aggregate feature according to bins. Use to Freedman-Diaconis Estimator 
     calculate bins [1].
 
@@ -41,7 +41,7 @@ def bin_and_agg(feature: str, data: pd.DataFrame, secondary_feature: str=None
         feature (str): Feature binarized and aggregated, if a secondary_feature is not passed
         data (pd.DataFrame): Dataframe containing both features
         secondary_feature (str): Feature that is aggregated
-        bins (np.array or str, optional): Array containing the bins. Defaults to None.
+        bins_boundaries (np.array or str or bool, optional): Array containing the bins. Defaults to True.
         func (str, optional): Function used to aggregate. Defaults to "count".
 
     Returns:
@@ -67,12 +67,33 @@ def bin_and_agg(feature: str, data: pd.DataFrame, secondary_feature: str=None
         >>> ("count_int_0" in df.columns.values) and ("count_float_0" not in df.columns.values)
         True
     """
-    
-    bins = bins or np.histogram_bin_edges(data[feature].values, bins="fd")
+    bin_edges_arg = ["auto", "fd", "doane", "scott", "stone", "rice", "sturges", "sqrt"]
+    bin_time_freq = ["W", "M", "Y"]
+
+    if bins_boundaries == True:
+        bins_boundaries = np.histogram_bin_edges(data[feature].values, bins="auto")
+
+    elif bins_boundaries in bin_edges_arg:
+        bins_boundaries = np.histogram_bin_edges(data[feature].values, bins=bins_boundaries)
+
+    elif not bins_boundaries:
+        pass
+
+    else:
+        msg = f"Expected bins to be either {bin_edges_arg}, {bin_time_freq}, or bool. Got {bins_boundaries}."
+        raise ValueError(msg)
 
     secondary_feature = secondary_feature or feature
 
-    groupby_args = pd.cut(data[feature], bins=bins)
+    if isinstance(bins_boundaries, np.array):
+        groupby_args = pd.cut(data[feature], bins=bins_boundaries)
+
+    elif bins_boundaries in bin_time_freq:
+        data.set_index(feature, inplace=True)
+        groupby_arg = pd.Grouper(key=feature, freq=bins_boundaries)
+
+    else:
+        groupby_args = feature
 
     return_dict = make_aggregate_dict(groupby_args, secondary_feature, data)
 
