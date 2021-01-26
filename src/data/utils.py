@@ -67,20 +67,24 @@ def bin_and_agg(feature: str, data: pd.DataFrame, secondary_feature: str=None
         >>> ("count_int_0" in df.columns.values) and ("count_float_0" not in df.columns.values)
         True
     """
-    bin_edges_arg = ["auto", "fd", "doane", "scott", "stone", "rice", "sturges", "sqrt"]
+    bin_edges_arg = ["auto", "fd", "doane", "scott", "stone", "rice"
+                    , "sturges", "sqrt"]
     bin_time_freq = ["W", "M", "Y"]
 
     if bins_boundaries == True:
-        bins_boundaries = np.histogram_bin_edges(data[feature].values, bins="auto")
+        bins_boundaries = np.histogram_bin_edges(data[feature].values, 
+                                                bins="auto")
 
     elif bins_boundaries in bin_edges_arg:
-        bins_boundaries = np.histogram_bin_edges(data[feature].values, bins=bins_boundaries)
+        bins_boundaries = np.histogram_bin_edges(data[feature].values, 
+                                                bins=bins_boundaries)
 
     elif not bins_boundaries:
         pass
 
     else:
-        msg = f"Expected bins to be either {bin_edges_arg}, {bin_time_freq}, or bool. Got {bins_boundaries}."
+        msg = f"Expected bins to be either {bin_edges_arg}, {bin_time_freq},"\
+                "or bool. Got {bins_boundaries}."
         raise ValueError(msg)
 
     secondary_feature = secondary_feature or feature
