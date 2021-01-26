@@ -15,8 +15,10 @@ DATA = PROJECT_ROOT / "data"
 sys.path.append(PROJECT_ROOT)
 
 from tests.mock_dataset import mock_dataset
+from src.make_logger import log_fun
 
 
+@log_fun
 @typechecked
 def bin_and_agg(feature: str, data: pd.DataFrame, secondary_feature: str=None
                 ,bins: Union[np.array, str]=None, func: str="count"):
@@ -65,5 +67,40 @@ def bin_and_agg(feature: str, data: pd.DataFrame, secondary_feature: str=None
                     ,"max": data.groupby(pd.cut(data[feature], bins=bins))[secondary_feature].max()
                     }
 
-    return return_dict[func].to_frame(name=f"{func}_{secondary_feature}").\
-            reset_index().rename(columns={feature: "bins"})
+    return return_dict[func].to_frame(name=f"{func}_{secondary_feature}")
+
+
+@log_fun
+@typechecked
+def aggregate_continuous(feature: str, data: pd.DataFrame
+                        ,secondary_feature: str):
+    """Aggregates continuous feature into bins and summarize statistics
+
+    Args:
+        feature (str): Feature binarized and aggregated.
+        data (pd.DataFrame): Dataframe containing both features
+        secondary_feature (str): Feature that is aggregated
+
+    Returns:
+        pd.DataFrame: binarized and aggregated data
+
+    Example:
+        >>> specs = {"float": [100, 1, 0] \
+                        ,"int": [100, 1, 0] \
+                        ,"categorical": [100, 1, 0] \
+                        ,"bool": [100, 1, 0] \
+                        ,"str": [100, 1, 0] \
+                        ,"datetime": [100, 1, 0] \
+                        }
+        >>> data, meta_data = mock_dataset(specs=specs, meta_data=True)
+        >>> df = aggregate_continuous(feature="float_0", data=data, secondary_feature="int_0")
+    """
+
+    summary = bin_and_agg(feature, data, secondary_feature=secondary_feature)
+    summary[f"mean_{secondary_feature}"] = bin_and_agg(feature, data, 
+                        secondary_feature=secondary_feature, func="mean")
+
+    summary[f"cum_count_{secondary_feature}"] = summary[f"count_{secondary_feature}"].cumsum()
+    summary[f"cum_proportion_{secondary_feature}"] = 100.0 * summary[f"cum_count_{secondary_feature}"] / summary[f"count_{secondary_feature}"].sum()
+
+    return summary
