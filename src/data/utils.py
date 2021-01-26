@@ -20,6 +20,18 @@ from src.make_logger import log_fun
 
 @log_fun
 @typechecked
+def make_aggregate_dict(by, secondary_feature: str, data: pd.DataFrame):
+
+    return {"count": data.groupby(by)[secondary_feature].count()
+            ,"sum": data.groupby(by)[secondary_feature].sum()
+            ,"mean": data.groupby(by)[secondary_feature].mean()
+            ,"min": data.groupby(by)[secondary_feature].min()
+            ,"max": data.groupby(by)[secondary_feature].max()
+            }
+
+
+@log_fun
+@typechecked
 def bin_and_agg(feature: str, data: pd.DataFrame, secondary_feature: str=None
                 ,bins: Union[np.array, str]=None, func: str="count"):
     """Aggregate feature according to bins. Use to Freedman-Diaconis Estimator 
@@ -135,12 +147,30 @@ def aggregate_discrete(feature: str, data: pd.DataFrame
 
     secondary_feature = secondary_feature or feature
 
-    return_dict = {"count": data.groupby(feature)[secondary_feature].count()
-                    ,"sum": data.groupby(feature)[secondary_feature].sum()
-                    ,"mean": data.groupby(feature)[secondary_feature].mean()
-                    ,"min": data.groupby(feature)[secondary_feature].min()
-                    ,"max": data.groupby(feature)[secondary_feature].max()
-                    }
+    return_dict = make_aggregate_dict(feature, secondary_feature, data)
+
+    summary = return_dict["count"].to_frame(name=f"count_{secondary_feature}")
+    summary[f"proportion_{secondary_feature}"] = 100.0*summary[f"count_{secondary_feature}"] / summary[f"count_{secondary_feature}"].sum()
+
+    if data[secondary_feature].dtype == np.number:
+        summary[f"mean_{secondary_feature}"] = return_dict["mean"]
+
+    summary[f"cum_count_{secondary_feature}"] = summary[f"count_{secondary_feature}"].cumsum()
+    summary[f"cum_proportion_{secondary_feature}"] = 100.0 * summary[f"cum_count_{secondary_feature}"] / summary[f"count_{secondary_feature}"].sum()
+
+    return summary
+
+
+@log_fun
+@typechecked
+def aggregate_time(feature: str, data: pd.DataFrame, freq="M"
+                        ,secondary_feature: str=None):
+
+    secondary_feature = secondary_feature or feature
+
+    groupby_arg = pd.Grouper(key=feature, freq=freq)
+
+    return_dict = make_aggregate_dict(groupby_arg, secondary_feature, data)
 
     summary = return_dict["count"].to_frame(name=f"count_{secondary_feature}")
     summary[f"proportion_{secondary_feature}"] = 100.0*summary[f"count_{secondary_feature}"] / summary[f"count_{secondary_feature}"].sum()
