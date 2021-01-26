@@ -72,12 +72,9 @@ def bin_and_agg(feature: str, data: pd.DataFrame, secondary_feature: str=None
 
     secondary_feature = secondary_feature or feature
 
-    return_dict = {"count": data.groupby(pd.cut(data[feature], bins=bins))[secondary_feature].count()
-                    ,"sum": data.groupby(pd.cut(data[feature], bins=bins))[secondary_feature].sum()
-                    ,"mean": data.groupby(pd.cut(data[feature], bins=bins))[secondary_feature].mean()
-                    ,"min": data.groupby(pd.cut(data[feature], bins=bins))[secondary_feature].min()
-                    ,"max": data.groupby(pd.cut(data[feature], bins=bins))[secondary_feature].max()
-                    }
+    groupby_args = pd.cut(data[feature], bins=bins)
+
+    return_dict = make_aggregate_dict(groupby_args, secondary_feature, data)
 
     return return_dict[func].to_frame(name=f"{func}_{secondary_feature}")
 
