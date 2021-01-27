@@ -70,7 +70,8 @@ def bin_and_agg(feature: str, data: pd.DataFrame, secondary_feature: str=None
         bins_boundaries = np.histogram_bin_edges(data[feature].values, 
                                                 bins=bins_boundaries)
 
-    elif (not bins_boundaries) or (bins_boundaries in bin_time_freq):
+    elif (not bins_boundaries) or (bins_boundaries in bin_time_freq) or \
+        isinstance(bins_boundaries, np.ndarray):
         pass
 
     else:
