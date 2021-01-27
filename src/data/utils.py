@@ -10,30 +10,19 @@ from typeguard import typechecked
 
 PROJECT_ROOT = Path(subprocess.Popen(['git', 'rev-parse', '--show-toplevel'], 
                                 stdout=subprocess.PIPE).communicate()[0].rstrip().decode('utf-8'))
-DATA = PROJECT_ROOT / "data"
 
 sys.path.append(PROJECT_ROOT)
 
-from tests.mock_dataset import mock_dataset
+# from tests.mock_dataset import mock_dataset
 from src.make_logger import log_fun
 
 
 @log_fun
 @typechecked
-def make_aggregate_dict(by, secondary_feature: str, data: pd.DataFrame):
-
-    return {"count": data.groupby(by)[secondary_feature].count()
-            ,"sum": data.groupby(by)[secondary_feature].sum()
-            ,"mean": data.groupby(by)[secondary_feature].mean()
-            ,"min": data.groupby(by)[secondary_feature].min()
-            ,"max": data.groupby(by)[secondary_feature].max()
-            }
-
-
-@log_fun
-@typechecked
 def bin_and_agg(feature: str, data: pd.DataFrame, secondary_feature: str=None
-                ,bins_boundaries: Union[np.array, str, bool]=True, func: str="count"):
+                ,bins_boundaries: Union[np.array, str, bool]=True
+                ,func: str="count"):
+    # sourcery skip: remove-pass-elif
     """Aggregate feature according to bins. Use to Freedman-Diaconis Estimator 
     calculate bins [1].
 
@@ -69,7 +58,9 @@ def bin_and_agg(feature: str, data: pd.DataFrame, secondary_feature: str=None
     """
     bin_edges_arg = ["auto", "fd", "doane", "scott", "stone", "rice"
                     , "sturges", "sqrt"]
-    bin_time_freq = ["W", "M", "Y"]
+    bin_time_freq = ["W", "M", "Q", "Y"]
+
+    secondary_feature = secondary_feature or feature
 
     if bins_boundaries == True:
         bins_boundaries = np.histogram_bin_edges(data[feature].values, 
@@ -83,13 +74,11 @@ def bin_and_agg(feature: str, data: pd.DataFrame, secondary_feature: str=None
         pass
 
     else:
-        msg = f"Expected bins to be either {bin_edges_arg}, {bin_time_freq},"\
-                "or bool. Got {bins_boundaries}."
+        msg = f"Expected bins to be either {bin_edges_arg}, {bin_time_freq},\
+                or bool. Got {bins_boundaries}."
         raise ValueError(msg)
 
-    secondary_feature = secondary_feature or feature
-
-    if isinstance(bins_boundaries, np.array):
+    if isinstance(bins_boundaries, np.ndarray):
         groupby_args = pd.cut(data[feature], bins=bins_boundaries)
 
     elif bins_boundaries in bin_time_freq:
@@ -99,9 +88,26 @@ def bin_and_agg(feature: str, data: pd.DataFrame, secondary_feature: str=None
     else:
         groupby_args = feature
 
-    return_dict = make_aggregate_dict(groupby_args, secondary_feature, data)
+    grouped = data.groupby(groupby_args)[secondary_feature]
 
-    return return_dict[func].to_frame(name=f"{func}_{secondary_feature}")
+    return_dict = {"count": grouped.count
+            ,"sum": grouped.sum
+            ,"mean": grouped.mean
+            ,"min": grouped.min
+            ,"max": grouped.max
+            }
+
+    output = return_dict["count"]().to_frame(name=f"{func}_{secondary_feature}")
+    output[f"cum_count_{secondary_feature}"] = output[f"count_{secondary_feature}"].cumsum()
+    output[f"proportions_{secondary_feature}"] = 100.0*output[f"count_{secondary_feature}"]/output[f"count_{secondary_feature}"].sum()
+    output[f"cum_proportions_{secondary_feature}"] = output[f"proportions_{secondary_feature}"].cumsum()
+
+    if data[secondary_feature].dtype == np.number:
+        output[f"mean_{secondary_feature}"] = return_dict["mean"]()
+        output[f"min_{secondary_feature}"] = return_dict["min"]()
+        output[f"max_{secondary_feature}"] = return_dict["max"]()
+
+    return output
 
 
 @log_fun
