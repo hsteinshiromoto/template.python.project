@@ -40,21 +40,7 @@ def bin_and_agg(feature: str, data: pd.DataFrame, secondary_feature: str=None
         [1] https://stats.stackexchange.com/questions/798/
             calculating-optimal-number-of-bins-in-a-histogram
 
-    Example:
-        >>> specs = {"float": [100, 1, 0] \
-                        ,"int": [100, 1, 0] \
-                        ,"categorical": [100, 1, 0] \
-                        ,"bool": [100, 1, 0] \
-                        ,"str": [100, 1, 0] \
-                        ,"datetime": [100, 1, 0] \
-                        }
-        >>> data, meta_data = mock_dataset(specs=specs, meta_data=True)
-        >>> df = bin_and_agg(feature="float_0", data=data)
-        >>> "count_float_0" in df.columns.values
-        True
-        >>> df = bin_and_agg(feature="float_0", secondary_feature="int_0", data=data)
-        >>> ("count_int_0" in df.columns.values) and ("count_float_0" not in df.columns.values)
-        True
+    Example: #!TODO: tests
     """
     bin_edges_arg = ["auto", "fd", "doane", "scott", "stone", "rice"
                     , "sturges", "sqrt"]
