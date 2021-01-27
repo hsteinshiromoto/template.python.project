@@ -91,8 +91,11 @@ def bin_and_agg(feature: str, data: pd.DataFrame, secondary_feature: str=None
 
     return_dict = {"count": grouped.count
             ,"sum": grouped.sum
-            ,"mean": grouped.mean
             ,"min": grouped.min
+            ,"mean": grouped.mean
+            ,"25%": grouped.quantile
+            ,"50%": grouped.median
+            ,"75%": grouped.quantile
             ,"max": grouped.max
             }
 
@@ -102,8 +105,11 @@ def bin_and_agg(feature: str, data: pd.DataFrame, secondary_feature: str=None
     output[f"cum_proportions_{secondary_feature}"] = output[f"proportions_{secondary_feature}"].cumsum()
 
     if data[secondary_feature].dtype == np.number:
-        output[f"mean_{secondary_feature}"] = return_dict["mean"]()
         output[f"min_{secondary_feature}"] = return_dict["min"]()
+        output[f"mean_{secondary_feature}"] = return_dict["mean"]()
+        output[f"25%_{secondary_feature}"] = return_dict["25%"](0.25)
+        output[f"50%_{secondary_feature}"] = return_dict["50%"]()
+        output[f"75%_{secondary_feature}"] = return_dict["25%"](0.75)
         output[f"max_{secondary_feature}"] = return_dict["max"]()
 
     return output
