@@ -137,24 +137,20 @@ def heatmap_4d(volume: pd.DataFrame, probabilities: pd.DataFrame
 
 
 def line_bar_plot(x: str, y_line: str, y_bar: str, data: pd.DataFrame
-                ,figsize: tuple=(20, 10)):
+                ,figsize: tuple=(20, 10), proportions: bool=True):
     """Plot line and bars
-
+    
     Args:
         x (str): The shared x axis
         y_line (str): Values to be plotted in line
         y_bar (str): Values to be plotted in bars
         data (pd.DataFrame): Dataframe containing the above features
         figsize (tuple, optional): Size of the figure. Defaults to (20, 10).
+        proportions (bool, optional): Add proportions each bar to the plot. Defaults to True.
 
     Returns:
         matplotlib axis objects: line and bar plots
-
-    References:
-        [1] https://stackoverflow.com/questions/55650458/
-            seaborn-subpots-share-x-axis-between-line-and-bar-chart
     """
-
     # Instantiate plotting objects
     fig, (line, bar) = plt.subplots(nrows=2, figsize=figsize)
 
@@ -162,67 +158,74 @@ def line_bar_plot(x: str, y_line: str, y_bar: str, data: pd.DataFrame
     x_len = x_axis.shape[0]
 
     # Bar plot
-    bar = sns.barplot(x_axis, data[y_bar])
+    bar = sns.barplot(x_axis, data[y_bar], ax=bar)
+
+    # Add proportions
+    if proportions:
+        total = data[y_bar].sum()
+
+        for p in bar.patches:
+            height = p.get_height()
+            bar.text(p.get_x() + p.get_width()/2., height + 3,
+                    f'{100.0*height/total:1.1f}%', ha="center", va="bottom")
+
     bar.set_xlabel(x)
     bar.set_ylabel(y_bar)
 
+    # Ensure that the axis ticks only show up on the bottom and left of the plot.   
+    # Ticks on the right and top of the plot are generally unnecessary chartjunk.   
+    bar.get_xaxis().tick_bottom()   
+    bar.get_yaxis().tick_left()   
 
-    # Ensure that the axis ticks only show up on the bottom and left of the plot.    
-    # Ticks on the right and top of the plot are generally unnecessary chartjunk.    
-    bar.get_xaxis().tick_bottom()    
-    bar.get_yaxis().tick_left()    
-    
     bar.spines['right'].set_visible(False)
     bar.spines['left'].set_visible(False)
     bar.spines['top'].set_visible(False)
     bar.spines['bottom'].set_visible(False)
-
-    # Remove the tick marks; they are unnecessary with the tick lines we just plotted.    
+    
+    # Remove the tick marks; they are unnecessary with the tick lines we just plotted.   
     bar.tick_params(axis='both', which='both',length=0)
 
     # Line plot
-    # Needs to come after bar plot to align x [1]
+    # Needs to come after bar plot to align x
     y_line_stats = data[y_line].describe()
     line_iqr = y_line_stats["75%"] - y_line_stats["25%"]
     y_line_max = min(y_line_stats["75%"] + 1.5*line_iqr, y_line_stats["max"])
     y_line_min = max(y_line_stats["25%"] - 1.5*line_iqr, y_line_stats["min"])
 
-    line.plot(x_axis, data[y_line], linestyle="-", marker="o", label=x)
+    line = sns.lineplot(x_axis, data[y_line], linestyle="-", marker="o", label=x, ax=line)
     line.plot(x_axis, x_len*[y_line_max], linestyle=":", color="black", alpha=0.25, label="max")
-    line.text(x_axis.values[-1], y_line_max, "max", fontsize=14, color="black")  
+    line.text(x_axis.values[-1], y_line_max, " max", fontsize=14, color="black", va="center") 
     line.plot(x_axis, x_len*[y_line_stats["mean"]], linestyle="--", color="black", alpha=0.25, label="mean")
-    line.text(x_axis.values[-1], y_line_stats["mean"], "mean", fontsize=14, color="black")  
+    line.text(x_axis.values[-1], y_line_stats["mean"], " mean", fontsize=14, color="black", va="center") 
     line.plot(x_axis, x_len*[y_line_min], linestyle=":", color="black", alpha=0.25, label="min")
-    line.text(x_axis.values[-1], y_line_min, "min", fontsize=14, color="black")  
+    line.text(x_axis.values[-1], y_line_min, " min", fontsize=14, color="black", va="center") 
     line.set_title(f"Plot of {y_line} vs {x}")
     line.set_ylabel(y_line)
     line.set_xticklabels([])
-    line.set_xlim(x_axis.min(), x_axis.max())
+    line.get_legend().remove()
 
-    # Ensure that the axis ticks only show up on the bottom and left of the plot.    
-    # Ticks on the right and top of the plot are generally unnecessary chartjunk.    
-    line.get_xaxis().tick_bottom()    
-    line.get_yaxis().tick_left()    
-    
+    # Ensure that the axis ticks only show up on the bottom and left of the plot.   
+    # Ticks on the right and top of the plot are generally unnecessary chartjunk.   
+    line.get_xaxis().tick_bottom()   
+    line.get_yaxis().tick_left()   
+
     line.spines['right'].set_visible(False)
     line.spines['left'].set_visible(False)
     line.spines['top'].set_visible(False)
     line.spines['bottom'].set_visible(False)
 
-    # Remove the tick marks; they are unnecessary with the tick lines we just plotted.    
+    # Remove the tick marks; they are unnecessary with the tick lines we just plotted.   
     line.tick_params(axis='both', which='both',length=0)
-
-    line.set_xlim(x_axis.min(), x_axis.max())
 
     if "interval" in str(data[x].dtype).lower():
         x_axis.values[-1] = f"{x_axis.max().left}+"
-        plt.xticks(data[x], x_axis, rotation=45)   
+        plt.xticks(data[x], x_axis, rotation=45)  
+
     elif data[x].dtype == "datetime64[ns]":
         x_dates = data[x].dt.strftime('%Y-%m-%d').sort_values()
         bar.set_xticklabels(labels=x_dates, rotation=45)
 
     return line, bar
-
 
 def hist_box(feature: str, data: pd.DataFrame, figsize: tuple=(20, 10)):
     """Plots histogram and box
