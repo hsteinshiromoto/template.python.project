@@ -98,3 +98,27 @@ def bin_and_agg(feature: str, data: pd.DataFrame, secondary_feature: str=None
         output[f"max_{secondary_feature}"] = return_dict["max"]()
 
     return output
+
+
+@log_fun
+@typechecked
+def make_pivot(feature: str, index: str, column: str, data: pd.DataFrame
+                ,groupby_args: list=None):
+
+    groupby_args = groupby_args or [index, column]
+
+    grouped = data.groupby(groupby_args)[feature].count().to_frame(name=f"count_{feature}")
+
+    if np.issubdtype(data[feature].dtype, np.number):
+        grouped[f"mean_{feature}"] = data.groupby(groupby_args)[feature].mean()
+
+    grouped.reset_index(inplace=True)
+    grouped.sort_values(by=[index, column], inplace=True, ascending=False)
+
+    pivot_count = pd.pivot(grouped, index=index, columns=column, values=f"count_{feature}")
+    pivot_mean = pd.pivot(grouped, index=index, columns=column, values=f"mean_{feature}")
+
+    pivot_count.sort_index(inplace=True, ascending=False)
+    pivot_mean.sort_index(inplace=True, ascending=False)
+
+    return pivot_count, pivot_mean
