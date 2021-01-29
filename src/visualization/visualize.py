@@ -139,7 +139,7 @@ def heatmap_4d(volume: pd.DataFrame, probabilities: pd.DataFrame
 def line_bar_plot(x: str, y_line: str, y_bar: str, data: pd.DataFrame
                 ,figsize: tuple=(20, 10), proportions: bool=True):
     """Plot line and bars
-    
+
     Args:
         x (str): The shared x axis
         y_line (str): Values to be plotted in line
@@ -200,6 +200,7 @@ def line_bar_plot(x: str, y_line: str, y_bar: str, data: pd.DataFrame
     line.plot(x_axis, x_len*[y_line_min], linestyle=":", color="black", alpha=0.25, label="min")
     line.text(x_axis.values[-1], y_line_min, " min", fontsize=14, color="black", va="center") 
     line.set_title(f"Plot of {y_line} vs {x}")
+    line.set_xlabel("")
     line.set_ylabel(y_line)
     line.set_xticklabels([])
     line.get_legend().remove()
