@@ -222,7 +222,7 @@ def line_bar_plot(x: str, y_line: str, y_bar: str, data: pd.DataFrame
         x_axis.values[-1] = f"{x_axis.max().left}+"
         plt.xticks(data[x], x_axis, rotation=45)  
 
-    elif data[x].dtype == "datetime64[ns]":
+    elif np.issubdtype(data[x].dtype, np.datetime64):
         x_dates = data[x].dt.strftime('%Y-%m-%d').sort_values()
         bar.set_xticklabels(labels=x_dates, rotation=45)
 
