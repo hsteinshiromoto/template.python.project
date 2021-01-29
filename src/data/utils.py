@@ -104,13 +104,33 @@ def bin_and_agg(feature: str, data: pd.DataFrame, secondary_feature: str=None
 @typechecked
 def make_pivot(feature: str, index: str, column: str, data: pd.DataFrame
                 ,groupby_args: list=None):
+    """Create two types of pivot matrices: count and mean
+
+    Args:
+        feature (str): Feature that is used as a value for the pivot tables. Needs to be numeric
+        index (str): Name of rows of the pivot table
+        column (str): Name of columns of the pivot table
+        data (pd.DataFrame): Data frame containing the data
+        groupby_args (list, optional): Parse arguments to groupby. Defaults to None.
+
+    Returns:
+        (pd.DataFrame): Pivot tables
+    """
+
 
     groupby_args = groupby_args or [index, column]
 
     grouped = data.groupby(groupby_args)[feature].count().to_frame(name=f"count_{feature}")
 
-    if np.issubdtype(data[feature].dtype, np.number):
+    try:
         grouped[f"mean_{feature}"] = data.groupby(groupby_args)[feature].mean()
+
+    except ValueError:
+        if np.issubdtype(data[secondary_feature].dtype, np.number):
+            msg = f"Expected feature {feature} to of data type numerical. Got {data[feature].dtype}."
+            raise(msg)
+
+        raise
 
     grouped.reset_index(inplace=True)
     grouped.sort_values(by=[index, column], inplace=True, ascending=False)
