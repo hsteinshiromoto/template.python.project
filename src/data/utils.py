@@ -20,8 +20,7 @@ from src.make_logger import log_fun
 @log_fun
 @typechecked
 def bin_and_agg(feature: str, data: pd.DataFrame, secondary_feature: str=None
-                ,bins_boundaries: Union[np.array, str, bool]=True
-                ,func: str="count"):
+                ,bins_boundaries: Union[np.array, str, bool]=True):
     # sourcery skip: remove-pass-elif
     """Aggregate feature according to bins. Use to Freedman-Diaconis Estimator 
     calculate bins [1].
@@ -31,7 +30,6 @@ def bin_and_agg(feature: str, data: pd.DataFrame, secondary_feature: str=None
         data (pd.DataFrame): Dataframe containing both features
         secondary_feature (str): Feature that is aggregated
         bins_boundaries (np.array or str or bool, optional): Array containing the bins. Defaults to True.
-        func (str, optional): Function used to aggregate. Defaults to "count".
 
     Returns:
         pd.DataFrame: binarized and aggregated data
@@ -86,7 +84,7 @@ def bin_and_agg(feature: str, data: pd.DataFrame, secondary_feature: str=None
             ,"max": grouped.max
             }
 
-    output = return_dict["count"]().to_frame(name=f"{func}_{secondary_feature}")
+    output = return_dict["count"]().to_frame(name=f"count_{secondary_feature}")
     output[f"cum_count_{secondary_feature}"] = output[f"count_{secondary_feature}"].cumsum()
     output[f"proportions_{secondary_feature}"] = output[f"count_{secondary_feature}"]/output[f"count_{secondary_feature}"].sum()
     output[f"cum_proportions_{secondary_feature}"] = output[f"proportions_{secondary_feature}"].cumsum()
