@@ -126,7 +126,7 @@ def make_pivot(feature: str, index: str, column: str, data: pd.DataFrame
         grouped[f"mean_{feature}"] = data.groupby(groupby_args)[feature].mean()
 
     except ValueError:
-        if np.issubdtype(data[secondary_feature].dtype, np.number):
+        if np.issubdtype(data[feature].dtype, np.number):
             msg = f"Expected feature {feature} to of data type numerical. Got {data[feature].dtype}."
             raise(msg)
 
