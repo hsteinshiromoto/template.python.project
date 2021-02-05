@@ -20,7 +20,7 @@ from src.make_logger import log_fun
 @log_fun
 @typechecked
 def bin_and_agg(feature: str, data: pd.DataFrame, secondary_feature: str=None
-                ,bins_boundaries: Union[np.array, str, bool]=True):
+                ,bins_boundaries: Union[np.array, str, bool]=None):
     # sourcery skip: remove-pass-elif
     """Aggregate feature according to bins. Use to Freedman-Diaconis Estimator 
     calculate bins [1].
