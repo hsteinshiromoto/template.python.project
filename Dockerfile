@@ -19,6 +19,7 @@ ENV LANG=C.UTF-8 \
 ENV PROJECT_ROOT /home/$PROJECT_NAME
 ENV PYTHONPATH $PROJECT_ROOT
 ENV TZ Australia/Sydney
+ENV JUPYTER_ENABLE_LAB=yes
 
 
 # Set container time zone
@@ -64,7 +65,7 @@ WORKDIR $PROJECT_ROOT
 # ---
 #Expose Jupyter port
 EXPOSE 8888 
-RUN jupyter lab
+# RUN jupyter lab
 
 EXPOSE 22
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
