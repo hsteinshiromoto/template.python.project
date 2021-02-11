@@ -22,7 +22,7 @@ statsmodels
 typeguard
 
 # Jupyter settings
-jupyter>=3
+jupyterlab>=3
 # jupyter_contrib_nbextensions
 # jupyter_nbextensions_configurator
-nbdime
+# nbdime
