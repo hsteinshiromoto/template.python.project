@@ -60,12 +60,16 @@ RUN bash /usr/local/bin/run_python.sh test_environment && \
 RUN mkdir -p $PROJECT_ROOT
 WORKDIR $PROJECT_ROOT
 
+RUN useradd -ms /bin/bash  vscode
+USER vscode
+WORKDIR $PROJECT_ROOT
+
 # ---
 # Setup running and entrypoint
 # ---
 #Expose Jupyter port
 EXPOSE 8888 
-# RUN jupyter lab
+# CMD ["jupyter", "lab", "--port=8888", "--no-browser", "--ip=0.0.0.0", "--allow-root"]
 
 EXPOSE 22
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
