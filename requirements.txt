@@ -18,6 +18,7 @@ pandas
 dask[complete]
 seaborn
 matplotlib
+xgboost
 statsmodels
 typeguard
 

@@ -62,7 +62,8 @@ WORKDIR $PROJECT_ROOT
 # ---
 # Setup running and entrypoint
 # ---
-EXPOSE 8888 #Expose Jupyter port
+#Expose Jupyter port
+EXPOSE 8888 
 RUN jupyter lab
 
 EXPOSE 22
