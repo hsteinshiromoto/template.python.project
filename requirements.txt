@@ -2,6 +2,7 @@
 -e .
 
 # external requirements
+bokeh
 click
 Sphinx
 coverage
@@ -21,7 +22,7 @@ statsmodels
 typeguard
 
 # Jupyter settings
-jupyter
-jupyter_contrib_nbextensions
-jupyter_nbextensions_configurator
+jupyter>=3
+# jupyter_contrib_nbextensions
+# jupyter_nbextensions_configurator
 nbdime
