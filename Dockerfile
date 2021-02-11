@@ -60,10 +60,10 @@ RUN mkdir -p $PROJECT_ROOT
 WORKDIR $PROJECT_ROOT
 
 # ---
-# Set up the necessary Python environment and packages
+# Setup running and entrypoint
 # ---
-EXPOSE 22
 EXPOSE 8888 #Expose Jupyter port
 RUN jupyter lab
 
+EXPOSE 22
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
