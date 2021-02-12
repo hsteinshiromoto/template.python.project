@@ -7,6 +7,12 @@ import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+import bokeh
+from bokeh.plotting import figure, output_notebook, show
+from bokeh.layouts import gridplot, row
+from bokeh.models import HoverTool, CustomJS, Label
+from bokeh.models.widgets import CheckboxGroup
+
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from mpl_toolkits.axes_grid1 import make_axes_locatable, axes_size
 
@@ -227,6 +233,115 @@ def line_bar_plot(x: str, y_line: str, y_bar: str, data: pd.DataFrame
         bar.set_xticklabels(labels=x_dates, rotation=45)
 
     return line, bar
+
+
+def dash_line(x: str, y: str, data: pd.DataFrame, figsize: tuple=(1000, 400)
+            ,title: str=None, x_axis_label: str=None, y_axis_label: str=None):
+    """Create dashboard line plot
+
+    Args:
+        x (str): Column in x axis
+        y (str): Column in y axis
+        data (pd.DataFrame): Data frame contaning the above. It also must contain
+                            columns for the max, min and mean of y axis
+        figsize (tuple, optional): Height and width of figure. Defaults to (1000, 400).
+        title (str, optional): Figure title. Defaults to None.
+        x_axis_label (str, optional): X-axis label. Defaults to None.
+        y_axis_label (str, optional): Y-axis label. Defaults to None.
+
+    Returns:
+        bokeh object: Plotted figure
+
+    References:
+        [1] https://www.reddit.com/r/learnpython/comments/8ythxo/how_to_use_checkbox_in_bokeh_with_pandas/
+    """    
+    # 1. Define variables
+
+    y_max = f"{y}_max"
+    y_min = f"{y}_min"
+    y_mean = f"{y}_mean"
+
+    title = title or f"{y} vs {x}"
+
+    tools = "xwheel_pan, ywheel_pan, pan,wheel_zoom,xwheel_zoom,ywheel_zoom,box_zoom,reset,save"
+
+    # 2. Instantiate plot object
+    
+    if np.issubdtype(data[x].dtype, np.datetime64):
+        line = figure(x_axis_type="datetime", plot_width=figsize[0]
+                    ,plot_height=figsize[1], title=title
+                    ,toolbar_location="above", tools=tools)
+
+    else:
+        line = figure(plot_width=figsize[0], plot_height=figsize[1]
+                    ,title=title, toolbar_location="above", tools=tools)
+
+    ## 2.1. Add axes labels
+
+    line.xaxis.axis_label = x or x_axis_label
+    line.yaxis.axis_label = y or y_axis_label
+    
+    # 3. Add circles
+    line.circle(x=x, y=y, source=data)
+
+    # 4. Add hover tooltip
+    ## 4.1. Format the tooltip
+    tooltips = [(y, f"@{y}"), (x, f"@{x}")]
+    hover = HoverTool(tooltips=tooltips)
+
+    ## 4.2. Add the HoverTool to the figure
+    line.add_tools(HoverTool(tooltips=tooltips))
+
+    # 5. Format figure
+    ## 5.1. Remove grey frame
+    line.outline_line_color = None
+
+    ## 5.2. Remove axis line
+    line.xaxis.axis_line_width = 0
+    line.yaxis.axis_line_width = 0
+
+    ## 5.3. Remove grid
+    line.xgrid.grid_line_color = None
+    line.ygrid.grid_line_color = None
+
+    ## 5.4. Remove tick markers
+    # line.xaxis.major_tick_line_color = None  # turn off x-axis major ticks
+    line.xaxis.minor_tick_line_color = None  # turn off x-axis minor ticks
+
+    # line.yaxis.major_tick_line_color = None  # turn off y-axis major ticks
+    line.yaxis.minor_tick_line_color = None  # turn off y-axis minor ticks
+
+    ## 5.5. Add text
+    # mytext = Label(x=data[x].max(), y=data[y].iloc[-1], text=y)
+    # line.add_layout(mytext)
+
+    # 6. Create rendering objects for callback
+    line_renderer = line.line(x=x, y=y, line_width=2, source=data)
+    line_max = line.line(x=x, y=y_max, line_width=1, source=data
+                        ,line_dash="dashed", line_alpha=0.25
+                        ,line_color="black")
+    line_mean = line.line(x=x, y=y_mean, line_width=1, source=data
+                        ,line_dash="dotted", line_alpha=0.25
+                        ,line_color="black")
+    line_min = line.line(x=x, y=y_min, line_width=1, source=data
+                        ,line_dash="dashed", line_alpha=0.25
+                        ,line_color="black")
+
+    # 7. Create checkbox callback. See [1]
+    checkboxes = CheckboxGroup(labels=["max", "mean", "min"], active=[0, 1, 2])
+    callback = CustomJS(code="""line_max.visible = false; // same xline passed in from args
+                                line_mean.visible = false;
+                                line_min.visible = false;
+                                // cb_obj injected in by the callback
+                                if (cb_obj.active.includes(0)){line_max.visible = true;}
+                                if (cb_obj.active.includes(1)){line_mean.visible = true;}
+                                if (cb_obj.active.includes(2)){line_min.visible = true;}
+                                """,
+                        args={'line_max': line_max, 'line_mean': line_mean, 'line_min': line_min})
+    checkboxes.js_on_click(callback)
+    
+    return row(line, checkboxes)
+
 
 def hist_box(feature: str, data: pd.DataFrame, figsize: tuple=(20, 10)):
     """Plots histogram and box
