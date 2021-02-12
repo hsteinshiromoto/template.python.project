@@ -254,6 +254,9 @@ def dash_line(x: str, y: str, data: pd.DataFrame, figsize: tuple=(1000, 400)
 
     References:
         [1] https://www.reddit.com/r/learnpython/comments/8ythxo/how_to_use_checkbox_in_bokeh_with_pandas/
+
+    Example: TODO: 
+        >>> show(dash_line())
     """    
     # 1. Define variables
 
