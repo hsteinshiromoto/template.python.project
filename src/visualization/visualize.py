@@ -244,7 +244,7 @@ def dash_line(x: str, y: str, data: pd.DataFrame, figsize: tuple=(1000, 400)
         y (str): Column in y axis
         data (pd.DataFrame): Data frame contaning the above. It also must contain
                             columns for the max, min and mean of y axis
-        figsize (tuple, optional): Height and width of figure. Defaults to (1000, 400).
+        figsize (tuple, optional): Width and height of figure. Defaults to (1000, 400).
         title (str, optional): Figure title. Defaults to None.
         x_axis_label (str, optional): X-axis label. Defaults to None.
         y_axis_label (str, optional): Y-axis label. Defaults to None.
