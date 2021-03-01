@@ -42,10 +42,7 @@
 	"forwardPorts": [8888],
 
 	// Uncomment the next line to run commands after the container is created - for example installing curl.
-	"postCreateCommand": "apt-get update && apt-get install gnupg2 -y",
-
-	// Uncomment when using a ptrace-based debugger like C++, Go, and Rust
-	"postCreateCommand": "apt-get update && apt-get install gnupg2 -y",
+	// "postCreateCommand": "apt-get update && apt-get install gnupg2 -y",
 
 	// Uncomment to use the Docker CLI from inside the container. See https://aka.ms/vscode-remote/samples/docker-from-docker.
 	// "mounts": [ "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind" ],
