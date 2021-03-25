@@ -449,10 +449,10 @@ def make_filter_cols_steps(settings: dict) -> list:
             ,("filter_std", Filter_Std())]
 
 
-@log_fun
 @click.command()
 @click.argument('basename', type=click.Path())
 @click.argument('save_interim', type=bool, default=True)
+@log_fun
 def main(basename: Path, save_interim: bool, steps: list=["base"]):
     
     # Load
