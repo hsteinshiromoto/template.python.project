@@ -12,7 +12,7 @@ import pandas as pd
 import pretty_errors
 from dotenv import find_dotenv, load_dotenv
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import StratifiedShuffleSplit
 from sklearn.pipeline import FeatureUnion, Pipeline
 from typeguard import typechecked
 
@@ -23,8 +23,8 @@ DATA = PROJECT_ROOT / "data"
 sys.path.append(PROJECT_ROOT)
 
 from src.base import get_settings
-from src.base_pipeline import Extract, EPipeline
-from src.data.filter_data import Filter_Nulls, Filter_Entropy, Filter_Std
+from src.base_pipeline import EPipeline, Extract
+from src.data.filter_data import Filter_Entropy, Filter_Nulls, Filter_Std
 from src.make_logger import log_fun, make_logger
 from tests.mock_dataset import mock_dataset
 
@@ -220,7 +220,7 @@ class Split_Predictors_Target(BaseEstimator, TransformerMixin):
 
 
 @typechecked
-class Split_Train_Test(BaseEstimator, TransformerMixin):
+class Train_Test_Split(BaseEstimator, TransformerMixin):
     """
     Splits train test sets
 
@@ -232,27 +232,40 @@ class Split_Train_Test(BaseEstimator, TransformerMixin):
         Split_Predictors_Target: Instantiated object
 
     Example:
-        >>> X, y = np.random.rand(100, 1).flatten(), np.random.rand(100, 1).flatten()
-        >>> stt = Split_Train_Test(0.75)
-        >>> _ = stt.fit()
-        >>> X_train, X_test, y_train, y_test = stt.transform(X, y)
-        >>> (X_train.reshape(-1, 1).shape[1] == X_test.reshape(-1, 1).shape[1]) and (y_train.reshape(-1, 1).shape[1] == y_test.reshape(-1, 1).shape[1])
+        >>> X, y = pd.DataFrame(np.random.rand(100, 1).flatten()), pd.DataFrame(np.random.randint(2, size=(100, 1)).flatten())
+        >>> X, y = dd.from_pandas(X, npartitions=1), dd.from_pandas(y, npartitions=1)
+        >>> tts = Train_Test_Split(0.75)
+        >>> _ = tts.fit()
+        >>> X_train, X_test, y_train, y_test = tts.transform(X, y)
+        >>> X_train.shape[0].compute() > X_test.shape[0].compute()
         True
-        >>> (X_test.reshape(-1, 1).shape[0] + X_train.reshape(-1, 1).shape[0] == 100) and (y_test.reshape(-1, 1).shape[0] + y_train.reshape(-1, 1).shape[0] == 100)
+        >>> y_train.shape[0].compute() > y_test.shape[0].compute()
         True
     """
     @log_fun
-    def __init__(self, train_size: float):
-        self.train_size = train_size
+    def __init__(self, train_proportion: float):
+        self.train_proportion = train_proportion
     
     @log_fun
-    def fit(self, X=None, y=None):
+    def fit(self, X=None, y=None, **kwargs):
+        n_splits = kwargs.get("n_splits") or 1
+        
+        self.sss = StratifiedShuffleSplit(n_splits=n_splits
+                                        ,train_size=self.train_proportion)
         return self
 
     @log_fun
-    def transform(self, X: dd, y: dd):
-        X_train, X_test, y_train, y_test = train_test_split(X, y, 
-                                                        train_size=self.train_size)
+    def transform(self, X: dd, y: dd=None):
+        n_partitions = X.npartitions
+
+        for train_index, test_index in self.sss.split(X, y):
+            X_train, X_test = X.compute().iloc[train_index, :], X.compute().iloc[test_index, :]
+            y_train, y_test = y.compute().iloc[train_index, :], y.compute().iloc[test_index, :]
+        
+        X_train = dd.from_pandas(X_train, npartitions=n_partitions)
+        X_test = dd.from_pandas(X_test, npartitions=n_partitions)
+        y_train = dd.from_pandas(y_train, npartitions=n_partitions)
+        y_test = dd.from_pandas(y_test, npartitions=n_partitions)
 
         return X_train, X_test, y_train, y_test
         
