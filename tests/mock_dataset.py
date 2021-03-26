@@ -98,7 +98,7 @@ def mock_dataset(specs: dict=None, meta_data: bool=False):
     # 4. Get meta data
 
     meta_data_dtype_map = {"float": "float", "int": "int"
-    ,"categorical": "object", "str": "str", "datetime": "datetime64[ns]"
+    ,"categorical": "category", "str": "str", "datetime": "datetime64[ns]"
     ,"bool": "bool"}
 
     meta_data_dict = {"column_name": [], "python_dtype": []}
@@ -110,3 +110,6 @@ def mock_dataset(specs: dict=None, meta_data: bool=False):
 
     return df, meta_data
 
+if __name__ == "__main__":
+    data, meta_data = mock_dataset(meta_data=True)
+    print("End")
