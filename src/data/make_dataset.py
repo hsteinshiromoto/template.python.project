@@ -352,6 +352,46 @@ class Time_Split(BaseEstimator, TransformerMixin):
         return None
 
 
+class Save_Dataset(BaseEstimator, TransformerMixin):
+    @log_fun
+    def __init__(self, basename: Path, path: Path):
+        self.basename = basename
+        self.path = path
+
+
+    @log_fun
+    def fit(self, X=None, y=None):
+        return self
+
+
+    @log_fun
+    def transform(self, X=None, y=None):
+        if self.basename.suffix == ".csv":
+            # Load data file
+            X.to_csv(str(self.path / self.basename.stem) + "_*.csv", index=False)
+            y.to_csv(str(self.path / self.basename.stem) + "_*.csv", index=False)
+
+        elif self.basename.suffix == ".parquet":
+            dd.to_parquet(X
+                        ,str(self.path / self.basename.stem) + "_*.parquet"
+                        ,overwrite=True
+                        )
+            dd.to_parquet(y
+                        ,str(self.path / self.basename.stem) + "_*.parquet"
+                        ,overwrite=True
+                        )
+
+        else:
+            msg = f"Wrong file format. Expected either: csv or parquet. \
+                    Got {Path(self.basename)}."
+            raise NotImplementedError(msg)
+
+
+    @log_fun
+    def get_feature_names(self):
+        return None
+
+
 @log_fun
 @typechecked
 def date_parser(array, format: str="%Y-%m-%d"):
