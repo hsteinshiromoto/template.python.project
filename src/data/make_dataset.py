@@ -30,6 +30,58 @@ from tests.mock_dataset import mock_dataset
 
 
 @typechecked
+class Get_Meta_Data(BaseEstimator, TransformerMixin):
+    """
+    Load meta data
+
+    Args:
+        BaseEstimator (BaseEstimator): Sci-kit learn object
+        TransformerMixin (TransformerMixin): Sci-kit learn object
+
+    Returns:
+        Get_Meta_Data: Instantiated object
+
+    Example:
+        >>> specs = {"float": [100, 1, 0.05] \
+                    ,"int": [100, 1, 0.025] \
+                    ,"categorical": [100, 1, 0.1] \
+                    ,"bool": [100, 1, 0] \
+                    ,"str": [100, 1, 0] \
+                    ,"datetime": [100, 1, 0] \
+                    }
+        >>> df, meta_data = mock_dataset(specs=specs, meta_data=True)
+        >>> basename = Path("meta_mock.csv")
+        >>> path = PROJECT_ROOT / "data" / "meta"
+        >>> meta_data.to_csv(str(path / f"{basename}"), index=False)
+        >>> gmd = Get_Meta_Data(basename, path)
+        >>> _ = gmd.fit()
+        >>> loaded_meta_data = gmd.transform()
+        >>> meta_data.equals(loaded_meta_data)
+        True
+        >>> Path.unlink(path / f"{basename}")
+    """
+    @log_fun
+    def __init__(self, basename: Path, path: Path=DATA / "meta"):
+        self.basename = basename
+        self.path = path
+
+
+    @log_fun
+    def fit(self, X=None, y=None):
+        return self
+
+
+    @log_fun
+    def transform(self, X=None, y=None):
+        return pd.read_csv(str(self.path / self.basename))
+
+
+    @log_fun
+    def get_feature_names(self):
+        return None
+
+
+@typechecked
 class Get_Raw_Data(BaseEstimator, TransformerMixin):
     """
     Load raw data
@@ -71,6 +123,7 @@ class Get_Raw_Data(BaseEstimator, TransformerMixin):
         self.basename = basename
         self.path = path
 
+
     @log_fun
     def fit(self, meta_data: pd.DataFrame, y=None):
         # Convert metadata
@@ -94,6 +147,7 @@ class Get_Raw_Data(BaseEstimator, TransformerMixin):
 
         return self
 
+
     @log_fun
     def transform(self, X=None, y=None):
         if self.basename.suffix == ".csv":
@@ -116,6 +170,7 @@ class Get_Raw_Data(BaseEstimator, TransformerMixin):
 
         return data
         
+
     @log_fun
     def get_feature_names(self):
         """
@@ -125,55 +180,6 @@ class Get_Raw_Data(BaseEstimator, TransformerMixin):
             (list): List of loaded columns
         """
         return self.load_columns
-
-
-@typechecked
-class Get_Meta_Data(BaseEstimator, TransformerMixin):
-    """
-    Load meta data
-
-    Args:
-        BaseEstimator (BaseEstimator): Sci-kit learn object
-        TransformerMixin (TransformerMixin): Sci-kit learn object
-
-    Returns:
-        Get_Meta_Data: Instantiated object
-
-    Example:
-        >>> specs = {"float": [100, 1, 0.05] \
-                    ,"int": [100, 1, 0.025] \
-                    ,"categorical": [100, 1, 0.1] \
-                    ,"bool": [100, 1, 0] \
-                    ,"str": [100, 1, 0] \
-                    ,"datetime": [100, 1, 0] \
-                    }
-        >>> df, meta_data = mock_dataset(specs=specs, meta_data=True)
-        >>> basename = Path("meta_mock.csv")
-        >>> path = PROJECT_ROOT / "data" / "meta"
-        >>> meta_data.to_csv(str(path / f"{basename}"), index=False)
-        >>> gmd = Get_Meta_Data(basename, path)
-        >>> _ = gmd.fit()
-        >>> loaded_meta_data = gmd.transform()
-        >>> meta_data.equals(loaded_meta_data)
-        True
-        >>> Path.unlink(path / f"{basename}")
-    """
-    @log_fun
-    def __init__(self, basename: Path, path: Path=DATA / "meta"):
-        self.basename = basename
-        self.path = path
-
-    @log_fun
-    def fit(self, X=None, y=None):
-        return self
-
-    @log_fun
-    def transform(self, X=None, y=None):
-        return pd.read_csv(str(self.path / self.basename))
-        
-    @log_fun
-    def get_feature_names(self):
-        return None
 
 
 @typechecked
@@ -275,7 +281,7 @@ class Train_Test_Split(BaseEstimator, TransformerMixin):
 
 
 @typechecked
-class Split_Time(BaseEstimator, TransformerMixin):
+class Time_Split(BaseEstimator, TransformerMixin):
     """
     Splits data according to a certain date
 
@@ -298,12 +304,12 @@ class Split_Time(BaseEstimator, TransformerMixin):
         >>> spt = Split_Predictors_Target("str_0")
         >>> _ = spt.fit()
         >>> X, y = spt.transform(df)
-        >>> stt = Split_Train_Test(0.75)
-        >>> _ = stt.fit()
-        >>> X_train, X_test, y_train, y_test = stt.transform(X, y)
-        >>> st = Split_Time(split_date=f"{df['datetime_0'].describe()['top'].date()}", time_dim_col="datetime_0")
-        >>> _ = st.fit(X_train, X_test)
-        >>> X, y = st.transform(X_train, X_test, y_train, y_test)
+        >>> tts = Train_Test_Split(0.75)
+        >>> _ = tts.fit()
+        >>> X_train, X_test, y_train, y_test = tts.transform(X, y)
+        >>> ts = Time_Split(split_date=f"{df['datetime_0'].describe()['top'].date()}", time_dim_col="datetime_0")
+        >>> _ = ts.fit(X_train, X_test)
+        >>> X, y = ts.transform(X_train, X_test, y_train, y_test)
         >>> X["train"].shape[0] == y["train"].shape[0]
         True
         >>> X["in-sample_out-time"].shape[0] == y["in-sample_out-time"].shape[0]
@@ -447,7 +453,7 @@ def make_train_test_split_steps(settings: dict) -> list:
         split_date = settings["train"]["split_date"]
         time_dim_col = settings["features"]["time_dimension"]
 
-        steps.append(("split_time", Split_Time(split_date=split_date
+        steps.append(("split_time", Time_Split(split_date=split_date
                                                 ,time_dim_col=time_dim_col)))
 
     return steps
