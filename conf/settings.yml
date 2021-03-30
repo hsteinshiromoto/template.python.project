@@ -1,0 +1,12 @@
+get_data:
+  raw_data: yellow_tripdata_2019-02.csv
+  meta_data: yellow-tripdata.csv
+
+preprocess:
+
+train_test_split:
+  train_proportion: 0.75
+  y_col: "Payment_type"
+  # time_split:
+  #   split_date: 
+  #   time_dimension: 

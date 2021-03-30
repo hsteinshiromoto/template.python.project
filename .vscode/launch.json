@@ -21,9 +21,9 @@
             "console": "integratedTerminal",
             "cwd": "${fileDirname}",
             "env": {"PYTHONPATH": "${workspaceFolder}:${env:PYTHONPATH}"},
-            "args": ["yellow_tripdata_2019-02.csv"
-                    ,"yellow_tripdata.csv"
-                    ]
+            // "args": ["yellow_tripdata_2019-02.csv"
+            //         ,"yellow_tripdata.csv"
+            //         ]
         }
     ]
 }
