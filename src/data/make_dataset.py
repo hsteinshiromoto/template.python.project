@@ -183,7 +183,7 @@ class Get_Raw_Data(BaseEstimator, TransformerMixin):
 
 
 @typechecked
-class Split_Predictors_Target(BaseEstimator, TransformerMixin):
+class Predictors_Target_Split(BaseEstimator, TransformerMixin):
     """
     Splits data set into predictors and target
 
@@ -192,13 +192,13 @@ class Split_Predictors_Target(BaseEstimator, TransformerMixin):
         TransformerMixin (TransformerMixin): Sci-kit learn object
 
     Returns:
-        Split_Predictors_Target: Instantiated object
+        Predictors_Target_Split: Instantiated object
 
     Example:
         >>> data = pd.DataFrame.from_dict({"predictor": np.random.rand(100, 1).flatten(), "target": np.random.rand(100, 1).flatten()})
-        >>> spt = Split_Predictors_Target("target")
-        >>> _ = spt.fit()
-        >>> X, y = spt.transform(data)
+        >>> pts = Predictors_Target_Split("target")
+        >>> _ = pts.fit()
+        >>> X, y = pts.transform(data)
         >>> ("target" not in X.columns.values) and ("predictor" in X.columns.values)
         True
         >>> ("predictor" not in y.columns.values) and ("target" in y.columns.values)
@@ -416,7 +416,7 @@ def date_parser(array, format: str="%Y-%m-%d"):
 
 @log_fun
 @typechecked
-def make_base_steps(raw_data: Path, meta_data: Path, settings: dict) -> list:
+def get_data_steps(raw_data: Path, meta_data: Path, settings: dict) -> list:
     """
     Make the steps to be followed in the pipeline to read raw and meta data
 
@@ -460,18 +460,16 @@ def make_base_steps(raw_data: Path, meta_data: Path, settings: dict) -> list:
         >>> Path.unlink(path / "raw" / f"{basename}")
         >>> Path.unlink(path / "meta" / f"{basename}")
     """
-    y_col = settings["train_model_params"]["y_col"]
 
     # Read data steps
     return [("get_meta_data", Get_Meta_Data(basename=meta_data))
             ,("get_raw_data", Get_Raw_Data(basename=raw_data))
-            ,("split_predictors_target", Split_Predictors_Target(y_col))
             ]
 
 
 @log_fun
 @typechecked
-def make_train_test_split_steps(settings: dict) -> list:
+def train_test_split_steps(train_test_split_settings: dict) -> list:
     """
     Make the steps split data set into training and test
 
@@ -484,31 +482,34 @@ def make_train_test_split_steps(settings: dict) -> list:
     Example:
     # TODO: 
     """
+    y_col = train_test_split_settings["y_col"]
 
-    train_proportion = settings["train_model_params"]["train_proportion"]
+    train_proportion = train_test_split_settings.get("train_proportion") or 0.75
 
-    steps = [("split_train_test", Train_Test_Split(train_proportion))]
+    steps = [("split_predictors_target", Predictors_Target_Split(y_col))
+            ,("split_train_test", Train_Test_Split(train_proportion))]
 
-    try:
-        if settings["features"]["time_dimension"]:
-            split_date = settings["train_model_params"]["split_date"]
-            time_dim_col = settings["features"]["time_dimension"]
+    time_split_settings = train_test_split_settings.get("time_split")
 
-            steps.append(
-                ("split_time", Time_Split(split_date=split_date
-                                        ,time_dim_col=time_dim_col)
-                )
-                        )
+    if time_split_settings:
+        split_date = time_split_settings["split_date"]
+        time_dim_col = time_split_settings["time_dimension"]
 
-    except KeyError:
-        pass
+        steps.append(
+            ("split_time", Time_Split(split_date=split_date
+                                    ,time_dim_col=time_dim_col)
+            )
+                    )
 
     return steps
 
 
 @log_fun
 @typechecked
-def make_filter_cols_steps(settings: dict) -> list:
+def make_preprocess_steps(preprocess_settings: dict=None) -> list:
+
+    if preprocess_settings:
+        pass
 
     return [("filter_nulls", Filter_Nulls())
             ,("filter_entropy", Filter_Entropy())
@@ -533,9 +534,9 @@ def main(raw_data: Path, meta_data: Path, save_interim: bool, steps: list=["base
     if not meta_data:
         meta_data = settings["files"]["meta_data"]
 
-    steps_dict = {"base": make_base_steps(Path(raw_data), Path(meta_data), settings)
-                ,"filter_cols": make_filter_cols_steps(settings)
-                ,"split_data": make_train_test_split_steps(settings)
+    steps_dict = {"base": get_data_steps(Path(raw_data), Path(meta_data), settings)
+                ,"filter_cols": make_preprocess_steps(settings.get("preprocess"))
+                ,"split_data": train_test_split_steps(settings["train_test_split"])
     }
 
     return None
