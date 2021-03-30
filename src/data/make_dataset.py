@@ -205,8 +205,8 @@ class Split_Predictors_Target(BaseEstimator, TransformerMixin):
         True
     """
     @log_fun
-    def __init__(self, target_col: str):
-        self.target_col = target_col
+    def __init__(self, y_col: str):
+        self.y_col = y_col
     
     @log_fun
     def fit(self, X=None, y=None):
@@ -214,15 +214,15 @@ class Split_Predictors_Target(BaseEstimator, TransformerMixin):
 
     @log_fun
     def transform(self, data: dd, y=None):
-        X = data.loc[:, data.columns != self.target_col]
-        y = data[[self.target_col]]
+        X = data.loc[:, data.columns != self.y_col]
+        y = data[[self.y_col]]
 
         self.predictors = X.columns.values
         return X, y
         
     @log_fun
     def get_feature_names(self):
-        return self.predictors, self.target_col
+        return self.predictors, self.y_col
 
 
 @typechecked
@@ -416,7 +416,7 @@ def date_parser(array, format: str="%Y-%m-%d"):
 
 @log_fun
 @typechecked
-def make_base_steps(basename: Path, settings: dict) -> list:
+def make_base_steps(raw_data: Path, meta_data: Path, settings: dict) -> list:
     """
     Make the steps to be followed in the pipeline to read raw and meta data
 
@@ -460,12 +460,12 @@ def make_base_steps(basename: Path, settings: dict) -> list:
         >>> Path.unlink(path / "raw" / f"{basename}")
         >>> Path.unlink(path / "meta" / f"{basename}")
     """
-    target_column = settings["train"]["target_col"]
+    y_col = settings["train_model_params"]["y_col"]
 
     # Read data steps
-    return [("get_meta_data", Get_Meta_Data(basename))
-            ,("get_raw_data", Get_Raw_Data(basename))
-            ,("split_predictors_target", Split_Predictors_Target(target_column))
+    return [("get_meta_data", Get_Meta_Data(basename=meta_data))
+            ,("get_raw_data", Get_Raw_Data(basename=raw_data))
+            ,("split_predictors_target", Split_Predictors_Target(y_col))
             ]
 
 
@@ -485,16 +485,23 @@ def make_train_test_split_steps(settings: dict) -> list:
     # TODO: 
     """
 
-    train_test_split_size = settings["train"]["train_test_split_size"]
+    train_proportion = settings["train_model_params"]["train_proportion"]
 
-    steps = [("split_train_test", Split_Train_Test(train_test_split_size))]
+    steps = [("split_train_test", Train_Test_Split(train_proportion))]
 
-    if settings["features"]["time_dimension"]:
-        split_date = settings["train"]["split_date"]
-        time_dim_col = settings["features"]["time_dimension"]
+    try:
+        if settings["features"]["time_dimension"]:
+            split_date = settings["train_model_params"]["split_date"]
+            time_dim_col = settings["features"]["time_dimension"]
 
-        steps.append(("split_time", Time_Split(split_date=split_date
-                                                ,time_dim_col=time_dim_col)))
+            steps.append(
+                ("split_time", Time_Split(split_date=split_date
+                                        ,time_dim_col=time_dim_col)
+                )
+                        )
+
+    except KeyError:
+        pass
 
     return steps
 
@@ -509,9 +516,9 @@ def make_filter_cols_steps(settings: dict) -> list:
 
 
 @click.command()
-@click.argument('raw_data', type=click.Path())
-@click.argument('meta_data', type=click.Path())
-@click.option("-i",'--save_interim', type=bool, default=True)
+@click.argument('raw_data', type=click.Path(), default=None)
+@click.argument('meta_data', type=click.Path(), default=None)
+@click.option("-i", '--save_interim', type=bool, default=True)
 @log_fun
 def main(raw_data: Path, meta_data: Path, save_interim: bool, steps: list=["base"]):
     
@@ -520,7 +527,13 @@ def main(raw_data: Path, meta_data: Path, save_interim: bool, steps: list=["base
     ## Settings
     settings = get_settings()
 
-    steps_dict = {"base": make_base_steps(basename, settings)
+    if not raw_data:
+        raw_data = settings["files"]["raw_data"]
+
+    if not meta_data:
+        meta_data = settings["files"]["meta_data"]
+
+    steps_dict = {"base": make_base_steps(Path(raw_data), Path(meta_data), settings)
                 ,"filter_cols": make_filter_cols_steps(settings)
                 ,"split_data": make_train_test_split_steps(settings)
     }
