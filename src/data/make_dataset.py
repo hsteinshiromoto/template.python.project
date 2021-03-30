@@ -416,7 +416,7 @@ def date_parser(array, format: str="%Y-%m-%d"):
 
 @log_fun
 @typechecked
-def get_data_steps(raw_data: Path, meta_data: Path, settings: dict) -> list:
+def get_data_steps(raw_data: Path or str, meta_data: Path or str) -> list:
     """
     Make the steps to be followed in the pipeline to read raw and meta data
 
@@ -462,6 +462,9 @@ def get_data_steps(raw_data: Path, meta_data: Path, settings: dict) -> list:
     """
 
     # Read data steps
+    meta_data = Path(meta_data) if isinstance(meta_data, str) else meta_data
+    raw_data = Path(raw_data) if isinstance(raw_data, str) else raw_data
+
     return [("get_meta_data", Get_Meta_Data(basename=meta_data))
             ,("get_raw_data", Get_Raw_Data(basename=raw_data))
             ]
@@ -469,7 +472,8 @@ def get_data_steps(raw_data: Path, meta_data: Path, settings: dict) -> list:
 
 @log_fun
 @typechecked
-def train_test_split_steps(train_test_split_settings: dict) -> list:
+def train_test_split_steps(y_col: str, train_proportion: float=0.75
+                        ,time_split_settings: dict=None) -> list:
     """
     Make the steps split data set into training and test
 
@@ -482,14 +486,9 @@ def train_test_split_steps(train_test_split_settings: dict) -> list:
     Example:
     # TODO: 
     """
-    y_col = train_test_split_settings["y_col"]
-
-    train_proportion = train_test_split_settings.get("train_proportion") or 0.75
 
     steps = [("split_predictors_target", Predictors_Target_Split(y_col))
             ,("split_train_test", Train_Test_Split(train_proportion))]
-
-    time_split_settings = train_test_split_settings.get("time_split")
 
     if time_split_settings:
         split_date = time_split_settings["split_date"]
@@ -517,8 +516,8 @@ def make_preprocess_steps(preprocess_settings: dict=None) -> list:
 
 
 @click.command()
-@click.argument('raw_data', type=click.Path(), default=None)
-@click.argument('meta_data', type=click.Path(), default=None)
+@click.option('--raw_data', type=click.Path(), default=None)
+@click.option('--meta_data', type=click.Path(), default=None)
 @click.option("-i", '--save_interim', type=bool, default=True)
 @log_fun
 def main(raw_data: Path, meta_data: Path, save_interim: bool, steps: list=["base"]):
@@ -528,15 +527,15 @@ def main(raw_data: Path, meta_data: Path, save_interim: bool, steps: list=["base
     ## Settings
     settings = get_settings()
 
-    if not raw_data:
-        raw_data = settings["files"]["raw_data"]
+    # if not raw_data:
+    #     raw_data = settings["files"]["raw_data"]
 
-    if not meta_data:
-        meta_data = settings["files"]["meta_data"]
+    # if not meta_data:
+    #     meta_data = settings["files"]["meta_data"]
 
-    steps_dict = {"base": get_data_steps(Path(raw_data), Path(meta_data), settings)
-                ,"filter_cols": make_preprocess_steps(settings.get("preprocess"))
-                ,"split_data": train_test_split_steps(settings["train_test_split"])
+    steps_dict = {"get_data": get_data_steps(**settings.get("get_data"))
+                ,"pre_process": make_preprocess_steps(settings.get("preprocess"))
+                ,"split_data": train_test_split_steps(**settings["train_test_split"])
     }
 
     return None
