@@ -30,6 +30,58 @@ from tests.mock_dataset import mock_dataset
 
 
 @typechecked
+class Get_Meta_Data(BaseEstimator, TransformerMixin):
+    """
+    Load meta data
+
+    Args:
+        BaseEstimator (BaseEstimator): Sci-kit learn object
+        TransformerMixin (TransformerMixin): Sci-kit learn object
+
+    Returns:
+        Get_Meta_Data: Instantiated object
+
+    Example:
+        >>> specs = {"float": [100, 1, 0.05] \
+                    ,"int": [100, 1, 0.025] \
+                    ,"categorical": [100, 1, 0.1] \
+                    ,"bool": [100, 1, 0] \
+                    ,"str": [100, 1, 0] \
+                    ,"datetime": [100, 1, 0] \
+                    }
+        >>> df, meta_data = mock_dataset(specs=specs, meta_data=True)
+        >>> basename = Path("meta_mock.csv")
+        >>> path = PROJECT_ROOT / "data" / "meta"
+        >>> meta_data.to_csv(str(path / f"{basename}"), index=False)
+        >>> gmd = Get_Meta_Data(basename, path)
+        >>> _ = gmd.fit()
+        >>> loaded_meta_data = gmd.transform()
+        >>> meta_data.equals(loaded_meta_data)
+        True
+        >>> Path.unlink(path / f"{basename}")
+    """
+    @log_fun
+    def __init__(self, basename: Path, path: Path=DATA / "meta"):
+        self.basename = basename
+        self.path = path
+
+
+    @log_fun
+    def fit(self, X=None, y=None):
+        return self
+
+
+    @log_fun
+    def transform(self, X=None, y=None):
+        return pd.read_csv(str(self.path / self.basename))
+
+
+    @log_fun
+    def get_feature_names(self):
+        return None
+
+
+@typechecked
 class Get_Raw_Data(BaseEstimator, TransformerMixin):
     """
     Load raw data
@@ -71,6 +123,7 @@ class Get_Raw_Data(BaseEstimator, TransformerMixin):
         self.basename = basename
         self.path = path
 
+
     @log_fun
     def fit(self, meta_data: pd.DataFrame, y=None):
         # Convert metadata
@@ -94,6 +147,7 @@ class Get_Raw_Data(BaseEstimator, TransformerMixin):
 
         return self
 
+
     @log_fun
     def transform(self, X=None, y=None):
         if self.basename.suffix == ".csv":
@@ -116,6 +170,7 @@ class Get_Raw_Data(BaseEstimator, TransformerMixin):
 
         return data
         
+
     @log_fun
     def get_feature_names(self):
         """
@@ -128,56 +183,7 @@ class Get_Raw_Data(BaseEstimator, TransformerMixin):
 
 
 @typechecked
-class Get_Meta_Data(BaseEstimator, TransformerMixin):
-    """
-    Load meta data
-
-    Args:
-        BaseEstimator (BaseEstimator): Sci-kit learn object
-        TransformerMixin (TransformerMixin): Sci-kit learn object
-
-    Returns:
-        Get_Meta_Data: Instantiated object
-
-    Example:
-        >>> specs = {"float": [100, 1, 0.05] \
-                    ,"int": [100, 1, 0.025] \
-                    ,"categorical": [100, 1, 0.1] \
-                    ,"bool": [100, 1, 0] \
-                    ,"str": [100, 1, 0] \
-                    ,"datetime": [100, 1, 0] \
-                    }
-        >>> df, meta_data = mock_dataset(specs=specs, meta_data=True)
-        >>> basename = Path("meta_mock.csv")
-        >>> path = PROJECT_ROOT / "data" / "meta"
-        >>> meta_data.to_csv(str(path / f"{basename}"), index=False)
-        >>> gmd = Get_Meta_Data(basename, path)
-        >>> _ = gmd.fit()
-        >>> loaded_meta_data = gmd.transform()
-        >>> meta_data.equals(loaded_meta_data)
-        True
-        >>> Path.unlink(path / f"{basename}")
-    """
-    @log_fun
-    def __init__(self, basename: Path, path: Path=DATA / "meta"):
-        self.basename = basename
-        self.path = path
-
-    @log_fun
-    def fit(self, X=None, y=None):
-        return self
-
-    @log_fun
-    def transform(self, X=None, y=None):
-        return pd.read_csv(str(self.path / self.basename))
-        
-    @log_fun
-    def get_feature_names(self):
-        return None
-
-
-@typechecked
-class Split_Predictors_Target(BaseEstimator, TransformerMixin):
+class Predictors_Target_Split(BaseEstimator, TransformerMixin):
     """
     Splits data set into predictors and target
 
@@ -186,21 +192,21 @@ class Split_Predictors_Target(BaseEstimator, TransformerMixin):
         TransformerMixin (TransformerMixin): Sci-kit learn object
 
     Returns:
-        Split_Predictors_Target: Instantiated object
+        Predictors_Target_Split: Instantiated object
 
     Example:
         >>> data = pd.DataFrame.from_dict({"predictor": np.random.rand(100, 1).flatten(), "target": np.random.rand(100, 1).flatten()})
-        >>> spt = Split_Predictors_Target("target")
-        >>> _ = spt.fit()
-        >>> X, y = spt.transform(data)
+        >>> pts = Predictors_Target_Split("target")
+        >>> _ = pts.fit()
+        >>> X, y = pts.transform(data)
         >>> ("target" not in X.columns.values) and ("predictor" in X.columns.values)
         True
         >>> ("predictor" not in y.columns.values) and ("target" in y.columns.values)
         True
     """
     @log_fun
-    def __init__(self, target_col: str):
-        self.target_col = target_col
+    def __init__(self, y_col: str):
+        self.y_col = y_col
     
     @log_fun
     def fit(self, X=None, y=None):
@@ -208,15 +214,15 @@ class Split_Predictors_Target(BaseEstimator, TransformerMixin):
 
     @log_fun
     def transform(self, data: dd, y=None):
-        X = data.loc[:, data.columns != self.target_col]
-        y = data[[self.target_col]]
+        X = data.loc[:, data.columns != self.y_col]
+        y = data[[self.y_col]]
 
         self.predictors = X.columns.values
         return X, y
         
     @log_fun
     def get_feature_names(self):
-        return self.predictors, self.target_col
+        return self.predictors, self.y_col
 
 
 @typechecked
@@ -275,7 +281,7 @@ class Train_Test_Split(BaseEstimator, TransformerMixin):
 
 
 @typechecked
-class Split_Time(BaseEstimator, TransformerMixin):
+class Time_Split(BaseEstimator, TransformerMixin):
     """
     Splits data according to a certain date
 
@@ -298,12 +304,12 @@ class Split_Time(BaseEstimator, TransformerMixin):
         >>> spt = Split_Predictors_Target("str_0")
         >>> _ = spt.fit()
         >>> X, y = spt.transform(df)
-        >>> stt = Split_Train_Test(0.75)
-        >>> _ = stt.fit()
-        >>> X_train, X_test, y_train, y_test = stt.transform(X, y)
-        >>> st = Split_Time(split_date=f"{df['datetime_0'].describe()['top'].date()}", time_dim_col="datetime_0")
-        >>> _ = st.fit(X_train, X_test)
-        >>> X, y = st.transform(X_train, X_test, y_train, y_test)
+        >>> tts = Train_Test_Split(0.75)
+        >>> _ = tts.fit()
+        >>> X_train, X_test, y_train, y_test = tts.transform(X, y)
+        >>> ts = Time_Split(split_date=f"{df['datetime_0'].describe()['top'].date()}", time_dim_col="datetime_0")
+        >>> _ = ts.fit(X_train, X_test)
+        >>> X, y = ts.transform(X_train, X_test, y_train, y_test)
         >>> X["train"].shape[0] == y["train"].shape[0]
         True
         >>> X["in-sample_out-time"].shape[0] == y["in-sample_out-time"].shape[0]
@@ -346,6 +352,46 @@ class Split_Time(BaseEstimator, TransformerMixin):
         return None
 
 
+class Save_Dataset(BaseEstimator, TransformerMixin):
+    @log_fun
+    def __init__(self, basename: Path, path: Path):
+        self.basename = basename
+        self.path = path
+
+
+    @log_fun
+    def fit(self, X=None, y=None):
+        return self
+
+
+    @log_fun
+    def transform(self, X=None, y=None):
+        if self.basename.suffix == ".csv":
+            # Load data file
+            X.to_csv(str(self.path / self.basename.stem) + "_*.csv", index=False)
+            y.to_csv(str(self.path / self.basename.stem) + "_*.csv", index=False)
+
+        elif self.basename.suffix == ".parquet":
+            dd.to_parquet(X
+                        ,str(self.path / self.basename.stem) + "_*.parquet"
+                        ,overwrite=True
+                        )
+            dd.to_parquet(y
+                        ,str(self.path / self.basename.stem) + "_*.parquet"
+                        ,overwrite=True
+                        )
+
+        else:
+            msg = f"Wrong file format. Expected either: csv or parquet. \
+                    Got {Path(self.basename)}."
+            raise NotImplementedError(msg)
+
+
+    @log_fun
+    def get_feature_names(self):
+        return None
+
+
 @log_fun
 @typechecked
 def date_parser(array, format: str="%Y-%m-%d"):
@@ -370,7 +416,7 @@ def date_parser(array, format: str="%Y-%m-%d"):
 
 @log_fun
 @typechecked
-def make_base_steps(basename: Path, settings: dict) -> list:
+def get_data_steps(raw_data: Path or str, meta_data: Path or str) -> list:
     """
     Make the steps to be followed in the pipeline to read raw and meta data
 
@@ -414,18 +460,20 @@ def make_base_steps(basename: Path, settings: dict) -> list:
         >>> Path.unlink(path / "raw" / f"{basename}")
         >>> Path.unlink(path / "meta" / f"{basename}")
     """
-    target_column = settings["train"]["target_col"]
 
     # Read data steps
-    return [("get_meta_data", Get_Meta_Data(basename))
-            ,("get_raw_data", Get_Raw_Data(basename))
-            ,("split_predictors_target", Split_Predictors_Target(target_column))
+    meta_data = Path(meta_data) if isinstance(meta_data, str) else meta_data
+    raw_data = Path(raw_data) if isinstance(raw_data, str) else raw_data
+
+    return [("get_meta_data", Get_Meta_Data(basename=meta_data))
+            ,("get_raw_data", Get_Raw_Data(basename=raw_data))
             ]
 
 
 @log_fun
 @typechecked
-def make_train_test_split_steps(settings: dict) -> list:
+def train_test_split_steps(y_col: str, train_proportion: float=0.75
+                        ,time_split_settings: dict=None) -> list:
     """
     Make the steps split data set into training and test
 
@@ -439,23 +487,28 @@ def make_train_test_split_steps(settings: dict) -> list:
     # TODO: 
     """
 
-    train_test_split_size = settings["train"]["train_test_split_size"]
+    steps = [("split_predictors_target", Predictors_Target_Split(y_col))
+            ,("split_train_test", Train_Test_Split(train_proportion))]
 
-    steps = [("split_train_test", Split_Train_Test(train_test_split_size))]
+    if time_split_settings:
+        split_date = time_split_settings["split_date"]
+        time_dim_col = time_split_settings["time_dimension"]
 
-    if settings["features"]["time_dimension"]:
-        split_date = settings["train"]["split_date"]
-        time_dim_col = settings["features"]["time_dimension"]
-
-        steps.append(("split_time", Split_Time(split_date=split_date
-                                                ,time_dim_col=time_dim_col)))
+        steps.append(
+            ("split_time", Time_Split(split_date=split_date
+                                    ,time_dim_col=time_dim_col)
+            )
+                    )
 
     return steps
 
 
 @log_fun
 @typechecked
-def make_filter_cols_steps(settings: dict) -> list:
+def make_preprocess_steps(preprocess_settings: dict=None) -> list:
+
+    if preprocess_settings:
+        pass
 
     return [("filter_nulls", Filter_Nulls())
             ,("filter_entropy", Filter_Entropy())
@@ -463,19 +516,26 @@ def make_filter_cols_steps(settings: dict) -> list:
 
 
 @click.command()
-@click.argument('basename', type=click.Path())
-@click.argument('save_interim', type=bool, default=True)
+@click.option('--raw_data', type=click.Path(), default=None)
+@click.option('--meta_data', type=click.Path(), default=None)
+@click.option("-i", '--save_interim', type=bool, default=True)
 @log_fun
-def main(basename: Path, save_interim: bool, steps: list=["base"]):
+def main(raw_data: Path, meta_data: Path, save_interim: bool, steps: list=["base"]):
     
     # Load
 
     ## Settings
     settings = get_settings()
 
-    steps_dict = {"base": make_base_steps(basename, settings)
-                ,"filter_cols": make_filter_cols_steps(settings)
-                ,"split_data": make_train_test_split_steps(settings)
+    # if not raw_data:
+    #     raw_data = settings["files"]["raw_data"]
+
+    # if not meta_data:
+    #     meta_data = settings["files"]["meta_data"]
+
+    steps_dict = {"get_data": get_data_steps(**settings.get("get_data"))
+                ,"pre_process": make_preprocess_steps(settings.get("preprocess"))
+                ,"split_data": train_test_split_steps(**settings["train_test_split"])
     }
 
     return None
