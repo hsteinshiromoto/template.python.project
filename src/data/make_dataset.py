@@ -263,7 +263,7 @@ class Train_Test_Split(BaseEstimator, TransformerMixin):
         return self
 
     @log_fun
-    def transform(self, X: dd, y: dd=None):
+    def transform(self, X=None, y=None):
         if isinstance(X, tuple):
             y = X[1]
             X = X[0]
@@ -331,7 +331,7 @@ class Time_Split(BaseEstimator, TransformerMixin):
         self.time_dim_col = time_dim_col
     
     @log_fun
-    def fit(self, X_train: dd, X_test: dd, y_train=None, y_test=None):
+    def fit(self, X_train=None, X_test=None, y_train=None, y_test=None):
         if isinstance(X_train, tuple):
             X_test = X_train[1]
             y_train = X_train[2]
@@ -344,7 +344,7 @@ class Time_Split(BaseEstimator, TransformerMixin):
         return self
 
     @log_fun
-    def transform(self, X_train: dd, X_test: dd, y_train: dd, y_test: dd):
+    def transform(self, X_train=None, X_test=None, y_train=None, y_test=None):
         if isinstance(X_train, tuple):
             X_test = X_train[1]
             y_train = X_train[2]
