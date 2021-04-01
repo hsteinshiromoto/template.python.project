@@ -264,6 +264,10 @@ class Train_Test_Split(BaseEstimator, TransformerMixin):
 
     @log_fun
     def transform(self, X: dd, y: dd=None):
+        if isinstance(X, tuple):
+            y = X[1]
+            X = X[0]
+
         n_partitions = X.npartitions
 
         for train_index, test_index in self.sss.split(X, y):
@@ -328,6 +332,12 @@ class Time_Split(BaseEstimator, TransformerMixin):
     
     @log_fun
     def fit(self, X_train: dd, X_test: dd, y_train=None, y_test=None):
+        if isinstance(X_train, tuple):
+            X_test = X_train[1]
+            y_train = X_train[2]
+            y_test = X_train[3]
+            X_train = X_train[0]
+
         self.mask_train_in_time = X_train[self.time_dim_col] <= self.split_date
         self.mask_test_in_time = X_test[self.time_dim_col] <= self.split_date
 
@@ -335,6 +345,12 @@ class Time_Split(BaseEstimator, TransformerMixin):
 
     @log_fun
     def transform(self, X_train: dd, X_test: dd, y_train: dd, y_test: dd):
+        if isinstance(X_train, tuple):
+            X_test = X_train[1]
+            y_train = X_train[2]
+            y_test = X_train[3]
+            X_train = X_train[0]
+
         X = {"train": X_train[self.mask_train_in_time]
         ,"in-sample_out-time": X_train[~self.mask_train_in_time]
         ,"out-sample_in-time": X_test[self.mask_test_in_time]
@@ -368,6 +384,10 @@ class Save_Dataset(BaseEstimator, TransformerMixin):
 
     @log_fun
     def transform(self, X=None, y=None):
+        if isinstance(X, tuple):
+            y = X[1]
+            X = X[0]
+            
         if self.basename.suffix == ".csv":
             # Load data file
             X.to_csv(str(self.path / self.basename.stem) + "_*.csv", index=False)
