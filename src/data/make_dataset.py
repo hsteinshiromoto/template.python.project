@@ -536,10 +536,7 @@ def main(raw_data: Path, meta_data: Path, save_interim: bool, steps: list=["base
 
     steps = []
     for step in steps_dict.values():
-        ic(step)
         steps.extend(step)
-
-    ic(steps)
 
     pipe = EPipeline(steps)
     pipe.fit(X="None")
