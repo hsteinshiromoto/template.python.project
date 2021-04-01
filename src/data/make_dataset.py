@@ -4,6 +4,7 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import Union
 
 import click
 import dask.dataframe as dd
@@ -11,6 +12,7 @@ import numpy as np
 import pandas as pd
 import pretty_errors
 from dotenv import find_dotenv, load_dotenv
+from icecream import ic
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.model_selection import StratifiedShuffleSplit
 from sklearn.pipeline import FeatureUnion, Pipeline
@@ -416,7 +418,7 @@ def date_parser(array, format: str="%Y-%m-%d"):
 
 @log_fun
 @typechecked
-def get_data_steps(raw_data: Path or str, meta_data: Path or str) -> list:
+def get_data_steps(raw_data: Union[Path,str], meta_data: Union[Path,str]) -> list:
     """
     Make the steps to be followed in the pipeline to read raw and meta data
 
@@ -527,16 +529,21 @@ def main(raw_data: Path, meta_data: Path, save_interim: bool, steps: list=["base
     ## Settings
     settings = get_settings()
 
-    # if not raw_data:
-    #     raw_data = settings["files"]["raw_data"]
-
-    # if not meta_data:
-    #     meta_data = settings["files"]["meta_data"]
-
     steps_dict = {"get_data": get_data_steps(**settings.get("get_data"))
                 ,"pre_process": make_preprocess_steps(settings.get("preprocess"))
                 ,"split_data": train_test_split_steps(**settings["train_test_split"])
     }
+
+    steps = []
+    for step in steps_dict.values():
+        ic(step)
+        steps.extend(step)
+
+    ic(steps)
+
+    pipe = EPipeline(steps)
+    pipe.fit(X="None")
+    data = pipe.transform(X="None")
 
     return None
 
