@@ -6,7 +6,7 @@ preprocess:
 
 train_test_split:
   train_proportion: 0.75
-  y_col: "Payment_type"
+  y_col: "payment_type"
   # time_split:
   #   split_date: 
   #   time_dimension: 
