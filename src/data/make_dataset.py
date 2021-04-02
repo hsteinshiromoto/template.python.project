@@ -560,7 +560,7 @@ def main(raw_data: Path, meta_data: Path, save_interim: bool, steps: list=["base
 
     pipe = EPipeline(steps)
     pipe.fit(X="None")
-    data = pipe.transform(X="None")
+    X_train, X_test, y_train, y_test = pipe.transform(X="None")
 
     return None
 
