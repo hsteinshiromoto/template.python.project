@@ -6,7 +6,7 @@ preprocess:
 
 train_test_split:
   train_proportion: 0.75
-  y_col: "payment_type"
-  # time_split:
-  #   split_date: 
-  #   time_dimension: 
+  y_col: payment_type
+  time_split_settings:
+    split_date: 2019-02-20
+    time_dimension: tpep_pickup_datetime
