@@ -326,7 +326,7 @@ class Time_Split(BaseEstimator, TransformerMixin):
         True
     """
     @log_fun
-    def __init__(self, split_date: str, time_dim_col: str):
+    def __init__(self, split_date: Union[str, datetime, datetime.date], time_dim_col: str):
         self.split_date = split_date
         self.time_dim_col = time_dim_col
     
@@ -440,7 +440,7 @@ def date_parser(array, format: str="%Y-%m-%d"):
 
 @log_fun
 @typechecked
-def get_data_steps(raw_data: Union[Path,str], meta_data: Union[Path,str]) -> list:
+def get_data_steps(raw_data: Union[Path, str], meta_data: Union[Path,str]) -> list:
     """
     Make the steps to be followed in the pipeline to read raw and meta data
 
@@ -562,7 +562,7 @@ def main(raw_data: Path, meta_data: Path, save_interim: bool, steps: list=["base
 
     pipe = EPipeline(steps)
     pipe.fit(X="None")
-    X_train, X_test, y_train, y_test = pipe.transform(X="None")
+    X, y = pipe.transform(X="None")
 
     return None
 
