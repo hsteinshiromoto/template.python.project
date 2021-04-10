@@ -338,8 +338,8 @@ class Time_Split(BaseEstimator, TransformerMixin):
             y_test = X_train[3]
             X_train = X_train[0]
 
-        self.mask_train_in_time = X_train[self.time_dim_col] <= self.split_date
-        self.mask_test_in_time = X_test[self.time_dim_col] <= self.split_date
+        self.mask_train_in_time = X_train[self.time_dim_col].compute() <= self.split_date
+        self.mask_test_in_time = X_test[self.time_dim_col].compute() <= self.split_date
 
         return self
 
@@ -351,16 +351,18 @@ class Time_Split(BaseEstimator, TransformerMixin):
             y_test = X_train[3]
             X_train = X_train[0]
 
-        X = {"train": X_train[self.mask_train_in_time]
-        ,"in-sample_out-time": X_train[~self.mask_train_in_time]
-        ,"out-sample_in-time": X_test[self.mask_test_in_time]
-        ,"out-sample_out-time": X_test[~self.mask_test_in_time]
+        n_partitions = X.npartitions
+
+        X = {"train": dd.from_pandas(X_train.compute()[self.mask_train_in_time], npartitions=n_partitions)
+        ,"in-sample_out-time": dd.from_pandas(X_train.compute()[~self.mask_train_in_time], npartitions=n_partitions)
+        ,"out-sample_in-time": dd.from_pandas(X_test.compute()[self.mask_test_in_time], npartitions=n_partitions)
+        ,"out-sample_out-time": dd.from_pandas(X_test.compute()[~self.mask_test_in_time], npartitions=n_partitions)
         }
 
-        y = {"train": y_train[self.mask_train_in_time]
-            ,"in-sample_out-time": y_train[~self.mask_train_in_time]
-            ,"out-sample_in-time": y_test[self.mask_test_in_time]
-            ,"out-sample_out-time": y_test[~self.mask_test_in_time]
+        y = {"train": dd.from_pandas(y_train.compute()[self.mask_train_in_time], npartitions=n_partitions)
+            ,"in-sample_out-time": dd.from_pandas(y_train.compute()[~self.mask_train_in_time], npartitions=n_partitions)
+            ,"out-sample_in-time": dd.from_pandas(y_test.compute()[self.mask_test_in_time], npartitions=n_partitions)
+            ,"out-sample_out-time": dd.from_pandas(y_test.compute()[~self.mask_test_in_time], npartitions=n_partitions)
             }
 
         return X, y
