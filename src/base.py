@@ -7,7 +7,8 @@ PROJECT_ROOT = Path(subprocess.Popen(['git', 'rev-parse', '--show-toplevel'],
 stdout=subprocess.PIPE).communicate()[0].rstrip().decode('utf-8'))
 
 
-def get_settings(basename: str="settings.yml", path: Path=PROJECT_ROOT / "conf") -> dict:
+def get_settings(basename: str="settings.yml"
+                ,path: Path=PROJECT_ROOT / "src" / "conf") -> dict:
     """
     Loads settings file
 
@@ -21,7 +22,6 @@ def get_settings(basename: str="settings.yml", path: Path=PROJECT_ROOT / "conf")
     Returns:
         dict: settings
     """
-
     with open(str(path / basename), 'r') as stream:
         try:
             settings = yaml.safe_load(stream)

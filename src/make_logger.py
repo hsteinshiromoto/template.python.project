@@ -9,12 +9,13 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-PROJECT_ROOT = Path(subprocess.Popen(['git', 'rev-parse', '--show-toplevel'], stdout=subprocess.PIPE).communicate()[0].rstrip().decode('utf-8'))
+PROJECT_ROOT = Path(subprocess.Popen(['git', 'rev-parse', '--show-toplevel']
+                    ,stdout=subprocess.PIPE).communicate()[0].rstrip().decode('utf-8'))
 
 
 def make_logger(filename: str, path: Path=PROJECT_ROOT / "logs"
                 ,test: bool=False
-                ,log_config_file: Path=PROJECT_ROOT / "conf" / "log.conf"):
+                ,log_config_file: Path=PROJECT_ROOT / "src" / "conf" / "log.conf"):
     """
     Instantiate logger object
 
