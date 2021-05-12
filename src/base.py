@@ -60,22 +60,7 @@ def get_settings(basename: str="settings.yml"
     Returns:
         dict: settings
     """
-    with open(str(path / basename), 'r') as stream:
-        try:
-            settings = yaml.safe_load(stream)
-
-        except yaml.YAMLError as exc:
-            raise exc
-
-    return settings
+    return Get_Filename(path).load(basename)
 
 
 if __name__ == "__main__":
-    get_conf = Get_Filename(PROJECT_ROOT / "src" / "conf")
-
-    for item in get_conf.list_files(pattern="*", sort=True):
-        print(item)
-
-    print(get_conf.load("settings.yml"))
-    # for item in filter(Path.is_file, Path(__file__).resolve().parent.glob("*")):
-    #     print(item)
