@@ -25,9 +25,11 @@ class Get_Filename(object):
         yield from output
 
 
-    def load(self, basename: Union[str, Path]=None):
+    def load(self, basename: Union[str, Path]):
+        basename = Path(basename)
+
         with open(str(self.path / basename), 'rb') as file:
-            if basename.suffix in ["yml", "yaml"]:
+            if basename.suffix in [".yml", ".yaml"]:
                 return yaml.safe_load(file)
 
             else:
@@ -41,8 +43,6 @@ class Get_Filename(object):
 
     def newest(self, pattern: str="*"):
         return self.list_files(pattern=pattern)[0]
-
-
 
 
 def get_settings(basename: str="settings.yml"
@@ -71,10 +71,11 @@ def get_settings(basename: str="settings.yml"
 
 
 if __name__ == "__main__":
-    get_file = Get_Filename(path=Path(__file__).resolve().parent)
+    get_conf = Get_Filename(PROJECT_ROOT / "src" / "conf")
 
-    for item in get_file.list_files(pattern="*.py", sort=True):
-        print(type(item))
+    for item in get_conf.list_files(pattern="*", sort=True):
+        print(item)
 
+    print(get_conf.load("settings.yml"))
     # for item in filter(Path.is_file, Path(__file__).resolve().parent.glob("*")):
     #     print(item)
