@@ -6,8 +6,7 @@ import os
 
 import yaml
 
-PROJECT_ROOT = Path(subprocess.Popen(['git', 'rev-parse', '--show-toplevel'], 
-stdout=subprocess.PIPE).communicate()[0].rstrip().decode('utf-8'))
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 class Get_Filename(object):
     def __init__(self, path: Path):
@@ -64,3 +63,4 @@ def get_settings(basename: str="settings.yml"
 
 
 if __name__ == "__main__":
+    pass
