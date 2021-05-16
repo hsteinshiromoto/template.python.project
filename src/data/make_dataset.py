@@ -289,22 +289,26 @@ class Train_Test_Split(BaseEstimator, TransformerMixin):
 @typechecked
 class Select_Train_Datasets(BaseEstimator, TransformerMixin):
     @log_fun
-    def __init__(self, return_train: bool=True):
-        self.return_train
+    def __init__(self, time_split: bool=False):
+        self.time_split = time_split
 
     @log_fun
     def fit(self, X=None, y=None):
         return self
 
     @log_fun
-    def fit(self, X: tuple, y=None):
-        X_train, X_test, y_train, y_test = X
-        
-        if self.return_train:
-            return X_train, y_train
+    def transform(self, X: tuple, y=None):
+        if self.time_split == True:
+            y = X[1]
+            X = X[0]
+
+            X_train = X["train"]
+            y_train = y["train"]
 
         else:
-            return X_test, y_test
+            X_train, X_test, y_train, y_test = X
+        
+        return X_train, y_train
 
 
 @typechecked
