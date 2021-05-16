@@ -14,7 +14,6 @@ class Get_Filename(ABC, BaseEstimator, TransformerMixin):
         self.path = path
         super().__init__()
 
-
     def list_files(self, pattern: str="*", sort: bool=False):
         files_list = list(filter(Path.is_file, self.path.glob(pattern)))
 
@@ -25,8 +24,40 @@ class Get_Filename(ABC, BaseEstimator, TransformerMixin):
 
         yield from output
 
-
+    @abstractmethod
     def load(self, basename: Union[str, Path]):
+        pass
+
+    def load_newest(self, pattern: str="*"):
+        newest = self.newest(pattern=pattern)
+        return self.load(newest.name)
+
+    def newest(self, pattern: str="*"):
+        return self.list_files(pattern=pattern)[0]
+
+
+class Get_Settings(Get_Filename):
+    """Loads settings file
+
+    Args:
+        path (Path, optional): Path of seetings file. Defaults to PROJECT_ROOT/"src"/"conf".
+
+    Example:
+        >>> settings = Get_Settings().load()
+        >>> isinstance(settings, dict)
+        True
+    """
+    def __init__(self, path: Path=PROJECT_ROOT / "src" / "conf"):
+        super().__init__(path)
+
+    def load(self, basename: Union[str, Path]="settings.yml"):
+        """
+        Args:
+            basename (str, Path, optional): Basename of settings file. Defaults to "settings.yml".
+
+        Returns:
+            dict: settings
+        """
         basename = Path(basename)
 
         with open(str(self.path / basename), 'rb') as file:
@@ -35,31 +66,3 @@ class Get_Filename(ABC, BaseEstimator, TransformerMixin):
 
             else:
                 return file.open()
-
-
-    def load_newest(self, pattern: str="*"):
-        newest = self.newest(pattern=pattern)
-        return self.load(newest.name)
-
-
-    def newest(self, pattern: str="*"):
-        return self.list_files(pattern=pattern)[0]
-
-
-def get_settings(basename: str="settings.yml"
-                ,path: Path=PROJECT_ROOT / "src" / "conf") -> dict:
-    """
-    Loads settings file
-
-    Args:
-        basename (str, optional): Basename of settings file. Defaults to "settings.yml".
-        path (Path, optional): Path of seetings file. Defaults to PROJECT_ROOT/"conf".
-
-    Returns:
-        dict: settings
-    """
-    return Get_Filename(path).load(basename)
-
-
-if __name__ == "__main__":
-    pass
