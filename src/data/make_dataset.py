@@ -511,20 +511,20 @@ def train_test_split_steps(y_col: str, train_proportion: float=0.75
     # TODO: 
     """
 
-    steps = [("split_predictors_target", Predictors_Target_Split(y_col))
-            ,("split_train_test", Train_Test_Split(train_proportion))]
+    split_pred_target_pipe = EPipeline([("split_predictors_target", Predictors_Target_Split(y_col))])
+    split_train_test_steps = [("split_train_test", Train_Test_Split(train_proportion))]
 
     if time_split_settings:
         split_date = time_split_settings["split_date"]
         time_dim_col = time_split_settings["time_dimension"]
 
-        steps.append(
+        split_train_test_steps.append(
             ("split_time", Time_Split(split_date=split_date
                                     ,time_dim_col=time_dim_col)
             )
                     )
 
-    return steps
+    return split_pred_target_pipe, EPipeline(split_train_test_steps)
 
 
 @log_fun
@@ -544,17 +544,29 @@ def make_preprocess_steps(preprocess_settings: dict=None) -> list:
 @click.option('--meta_data', type=click.Path(), default=None)
 @click.option("-i", '--save_interim', type=bool, default=True)
 @log_fun
-def main(raw_data: Path, meta_data: Path, save_interim: bool, steps: list=["base"]):
+def main(data: Path, raw_data: Path, meta_data: Path, save_interim: bool, steps: list=["base"]):
     
     # Load
 
     ## Settings
     settings = get_settings()
 
-    steps_dict = {"get_data": get_data_steps(**settings.get("get_data"))
-                ,"pre_process": make_preprocess_steps(settings.get("preprocess"))
-                ,"split_data": train_test_split_steps(**settings["train_test_split"])
-    }
+    steps_dict = {}
+    if not data:
+        get_data_pipe = EPipeline(get_data_steps(**settings.get("get_data")))
+        get_data_pipe.fit()
+        data = get_data_pipe.transform()
+
+
+    split_pred_target_pipe, split_train_test_pipe = train_test_split_steps(**settings["train_test_split"])
+
+    split_pred_target_pipe.fit()
+    X, y = split_pred_target_pipe.transform(data)
+
+    split_train_test_pipe.fit()
+
+    steps_dict["pre_process"] = make_preprocess_steps(settings.get("preprocess"))
+    
 
     steps = []
     for step in steps_dict.values():
