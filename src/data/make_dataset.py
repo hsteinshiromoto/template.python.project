@@ -287,6 +287,27 @@ class Train_Test_Split(BaseEstimator, TransformerMixin):
 
 
 @typechecked
+class Select_Train_Datasets(BaseEstimator, TransformerMixin):
+    @log_fun
+    def __init__(self, return_train: bool=True):
+        self.return_train
+
+    @log_fun
+    def fit(self, X=None, y=None):
+        return self
+
+    @log_fun
+    def fit(self, X: tuple, y=None):
+        X_train, X_test, y_train, y_test = X
+        
+        if self.return_train:
+            return X_train, y_train
+
+        else:
+            return X_test, y_test
+
+
+@typechecked
 class Time_Split(BaseEstimator, TransformerMixin):
     """
     Splits data according to a certain date
@@ -531,9 +552,6 @@ def train_test_split_steps(y_col: str, train_proportion: float=0.75
 @typechecked
 def make_preprocess_steps(preprocess_settings: dict=None) -> list:
 
-    if preprocess_settings:
-        pass
-
     return [("filter_nulls", Filter_Nulls())
             ,("filter_entropy", Filter_Entropy())
             ,("filter_std", Filter_Std())]
@@ -544,37 +562,43 @@ def make_preprocess_steps(preprocess_settings: dict=None) -> list:
 @click.option('--meta_data', type=click.Path(), default=None)
 @click.option("-i", '--save_interim', type=bool, default=True)
 @log_fun
-def main(data: Path, raw_data: Path, meta_data: Path, save_interim: bool, steps: list=["base"]):
+def main(data: Union[pd.DataFrame, dict], settings: dict={}, save_interim: bool, steps: list=["base"]):
     
     # Load
 
     ## Settings
-    settings = get_settings()
+    if not settings:
+        settings = get_settings()
 
-    steps_dict = {}
-    if not data:
-        get_data_pipe = EPipeline(get_data_steps(**settings.get("get_data")))
+    make_dataset_pipeline = {"train": []
+                            ,"test": []
+                            }
+
+    if isinstance(data, dict):
+        get_data_pipe = EPipeline(get_data_steps(**data))
         get_data_pipe.fit()
-        data = get_data_pipe.transform()
-
+        data = get_data_pipe.transform(None)
 
     split_pred_target_pipe, split_train_test_pipe = train_test_split_steps(**settings["train_test_split"])
 
-    split_pred_target_pipe.fit()
+    split_pred_target_pipe.fit(None)
+
+    make_dataset_pipeline["train"].append(("split_pred_target", split_pred_target_pipe))
+    make_dataset_pipeline["test"].append(("split_pred_target", split_pred_target_pipe))
+
     X, y = split_pred_target_pipe.transform(data)
 
-    split_train_test_pipe.fit()
+    split_train_test_pipe.fit(None)
 
-    steps_dict["pre_process"] = make_preprocess_steps(settings.get("preprocess"))
+    make_dataset_pipeline["train"].append(("split_train_test", split_train_test_pipe))
+
+    X_train, X_test, y_train, y_test = split_train_test_pipe.transform(X, y)
+
+    pre_process_steps = make_preprocess_steps(settings.get("preprocess"))
+    pre_process_pipe = EPipeline(pre_process_steps)
+    pre_process_pipe.fit(X_train, y_train)
     
 
-    steps = []
-    for step in steps_dict.values():
-        steps.extend(step)
-
-    pipe = EPipeline(steps)
-    pipe.fit(X="None")
-    X, y = pipe.transform(X="None")
 
     return None
 
