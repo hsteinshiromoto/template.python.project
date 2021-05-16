@@ -1,16 +1,18 @@
-import subprocess
-from pathlib import Path
-from abc import abstractmethod
-from typing import Union
 import os
+import subprocess
+from abc import ABC, abstractmethod
+from pathlib import Path
+from typing import Union
 
 import yaml
+from sklearn.base import BaseEstimator, TransformerMixin
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
-class Get_Filename(object):
+class Get_Filename(ABC, BaseEstimator, TransformerMixin):
     def __init__(self, path: Path):
         self.path = path
+        super().__init__()
 
 
     def list_files(self, pattern: str="*", sort: bool=False):
@@ -52,9 +54,6 @@ def get_settings(basename: str="settings.yml"
     Args:
         basename (str, optional): Basename of settings file. Defaults to "settings.yml".
         path (Path, optional): Path of seetings file. Defaults to PROJECT_ROOT/"conf".
-
-    Raises:
-        exc: Yaml load exception
 
     Returns:
         dict: settings
