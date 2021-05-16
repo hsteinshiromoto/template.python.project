@@ -9,7 +9,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
-class Get_Filename(ABC, BaseEstimator, TransformerMixin):
+class Get_Filename(ABC):
     def __init__(self, path: Path):
         self.path = path
         super().__init__()
@@ -23,6 +23,10 @@ class Get_Filename(ABC, BaseEstimator, TransformerMixin):
             output = sorted(files_list)
 
         yield from output
+
+    @abstractmethod
+    def prep_load(self):
+        pass
 
     @abstractmethod
     def load(self, basename: Union[str, Path]):
