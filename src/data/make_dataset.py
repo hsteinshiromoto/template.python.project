@@ -11,12 +11,10 @@ import click
 import dask.dataframe as dd
 import numpy as np
 import pandas as pd
-import pretty_errors
-from dotenv import find_dotenv, load_dotenv
+# import pretty_errors
 from icecream import ic
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.model_selection import StratifiedShuffleSplit
-from sklearn.pipeline import FeatureUnion, Pipeline
 from typeguard import typechecked
 
 PROJECT_ROOT = Path(subprocess.Popen(['git', 'rev-parse', '--show-toplevel'], 
