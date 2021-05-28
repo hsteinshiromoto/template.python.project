@@ -548,7 +548,9 @@ def train_test_split_steps(y_col: str, train_proportion: float=0.75
             )
                     )
 
-    return split_pred_target_pipe, EPipeline(split_train_test_steps)
+    split_train_test_pipe = EPipeline(split_train_test_steps)
+
+    return split_pred_target_pipe, split_train_test_pipe
 
 
 @log_fun
@@ -568,7 +570,10 @@ def main(data: Union[pd.DataFrame, dict]=None, save: bool=False
 
     ## Settings
     if not settings:
-        settings = get_settings()
+        settings = Get_Settings().load()
+
+    if not data:
+        data = settings["get_data"]
 
     make_dataset_pipeline = {"train": []
                             ,"test": []
@@ -576,7 +581,7 @@ def main(data: Union[pd.DataFrame, dict]=None, save: bool=False
 
     if isinstance(data, dict):
         get_data_pipe = EPipeline(get_data_steps(**data))
-        get_data_pipe.fit()
+        get_data_pipe.fit(None)
         data = get_data_pipe.transform(None)
 
     split_pred_target_pipe, split_train_test_pipe = train_test_split_steps(**settings["train_test_split"])
