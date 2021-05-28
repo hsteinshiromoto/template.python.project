@@ -25,10 +25,6 @@ class Get_Filename(ABC):
         yield from output
 
     @abstractmethod
-    def prep_load(self):
-        pass
-
-    @abstractmethod
     def load(self, basename: Union[str, Path]):
         pass
 
