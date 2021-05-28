@@ -560,12 +560,9 @@ def make_preprocess_steps(preprocess_settings: dict=None) -> list:
             ,("filter_std", Filter_Std())]
 
 
-@click.command()
-@click.option('--raw_data', type=click.Path(), default=None)
-@click.option('--meta_data', type=click.Path(), default=None)
-@click.option("-i", '--save_interim', type=bool, default=True)
-@log_fun
-def main(data: Union[pd.DataFrame, dict], settings: dict={}, save_interim: bool, steps: list=["base"]):
+@typechecked
+def main(data: Union[pd.DataFrame, dict]=None, save: bool=False
+        ,settings: dict={}):
     
     # Load
 
