@@ -1,5 +1,5 @@
 {
-	"image": "docker.pkg.github.com/hsteinshiromoto/docker.datascience/datascience:latest",
+	"image": "hsteinshiromoto/docker.datascience:latest",
 
 	// Sets the run context to one level up instead of the .devcontainer folder.
 	"context": "..",
