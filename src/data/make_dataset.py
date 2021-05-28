@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import argparse
 import logging
 import subprocess
 import sys
@@ -24,7 +25,7 @@ DATA = PROJECT_ROOT / "data"
 
 sys.path.append(PROJECT_ROOT)
 
-from src.base import get_settings
+from src.base import Get_Settings, argparse_str2bool
 from src.base_pipeline import EPipeline, Extract
 from src.data.filter_data import Filter_Entropy, Filter_Nulls, Filter_Std
 from src.make_logger import log_fun, make_logger
@@ -609,4 +610,12 @@ def main(data: Union[pd.DataFrame, dict], settings: dict={}, save_interim: bool,
 
 if __name__ == '__main__':
     logger = make_logger(__file__)
-    main()
+
+    # Create the parser
+    parser = argparse.ArgumentParser(description='Runs make_dataset')
+    parser.add_argument('-s', '--save', dest='save', type=argparse_str2bool
+                        ,help='Save interim datasets', default=False)
+
+    args = parser.parse_args()
+
+    main(save=args.save)
