@@ -84,6 +84,10 @@ def argparse_str2bool(arg: str) -> bool:
 
     Returns:
         (bool): Boolean value
+
+    Example:
+        >>> argparse_str2bool("True": str)
+        True
     """
     if isinstance(arg, bool):
         return arg
