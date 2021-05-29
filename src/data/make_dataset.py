@@ -521,7 +521,7 @@ def get_data_steps(raw_data: Union[Path, str], meta_data: Union[Path,str]) -> li
 @log_fun
 @typechecked
 def train_test_split_steps(y_col: str, train_proportion: float=0.75
-                        ,time_split_settings: dict=None) -> list:
+                        ,time_split_settings: dict=None) -> tuple:
     """
     Make the steps split data set into training and test
 
