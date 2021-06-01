@@ -142,3 +142,34 @@ def make_pivot(feature: str, index: str, column: str, data: pd.DataFrame
     pivot_mean.sort_index(inplace=True, ascending=False)
 
     return pivot_count, pivot_mean
+
+
+@log_fun
+@typechecked
+def truncate_prop(column: str, data: pd.DataFrame, prop_threshold: float=0.8):
+    """Truncates data according to the proportion of a categorical column
+
+    Args:
+        column (str): Name of categorical column
+        data (pd.DataFrame): Data frame
+        prop_threshold (float, optional): Proportion of cumulative proportion above which the data frame will the truncated. Defaults to 0.8.
+
+    Returns:
+        (pd.DataFrame): Truncated data frame
+    """
+
+    grouped = data[column].value_counts(normalize=True).to_frame(name="Proportions")
+    grouped["Cumulative_Proportions"] = grouped["Proportions"].cumsum()
+    grouped["Count"] = data[column].value_counts()
+    grouped.reset_index(inplace=True)
+    grouped.rename(columns={"index": column}, inplace=True)
+
+    idx = grouped["Cumulative_Proportions"].sub(prop_threshold).abs().idxmin()
+    grouped.loc[idx, column] = "Other Values"
+    grouped.loc[idx, "Cumulative_Proportions"] = 1
+
+    mask = grouped["Cumulative_Proportions"]  > prop_threshold
+    grouped.loc[idx, "Proportions"] = grouped.loc[mask, "Proportions"].sum()
+    grouped.loc[idx, "Count"] = grouped.loc[mask, "Count"].sum()
+
+    return grouped.iloc[:idx+1, :]
