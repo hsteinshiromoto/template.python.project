@@ -156,14 +156,18 @@ def truncate_prop(column: str, data: pd.DataFrame, prop_threshold: float=0.8):
 
     Returns:
         (pd.DataFrame): Truncated data frame
-    """
 
+    References:
+        [1] https://hsteinshiromoto.github.io/posts/2020/06/25/find_row_closest_value_to_input
+    """
+    # Group data
     grouped = data[column].value_counts(normalize=True).to_frame(name="Proportions")
     grouped["Cumulative_Proportions"] = grouped["Proportions"].cumsum()
     grouped["Count"] = data[column].value_counts()
     grouped.reset_index(inplace=True)
     grouped.rename(columns={"index": column}, inplace=True)
 
+    # Get row containing values closed to a value [1]
     idx = grouped["Cumulative_Proportions"].sub(prop_threshold).abs().idxmin()
     grouped.loc[idx, column] = "Other Values"
     grouped.loc[idx, "Cumulative_Proportions"] = 1
