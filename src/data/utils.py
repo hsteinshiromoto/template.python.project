@@ -150,7 +150,8 @@ def make_pivot(feature: str, index: str, column: str, data: pd.DataFrame
 @typechecked
 def get_high_frequency_categories(array: Iterable
                                 ,method: dict={"pareto": (0.2, 0.8)
-                                            ,"top": 10
+                                            ,"top_pct_obs": 0.2
+                                            ,"top_pct_cat": 0.2
                                             }
                                 ,return_summary: bool=True):
     """Truncates data according to the proportion of a categorical column
@@ -172,34 +173,32 @@ def get_high_frequency_categories(array: Iterable
     grouped.sort_values(by="n_observations", ascending=False, inplace=True)
     grouped["n_observations_proportions"] = grouped["n_observations"] / grouped["n_observations"].sum()
     grouped["cum_n_observations_proportions"] = grouped["n_observations_proportions"].cumsum()
-    grouped.reset_index(inplace=True)
-    grouped.rename(columns={"index": "categories_count"}, inplace=True)
-    grouped["categories_proportion"] = grouped["categories_count"] / grouped["categories_count"].max()
-    grouped["cum_categories_proportion"] = grouped["categories_proportion"].cumsum()
+    grouped.reset_index(inplace=True, drop=True)
 
     if "pareto" in method:
-        subset = grouped["cum_n_observations_proportions"] + grouped["cum_categories_proportion"]
-        threshold = np.sum(method.values())
+        subset = grouped["cum_n_observations_proportions"] + np.linspace(0, 1, grouped.shape[0])
+        threshold = np.sum(method["pareto"])
         # Get row containing values closed to a value [1]
         idx = subset.sub(threshold).abs().idxmin()
 
-    elif "top" in method:
-        idx = method.values()
+    elif "top_pct_obs" in method:
+        idx = grouped["cum_n_observations_proportions"].sub(method["top_pct_obs"]).abs().idxmin()
+
+    elif "top_pct_cat" in method:
+        subset = pd.DataFrame(np.linspace(0, 1, grouped.shape[0]))
+        idx = subset.sub(method["top_pct_cat"]).abs().idxmin()
 
     else:
         msg = f"Expected method to be pareto or top. Got {list(method.keys())}."
         raise NotImplementedError(msg)
 
-    grouped.loc[idx, "category"] = "other categories"
-    grouped.loc[idx, "cum_n_observations_proportions"] = 1
-    grouped.loc[idx, "cum_categories_proportion"] = 1
+    grouped.loc[idx+1, "category"] = "other categories"
+    grouped.loc[idx+1, "cum_n_observations_proportions"] = 1
 
-    grouped.loc[idx, "n_observations"] = grouped.loc[idx:, "n_observations"].sum()
-    grouped.loc[idx, "n_observations_proportions"] = grouped.loc[idx:, "n_observations_proportions"].sum()
-    grouped.loc[idx, "categories_count"] = grouped.loc[idx:, "categories_count"].sum()
-    grouped.loc[idx, "categories_proportion"] = grouped.loc[idx:, "categories_proportion"].sum()
+    grouped.loc[idx+1, "n_observations"] = grouped.loc[idx:, "n_observations"].sum()
+    grouped.loc[idx+1, "n_observations_proportions"] = grouped.loc[idx:, "n_observations_proportions"].sum()
 
-    output = [item for item in array if item in grouped.loc[:idx, "category"].values]
+    output = grouped.loc[:idx+1, "category"].values
 
     if not return_summary:
         return output
