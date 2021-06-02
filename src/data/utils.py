@@ -1,6 +1,7 @@
 import subprocess
 import sys
 from collections.abc import Iterable
+from collections import Counter
 from pathlib import Path
 from typing import Union
 
@@ -165,8 +166,10 @@ def get_high_frequency_categories(array: Iterable
         [1] https://hsteinshiromoto.github.io/posts/2020/06/25/find_row_closest_value_to_input
     """
     unique, counts = np.unique(array, return_counts=True)
-    grouped = pd.DataFrame.from_dict(dict(zip(unique, counts))
-                                    ,columns=["category", "n_observations"])
+    grouped = pd.DataFrame.from_dict({"category": unique
+                                    ,"n_observations": counts
+                                    })
+    grouped.sort_values(by="n_observations", ascending=False, inplace=True)
     grouped["n_observations_proportions"] = grouped["n_observations"] / grouped["n_observations"].sum()
     grouped["cum_n_observations_proportions"] = grouped["n_observations_proportions"].cumsum()
     grouped.reset_index(inplace=True)
