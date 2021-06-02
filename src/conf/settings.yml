@@ -1,6 +1,6 @@
 get_data:
   raw_data: yellow_tripdata_2019-02.csv
-  meta_data: yellow-tripdata.csv
+  meta_data: yellow_tripdata.csv
 
 preprocess:
 

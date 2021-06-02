@@ -1,15 +1,15 @@
+import argparse
 import os
-import subprocess
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Union
 
 import yaml
-from sklearn.base import BaseEstimator, TransformerMixin
+from typeguard import typechecked
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
-class Get_Filename(ABC, BaseEstimator, TransformerMixin):
+class Get_Filename(ABC):
     def __init__(self, path: Path):
         self.path = path
         super().__init__()
@@ -66,3 +66,33 @@ class Get_Settings(Get_Filename):
 
             else:
                 return file.open()
+
+
+@typechecked
+def argparse_str2bool(arg: str) -> bool:
+    """Convert string to boolean
+
+    Args:
+        arg (str): String to be converted to boolean
+
+    Raises:
+        argparse.ArgumentTypeError: [description]
+
+    Returns:
+        (bool): Boolean value
+
+    Example:
+        >>> argparse_str2bool("True": str)
+        True
+    """
+    if isinstance(arg, bool):
+        return arg
+
+    if arg.lower() in ['yes', 'true', 't', 'y', '1', 1]:
+        return True
+
+    elif arg.lower() in ['no', 'false', 'f', 'n', '0', 0]:
+        return False
+
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')

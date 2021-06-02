@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import argparse
 import logging
 import subprocess
 import sys
@@ -10,12 +11,10 @@ import click
 import dask.dataframe as dd
 import numpy as np
 import pandas as pd
-import pretty_errors
-from dotenv import find_dotenv, load_dotenv
+# import pretty_errors
 from icecream import ic
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.model_selection import StratifiedShuffleSplit
-from sklearn.pipeline import FeatureUnion, Pipeline
 from typeguard import typechecked
 
 PROJECT_ROOT = Path(subprocess.Popen(['git', 'rev-parse', '--show-toplevel'], 
@@ -24,7 +23,7 @@ DATA = PROJECT_ROOT / "data"
 
 sys.path.append(PROJECT_ROOT)
 
-from src.base import get_settings
+from src.base import Get_Settings, argparse_str2bool
 from src.base_pipeline import EPipeline, Extract
 from src.data.filter_data import Filter_Entropy, Filter_Nulls, Filter_Std
 from src.make_logger import log_fun, make_logger
@@ -287,6 +286,31 @@ class Train_Test_Split(BaseEstimator, TransformerMixin):
 
 
 @typechecked
+class Select_Train_Datasets(BaseEstimator, TransformerMixin):
+    @log_fun
+    def __init__(self, time_split: bool=False):
+        self.time_split = time_split
+
+    @log_fun
+    def fit(self, X=None, y=None):
+        return self
+
+    @log_fun
+    def transform(self, X: tuple, y=None):
+        if self.time_split == True:
+            y = X[1]
+            X = X[0]
+
+            X_train = X["train"]
+            y_train = y["train"]
+
+        else:
+            X_train, X_test, y_train, y_test = X
+        
+        return X_train, y_train
+
+
+@typechecked
 class Time_Split(BaseEstimator, TransformerMixin):
     """
     Splits data according to a certain date
@@ -497,7 +521,7 @@ def get_data_steps(raw_data: Union[Path, str], meta_data: Union[Path,str]) -> li
 @log_fun
 @typechecked
 def train_test_split_steps(y_col: str, train_proportion: float=0.75
-                        ,time_split_settings: dict=None) -> list:
+                        ,time_split_settings: dict=None) -> tuple:
     """
     Make the steps split data set into training and test
 
@@ -511,62 +535,87 @@ def train_test_split_steps(y_col: str, train_proportion: float=0.75
     # TODO: 
     """
 
-    steps = [("split_predictors_target", Predictors_Target_Split(y_col))
-            ,("split_train_test", Train_Test_Split(train_proportion))]
+    split_pred_target_pipe = EPipeline([("split_predictors_target", Predictors_Target_Split(y_col))])
+    split_train_test_steps = [("split_train_test", Train_Test_Split(train_proportion))]
 
     if time_split_settings:
         split_date = time_split_settings["split_date"]
         time_dim_col = time_split_settings["time_dimension"]
 
-        steps.append(
+        split_train_test_steps.append(
             ("split_time", Time_Split(split_date=split_date
                                     ,time_dim_col=time_dim_col)
             )
                     )
 
-    return steps
+    split_train_test_pipe = EPipeline(split_train_test_steps)
+
+    return split_pred_target_pipe, split_train_test_pipe
 
 
 @log_fun
 @typechecked
 def make_preprocess_steps(preprocess_settings: dict=None) -> list:
 
-    if preprocess_settings:
-        pass
-
     return [("filter_nulls", Filter_Nulls())
             ,("filter_entropy", Filter_Entropy())
             ,("filter_std", Filter_Std())]
 
 
-@click.command()
-@click.option('--raw_data', type=click.Path(), default=None)
-@click.option('--meta_data', type=click.Path(), default=None)
-@click.option("-i", '--save_interim', type=bool, default=True)
-@log_fun
-def main(raw_data: Path, meta_data: Path, save_interim: bool, steps: list=["base"]):
+@typechecked
+def main(data: Union[pd.DataFrame, dict]=None, save: bool=False
+        ,settings: dict={}):
     
     # Load
 
     ## Settings
-    settings = get_settings()
+    if not settings:
+        settings = Get_Settings().load()
 
-    steps_dict = {"get_data": get_data_steps(**settings.get("get_data"))
-                ,"pre_process": make_preprocess_steps(settings.get("preprocess"))
-                ,"split_data": train_test_split_steps(**settings["train_test_split"])
-    }
+    if not data:
+        data = settings["get_data"]
 
-    steps = []
-    for step in steps_dict.values():
-        steps.extend(step)
+    make_dataset_pipeline = {"train": []
+                            ,"test": []
+                            }
 
-    pipe = EPipeline(steps)
-    pipe.fit(X="None")
-    X, y = pipe.transform(X="None")
+    if isinstance(data, dict):
+        get_data_pipe = EPipeline(get_data_steps(**data))
+        get_data_pipe.fit(None)
+        data = get_data_pipe.transform(None)
+
+    split_pred_target_pipe, split_train_test_pipe = train_test_split_steps(**settings["train_test_split"])
+
+    split_pred_target_pipe.fit(None)
+
+    make_dataset_pipeline["train"].append(("split_pred_target", split_pred_target_pipe))
+    make_dataset_pipeline["test"].append(("split_pred_target", split_pred_target_pipe))
+
+    X, y = split_pred_target_pipe.transform(data)
+
+    split_train_test_pipe.fit(None)
+
+    make_dataset_pipeline["train"].append(("split_train_test", split_train_test_pipe))
+
+    X_train, X_test, y_train, y_test = split_train_test_pipe.transform(X, y)
+
+    pre_process_steps = make_preprocess_steps(settings.get("preprocess"))
+    pre_process_pipe = EPipeline(pre_process_steps)
+    pre_process_pipe.fit(X_train, y_train)
+    
+
 
     return None
 
 
 if __name__ == '__main__':
     logger = make_logger(__file__)
-    main()
+
+    # Create the parser
+    parser = argparse.ArgumentParser(description='Runs make_dataset')
+    parser.add_argument('-s', '--save', dest='save', type=argparse_str2bool
+                        ,help='Save interim datasets', default=False)
+
+    args = parser.parse_args()
+
+    main(save=args.save)
