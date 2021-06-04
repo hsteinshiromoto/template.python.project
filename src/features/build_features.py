@@ -34,19 +34,19 @@ class Transform_Datetime(BaseEstimator, TransformerMixin):
     
     @log_fun
     def fit(self, X: pd.DataFrame, y=None):
-        self.datetime_column_names = copy(X.columns.values)
+        self.feature_names = copy(X.columns.values)
         return self
 
     @log_fun
     def transform(self, X: pd.DataFrame, y: pd.DataFrame=None):
-        for column in self.datetime_column_names:
+        for column in self.feature_names:
             X.loc[:, f"{column}_year"] = X[column].dt.year
             X.loc[:, f"{column}_month"] = X[column].dt.month
             X.loc[:, f"{column}_day"] = X[column].dt.day
 
         self.feature_names = X.columns
 
-        return X.drop(columns=self.datetime_column_names)
+        return X.drop(columns=self.feature_names)
         
     @log_fun
     def get_feature_names(self):
@@ -58,7 +58,6 @@ class Input_Datetime(BaseEstimator, TransformerMixin):
     @log_fun
     def __init__(self, input_value: str='9999-12-31'):
         self.input_value = input_value
-        pass
     
     @log_fun
     def fit(self, X: pd.DataFrame, y=None):
