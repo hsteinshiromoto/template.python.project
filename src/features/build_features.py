@@ -86,7 +86,7 @@ class Input_Numeric(BaseEstimator, TransformerMixin):
     
     @log_fun
     def fit(self, X: pd.DataFrame, y=None):
-        self.input_values = {}
+        self.col_input_val_map = {}
         self.feature_names = X.columns.values
         
         for column in X.columns.values:
@@ -95,28 +95,28 @@ class Input_Numeric(BaseEstimator, TransformerMixin):
             array = X.loc[mask, column].values
 
             if self.method == "median":
-                self.input_values[column] = np.quantile(array, 0.5)
+                self.col_input_val_map[column] = np.quantile(array, 0.5)
 
             elif self.method == "25%":
-                self.input_values[column] = np.quantile(array, 0.25)
+                self.col_input_val_map[column] = np.quantile(array, 0.25)
 
             elif self.method == "mean":
-                self.input_values[column] = np.mean(array)
+                self.col_input_val_map[column] = np.mean(array)
 
             elif self.method == "min":
-                self.input_values[column] = min(array)
+                self.col_input_val_map[column] = min(array)
 
             elif self.method == "max":
-                self.input_values[column] = max(array)
+                self.col_input_val_map[column] = max(array)
 
             else:
-                self.input_values[column] = self.method
+                self.col_input_val_map[column] = self.method
         
         return self
 
     @log_fun
     def transform(self, X: pd.DataFrame, y=None):
-        for column, value in self.input_values.items():
+        for column, value in self.col_input_val_map.items():
             X[column] = X[column].fillna(value)
         
         return X
