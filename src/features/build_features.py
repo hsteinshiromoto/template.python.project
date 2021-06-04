@@ -88,6 +88,7 @@ class Input_Numeric(BaseEstimator, TransformerMixin):
     @log_fun
     def fit(self, X: pd.DataFrame, y=None):
         self.input_values = {}
+        self.feature_names = X.columns.values
         
         for column in X.columns.values:
 
