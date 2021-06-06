@@ -81,7 +81,7 @@ class Input_Datetime(BaseEstimator, TransformerMixin):
 
 class Input_Numeric(BaseEstimator, TransformerMixin):
     @log_fun
-    def __init__(self, method: Union[str, np.number]="median"):
+    def __init__(self, method: Union[str, float]="median"):
         self.method = method
     
     @log_fun
