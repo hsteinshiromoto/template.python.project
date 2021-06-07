@@ -94,11 +94,14 @@ class Input_Numeric(BaseEstimator, TransformerMixin):
             mask = X[column].notnull()
             array = X.loc[mask, column].values
 
-            if self.method == "median":
+            if (self.method == "median") | (self.method == "50%"):
                 self.col_input_val_map[column] = np.quantile(array, 0.5)
 
             elif self.method == "25%":
                 self.col_input_val_map[column] = np.quantile(array, 0.25)
+
+            elif self.method == "75%":
+                self.col_input_val_map[column] = np.quantile(array, 0.75)
 
             elif self.method == "mean":
                 self.col_input_val_map[column] = np.mean(array)
