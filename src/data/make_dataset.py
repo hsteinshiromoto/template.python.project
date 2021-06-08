@@ -213,7 +213,7 @@ class Predictors_Target_Split(BaseEstimator, TransformerMixin):
         return self
 
     @log_fun
-    def transform(self, data: dd, y=None):
+    def transform(self, data: Union[dd.DataFrame, pd.DataFrame], y=None):
         X = data.loc[:, data.columns != self.y_col]
         y = data[[self.y_col]]
 
@@ -366,7 +366,7 @@ class Time_Split(BaseEstimator, TransformerMixin):
         self.time_dim_col = time_dim_col
     
     @log_fun
-    def fit(self, X: Union[dd.DataFrame, tuple], y=None):
+    def fit(self, X: Union[dict, tuple], y=None):
         if isinstance(X, tuple):
             y = X[1]
             X = X[0]
