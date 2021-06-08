@@ -250,19 +250,19 @@ class Train_Test_Split(BaseEstimator, TransformerMixin):
         True
     """
     @log_fun
-    def __init__(self, train_proportion: float):
+    def __init__(self, train_proportion: float, n_splits: int=2):
         self.train_proportion = train_proportion
+        self.n_splits = n_splits
     
     @log_fun
-    def fit(self, X=None, y=None, **kwargs):
-        n_splits = kwargs.get("n_splits") or 1
+    def fit(self, X=None, y=None):
         
-        self.sss = StratifiedShuffleSplit(n_splits=n_splits
+        self.sss = StratifiedShuffleSplit(n_splits=self.n_splits
                                         ,train_size=self.train_proportion)
         return self
 
     @log_fun
-    def transform(self, X=None, y=None):
+    def transform(self, X: dd, y=None):
         if isinstance(X, tuple):
             y = X[1]
             X = X[0]
@@ -521,7 +521,7 @@ def get_data_steps(raw_data: Union[Path, str], meta_data: Union[Path,str]) -> li
 @log_fun
 @typechecked
 def train_test_split_steps(y_col: str, train_proportion: float=0.75
-                        ,time_split_settings: dict=None) -> tuple:
+                        ,time_split_settings: dict=None):
     """
     Make the steps split data set into training and test
 
@@ -535,22 +535,22 @@ def train_test_split_steps(y_col: str, train_proportion: float=0.75
     # TODO: 
     """
 
-    split_pred_target_pipe = EPipeline([("split_predictors_target", Predictors_Target_Split(y_col))])
-    split_train_test_steps = [("split_train_test", Train_Test_Split(train_proportion))]
+    pred_target_split_pipe = EPipeline([("split_predictors_target", Predictors_Target_Split(y_col))])
+    train_test_steps_split = [("split_train_test", Train_Test_Split(train_proportion))]
 
     if time_split_settings:
         split_date = time_split_settings["split_date"]
         time_dim_col = time_split_settings["time_dimension"]
 
-        split_train_test_steps.append(
+        train_test_steps_split.append(
             ("split_time", Time_Split(split_date=split_date
                                     ,time_dim_col=time_dim_col)
             )
                     )
 
-    split_train_test_pipe = EPipeline(split_train_test_steps)
+    train_test_split_pipe = EPipeline(train_test_steps_split)
 
-    return split_pred_target_pipe, split_train_test_pipe
+    return pred_target_split_pipe, train_test_split_pipe
 
 
 @log_fun
@@ -584,20 +584,20 @@ def main(data: Union[pd.DataFrame, dict]=None, save: bool=False
         get_data_pipe.fit(None)
         data = get_data_pipe.transform(None)
 
-    split_pred_target_pipe, split_train_test_pipe = train_test_split_steps(**settings["train_test_split"])
+    pred_target_split_pipe, train_test_split_pipe = train_test_split_steps(**settings["train_test_split"])
 
-    split_pred_target_pipe.fit(None)
+    pred_target_split_pipe.fit(None)
 
-    make_dataset_pipeline["train"].append(("split_pred_target", split_pred_target_pipe))
-    make_dataset_pipeline["test"].append(("split_pred_target", split_pred_target_pipe))
+    make_dataset_pipeline["train"].append(("split_pred_target", pred_target_split_pipe))
+    make_dataset_pipeline["test"].append(("split_pred_target", pred_target_split_pipe))
 
-    X, y = split_pred_target_pipe.transform(data)
+    X, y = pred_target_split_pipe.transform(data)
 
-    split_train_test_pipe.fit(None)
+    train_test_split_pipe.fit(None)
 
-    make_dataset_pipeline["train"].append(("split_train_test", split_train_test_pipe))
+    make_dataset_pipeline["train"].append(("split_train_test", train_test_split_pipe))
 
-    X_train, X_test, y_train, y_test = split_train_test_pipe.transform(X, y)
+    X_train, X_test, y_train, y_test = train_test_split_pipe.transform(X, y)
 
     pre_process_steps = make_preprocess_steps(settings.get("preprocess"))
     pre_process_pipe = EPipeline(pre_process_steps)
