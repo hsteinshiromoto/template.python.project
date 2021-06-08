@@ -7,7 +7,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Union
 
-import click
 import dask.dataframe as dd
 import numpy as np
 import pandas as pd
@@ -276,7 +275,7 @@ class Train_Test_Split(BaseEstimator, TransformerMixin):
 
         # N.B.: Need to add y to object to pass to .transform, when using in 
         # tandem with another pipe
-        if not y:
+        if y is None:
             y = self.y
 
         for train_index, test_index in self.sss.split(X, y):
@@ -603,7 +602,7 @@ def main(data: Union[pd.DataFrame, dict]=None, save: bool=False
 
     X, y = pred_target_split_pipe.transform(data)
 
-    train_test_split_pipe.fit(None)
+    train_test_split_pipe.fit(X, y)
 
     make_dataset_pipeline["train"].append(("split_train_test", train_test_split_pipe))
 
