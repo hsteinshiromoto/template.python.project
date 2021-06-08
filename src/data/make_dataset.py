@@ -366,7 +366,7 @@ class Time_Split(BaseEstimator, TransformerMixin):
         self.time_dim_col = time_dim_col
     
     @log_fun
-    def fit(self, X=None, y=None):
+    def fit(self, X: Union[dd.DataFrame, tuple], y=None):
         if isinstance(X, tuple):
             y = X[1]
             X = X[0]
