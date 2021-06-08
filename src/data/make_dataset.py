@@ -362,7 +362,7 @@ class Time_Split(BaseEstimator, TransformerMixin):
     """
     @log_fun
     def __init__(self, split_date: Union[str, datetime, datetime.date], time_dim_col: str):
-        self.split_date = split_date
+        self.split_date = str(split_date)
         self.time_dim_col = time_dim_col
     
     @log_fun
@@ -374,31 +374,34 @@ class Time_Split(BaseEstimator, TransformerMixin):
         self.mask_train_in_time = X["train"][self.time_dim_col].compute() <= self.split_date
         self.mask_test_in_time = X["test"][self.time_dim_col].compute() <= self.split_date
 
+        self.y = y
+
         return self
 
     @log_fun
-    def transform(self, X_train=None, X_test=None, y_train=None, y_test=None):
-        if isinstance(X_train, tuple):
-            X_test = X_train[1]
-            y_train = X_train[2]
-            y_test = X_train[3]
-            X_train = X_train[0]
+    def transform(self, X: Union[dict, tuple], y=None):
+        if isinstance(X, tuple):
+            y = X[1]
+            X = X[0]
+        
+        if y in None:
+            y = self.y
 
-        n_partitions = X.npartitions
+        n_partitions = X["train"].npartitions
 
-        X = {"train": dd.from_pandas(X_train.compute()[self.mask_train_in_time], npartitions=n_partitions)
-        ,"in-sample_out-time": dd.from_pandas(X_train.compute()[~self.mask_train_in_time], npartitions=n_partitions)
-        ,"out-sample_in-time": dd.from_pandas(X_test.compute()[self.mask_test_in_time], npartitions=n_partitions)
-        ,"out-sample_out-time": dd.from_pandas(X_test.compute()[~self.mask_test_in_time], npartitions=n_partitions)
+        X_out = {"train": dd.from_pandas(X["train"].compute()[self.mask_train_in_time], npartitions=n_partitions)
+        ,"in-sample_out-time": dd.from_pandas(X["train"].compute()[~self.mask_train_in_time], npartitions=n_partitions)
+        ,"out-sample_in-time": dd.from_pandas(X["test"].compute()[self.mask_test_in_time], npartitions=n_partitions)
+        ,"out-sample_out-time": dd.from_pandas(X["test"].compute()[~self.mask_test_in_time], npartitions=n_partitions)
         }
 
-        y = {"train": dd.from_pandas(y_train.compute()[self.mask_train_in_time], npartitions=n_partitions)
-            ,"in-sample_out-time": dd.from_pandas(y_train.compute()[~self.mask_train_in_time], npartitions=n_partitions)
-            ,"out-sample_in-time": dd.from_pandas(y_test.compute()[self.mask_test_in_time], npartitions=n_partitions)
-            ,"out-sample_out-time": dd.from_pandas(y_test.compute()[~self.mask_test_in_time], npartitions=n_partitions)
+        y_out = {"train": dd.from_pandas(y["train"].compute()[self.mask_train_in_time], npartitions=n_partitions)
+            ,"in-sample_out-time": dd.from_pandas(y["train"].compute()[~self.mask_train_in_time], npartitions=n_partitions)
+            ,"out-sample_in-time": dd.from_pandas(y["test"].compute()[self.mask_test_in_time], npartitions=n_partitions)
+            ,"out-sample_out-time": dd.from_pandas(y["test"].compute()[~self.mask_test_in_time], npartitions=n_partitions)
             }
 
-        return X, y
+        return X_out, y_out
         
     @log_fun
     def get_feature_names(self):
@@ -606,11 +609,11 @@ def main(data: Union[pd.DataFrame, dict]=None, save: bool=False
 
     make_dataset_pipeline["train"].append(("split_train_test", train_test_split_pipe))
 
-    X_train, X_test, y_train, y_test = train_test_split_pipe.transform(X, y)
+    X, y = train_test_split_pipe.transform(X, y)
 
     pre_process_steps = make_preprocess_steps(settings.get("preprocess"))
     pre_process_pipe = EPipeline(pre_process_steps)
-    pre_process_pipe.fit(X_train, y_train)
+    pre_process_pipe.fit(X["train"], y["train"])
     
 
 
