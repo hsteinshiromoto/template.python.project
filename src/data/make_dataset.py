@@ -282,13 +282,15 @@ class Train_Test_Split(BaseEstimator, TransformerMixin):
         for train_index, test_index in self.sss.split(X, y):
             X_train, X_test = X.compute().iloc[train_index, :], X.compute().iloc[test_index, :]
             y_train, y_test = y.compute().iloc[train_index, :], y.compute().iloc[test_index, :]
-        
-        X_train = dd.from_pandas(X_train, npartitions=n_partitions)
-        X_test = dd.from_pandas(X_test, npartitions=n_partitions)
-        y_train = dd.from_pandas(y_train, npartitions=n_partitions)
-        y_test = dd.from_pandas(y_test, npartitions=n_partitions)
 
-        return X_train, X_test, y_train, y_test
+        X_dict, y_dict = {}, {}
+        
+        X_dict["train"] = dd.from_pandas(X_train, npartitions=n_partitions)
+        X_dict["test"] = dd.from_pandas(X_test, npartitions=n_partitions)
+        y_dict["train"] = dd.from_pandas(y_train, npartitions=n_partitions)
+        y_dict["test"] = dd.from_pandas(y_test, npartitions=n_partitions)
+
+        return X_dict, y_dict
         
     @log_fun
     def get_feature_names(self):
@@ -365,15 +367,13 @@ class Time_Split(BaseEstimator, TransformerMixin):
         self.time_dim_col = time_dim_col
     
     @log_fun
-    def fit(self, X_train=None, X_test=None, y_train=None, y_test=None):
-        if isinstance(X_train, tuple):
-            X_test = X_train[1]
-            y_train = X_train[2]
-            y_test = X_train[3]
-            X_train = X_train[0]
+    def fit(self, X=None, y=None):
+        if isinstance(X, tuple):
+            y = X[1]
+            X = X[0]
 
-        self.mask_train_in_time = X_train[self.time_dim_col].compute() <= self.split_date
-        self.mask_test_in_time = X_test[self.time_dim_col].compute() <= self.split_date
+        self.mask_train_in_time = X["train"][self.time_dim_col].compute() <= self.split_date
+        self.mask_test_in_time = X["test"][self.time_dim_col].compute() <= self.split_date
 
         return self
 
