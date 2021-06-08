@@ -536,19 +536,19 @@ def train_test_split_steps(y_col: str, train_proportion: float=0.75
     """
 
     pred_target_split_pipe = EPipeline([("split_predictors_target", Predictors_Target_Split(y_col))])
-    train_test_steps_split = [("split_train_test", Train_Test_Split(train_proportion))]
+    train_test_split_steps = [("split_train_test", Train_Test_Split(train_proportion))]
 
     if time_split_settings:
         split_date = time_split_settings["split_date"]
         time_dim_col = time_split_settings["time_dimension"]
 
-        train_test_steps_split.append(
+        train_test_split_steps.append(
             ("split_time", Time_Split(split_date=split_date
                                     ,time_dim_col=time_dim_col)
             )
                     )
 
-    train_test_split_pipe = EPipeline(train_test_steps_split)
+    train_test_split_pipe = EPipeline(train_test_split_steps)
 
     return pred_target_split_pipe, train_test_split_pipe
 
