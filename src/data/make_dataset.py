@@ -259,15 +259,25 @@ class Train_Test_Split(BaseEstimator, TransformerMixin):
         
         self.sss = StratifiedShuffleSplit(n_splits=self.n_splits
                                         ,train_size=self.train_proportion)
+
+        # N.B.: Need to add y to object to pass to .transform, when using in 
+        # tandem with another pipe
+        self.y = y
+
         return self
 
     @log_fun
-    def transform(self, X: dd, y=None):
+    def transform(self, X: Union[dd.DataFrame, tuple], y=None):
         if isinstance(X, tuple):
             y = X[1]
             X = X[0]
 
         n_partitions = X.npartitions
+
+        # N.B.: Need to add y to object to pass to .transform, when using in 
+        # tandem with another pipe
+        if not y:
+            y = self.y
 
         for train_index, test_index in self.sss.split(X, y):
             X_train, X_test = X.compute().iloc[train_index, :], X.compute().iloc[test_index, :]
