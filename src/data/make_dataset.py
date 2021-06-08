@@ -614,10 +614,11 @@ def main(data: Union[pd.DataFrame, dict]=None, save: bool=False
     pre_process_steps = make_preprocess_steps(settings.get("preprocess"))
     pre_process_pipe = EPipeline(pre_process_steps)
     pre_process_pipe.fit(X["train"], y["train"])
+
+    make_dataset_pipeline["train"].append(("preprocess", pre_process_pipe))
+    make_dataset_pipeline["test"].append(("preprocess", pre_process_pipe))
     
-
-
-    return None
+    return make_dataset_pipeline
 
 
 if __name__ == '__main__':
