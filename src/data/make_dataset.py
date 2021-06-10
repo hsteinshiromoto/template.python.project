@@ -20,7 +20,7 @@ PROJECT_ROOT = Path(subprocess.Popen(['git', 'rev-parse', '--show-toplevel'],
                                 stdout=subprocess.PIPE).communicate()[0].rstrip().decode('utf-8'))
 DATA = PROJECT_ROOT / "data"
 
-sys.path.append(PROJECT_ROOT)
+sys.path.append(str(PROJECT_ROOT))
 
 from src.base import Get_Settings, argparse_str2bool
 from src.base_pipeline import EPipeline, Extract
@@ -156,8 +156,7 @@ class Get_Raw_Data(BaseEstimator, TransformerMixin):
                                 ,date_parser=date_parser, dtype=self.dtypes_mapping)
 
         elif self.basename.suffix == ".parquet":
-            data = dd.read_parquet(str(self.path / self.basename), 
-                                    columns=self.load_columns)
+            data = dd.read_parquet(str(self.path / self.basename))
 
         elif self.basename.suffix == ".sql":
             msg = "Read queries are not implemented yet."
@@ -249,7 +248,7 @@ class Train_Test_Split(BaseEstimator, TransformerMixin):
         True
     """
     @log_fun
-    def __init__(self, train_proportion: float, n_splits: int=2):
+    def __init__(self, train_proportion: float, n_splits: int=1):
         self.train_proportion = train_proportion
         self.n_splits = n_splits
     
@@ -266,11 +265,7 @@ class Train_Test_Split(BaseEstimator, TransformerMixin):
         return self
 
     @log_fun
-    def transform(self, X: Union[dd.DataFrame, tuple], y=None):
-        if isinstance(X, tuple):
-            y = X[1]
-            X = X[0]
-
+    def transform(self, X: dd.DataFrame, y=None):
         n_partitions = X.npartitions
 
         # N.B.: Need to add y to object to pass to .transform, when using in 
@@ -371,8 +366,8 @@ class Time_Split(BaseEstimator, TransformerMixin):
             y = X[1]
             X = X[0]
 
-        self.mask_train_in_time = X["train"][self.time_dim_col].compute() <= self.split_date
-        self.mask_test_in_time = X["test"][self.time_dim_col].compute() <= self.split_date
+        self.mask_train_in_time = X["train"][self.time_dim_col] <= self.split_date
+        self.mask_test_in_time = X["test"][self.time_dim_col] <= self.split_date
 
         self.y = y
 
@@ -384,21 +379,21 @@ class Time_Split(BaseEstimator, TransformerMixin):
             y = X[1]
             X = X[0]
         
-        if y in None:
+        if y is None:
             y = self.y
 
         n_partitions = X["train"].npartitions
 
-        X_out = {"train": dd.from_pandas(X["train"].compute()[self.mask_train_in_time], npartitions=n_partitions)
-        ,"in-sample_out-time": dd.from_pandas(X["train"].compute()[~self.mask_train_in_time], npartitions=n_partitions)
-        ,"out-sample_in-time": dd.from_pandas(X["test"].compute()[self.mask_test_in_time], npartitions=n_partitions)
-        ,"out-sample_out-time": dd.from_pandas(X["test"].compute()[~self.mask_test_in_time], npartitions=n_partitions)
+        X_out = {"train": X["train"].loc[self.mask_train_in_time, :]
+        ,"in-sample_out-time": X["train"].loc[~self.mask_train_in_time, :]
+        ,"out-sample_in-time": X["test"].loc[self.mask_test_in_time, :]
+        ,"out-sample_out-time": X["test"].loc[~self.mask_test_in_time, :]
         }
 
-        y_out = {"train": dd.from_pandas(y["train"].compute()[self.mask_train_in_time], npartitions=n_partitions)
-            ,"in-sample_out-time": dd.from_pandas(y["train"].compute()[~self.mask_train_in_time], npartitions=n_partitions)
-            ,"out-sample_in-time": dd.from_pandas(y["test"].compute()[self.mask_test_in_time], npartitions=n_partitions)
-            ,"out-sample_out-time": dd.from_pandas(y["test"].compute()[~self.mask_test_in_time], npartitions=n_partitions)
+        y_out = {"train": y["train"].loc[self.mask_train_in_time, :]
+            ,"in-sample_out-time": y["train"].loc[~self.mask_train_in_time, :]
+            ,"out-sample_in-time": y["test"].loc[self.mask_test_in_time, :]
+            ,"out-sample_out-time": y["test"].loc[~self.mask_test_in_time, :]
             }
 
         return X_out, y_out
@@ -548,21 +543,19 @@ def train_test_split_steps(y_col: str, train_proportion: float=0.75
     """
 
     pred_target_split_pipe = EPipeline([("split_predictors_target", Predictors_Target_Split(y_col))])
-    train_test_split_steps = [("split_train_test", Train_Test_Split(train_proportion))]
+    train_test_split_pipe = EPipeline([("split_train_test", Train_Test_Split(train_proportion))])
 
     if time_split_settings:
         split_date = time_split_settings["split_date"]
         time_dim_col = time_split_settings["time_dimension"]
-
-        train_test_split_steps.append(
-            ("split_time", Time_Split(split_date=split_date
+        time_split_pipe = EPipeline([("split_time", Time_Split(split_date=split_date
                                     ,time_dim_col=time_dim_col)
-            )
-                    )
+                                    )])
 
-    train_test_split_pipe = EPipeline(train_test_split_steps)
+    else:
+        time_split_pipe = None
 
-    return pred_target_split_pipe, train_test_split_pipe
+    return pred_target_split_pipe, train_test_split_pipe, time_split_pipe
 
 
 @log_fun
@@ -575,8 +568,8 @@ def make_preprocess_steps(preprocess_settings: dict=None) -> list:
 
 
 @typechecked
-def main(data: Union[pd.DataFrame, dict]=None, save: bool=False
-        ,settings: dict={}):
+def main(data: Union[pd.DataFrame, dd.DataFrame, dict]=None, save: bool=False
+        ,settings: dict={}, convert_to_parquet: bool=True):
     
     # Load
 
@@ -587,38 +580,34 @@ def main(data: Union[pd.DataFrame, dict]=None, save: bool=False
     if not data:
         data = settings["get_data"]
 
-    make_dataset_pipeline = {"train": []
-                            ,"test": []
-                            }
-
     if isinstance(data, dict):
         get_data_pipe = EPipeline(get_data_steps(**data))
         get_data_pipe.fit(None)
         data = get_data_pipe.transform(None)
 
-    pred_target_split_pipe, train_test_split_pipe = train_test_split_steps(**settings["train_test_split"])
+    if settings["get_data"]["raw_data"].endswith(".csv") & convert_to_parquet:
+        data.to_parquet(str(DATA / "raw" / f"data.parquet"))
 
+    pred_target_split_pipe, train_test_split_pipe, time_split_pipe = train_test_split_steps(**settings["train_test_split"])
     pred_target_split_pipe.fit(None)
-
-    make_dataset_pipeline["train"].append(("split_pred_target", pred_target_split_pipe))
-    make_dataset_pipeline["test"].append(("split_pred_target", pred_target_split_pipe))
-
     X, y = pred_target_split_pipe.transform(data)
 
     train_test_split_pipe.fit(X, y)
+    X, y = train_test_split_pipe.transform(X)
 
-    make_dataset_pipeline["train"].append(("split_train_test", train_test_split_pipe))
+    for dataset_type in X.keys():
+        X[dataset_type].to_parquet(str(DATA / "raw" / f"X_{dataset_type}.parquet"))
+        y[dataset_type].to_parquet(str(DATA / "raw" / f"y_{dataset_type}.parquet"))
 
-    X, y = train_test_split_pipe.transform(X, y)
+    if time_split_pipe is not None:
+        time_split_pipe.fit(X, y)
+        X, y = time_split_pipe.transform(X)
 
-    pre_process_steps = make_preprocess_steps(settings.get("preprocess"))
-    pre_process_pipe = EPipeline(pre_process_steps)
-    pre_process_pipe.fit(X["train"], y["train"])
+        for dataset_type in X.keys():
+            X[dataset_type].to_parquet(str(DATA / "raw" / f"X_{dataset_type}.parquet"))
+            y[dataset_type].to_parquet(str(DATA / "raw" / f"y_{dataset_type}.parquet"))
 
-    make_dataset_pipeline["train"].append(("preprocess", pre_process_pipe))
-    make_dataset_pipeline["test"].append(("preprocess", pre_process_pipe))
-    
-    return make_dataset_pipeline
+    return None
 
 
 if __name__ == '__main__':
