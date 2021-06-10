@@ -2,7 +2,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-import dask.dataframe as dd
 import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
@@ -48,10 +47,10 @@ class Extract(BaseEstimator, TransformerMixin):
             raise TypeError(msg)
         self.column = column
 
-    def fit(self, X: dd, y: dd=None):
+    def fit(self, X: pd.DataFrame, y: pd.DataFrame=None):
         return self
 
-    def transform(self, X: dd, y: dd=None):
+    def transform(self, X: pd.DataFrame, y: pd.DataFrame=None):
         return X[self.column]
 
     def get_feature_names(self):

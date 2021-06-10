@@ -4,6 +4,8 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+    
+
         {
             "name": "Python: Current File",
             "type": "python",
@@ -13,13 +15,13 @@
             "cwd": "${fileDirname}",
             "env": {"PYTHONPATH": "${workspaceFolder}:${env:PYTHONPATH}"}
         }
-        , {
+        ,{
             "name": "Make Dataset",
             "type": "python",
             "request": "launch",
-            "program": "make_dataset.py",
+            "program": "src/data/make_dataset.py",
             "console": "integratedTerminal",
-            "cwd": "${fileDirname}",
+            // "cwd": "${fileDirname}",
             "env": {"PYTHONPATH": "${workspaceFolder}:${env:PYTHONPATH}"},
         }
     ]

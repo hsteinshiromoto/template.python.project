@@ -3,6 +3,7 @@ import sys
 from datetime import datetime
 from math import e, log
 from pathlib import Path
+from typing import Union
 
 import dask.dataframe as dd
 import numpy as np
@@ -51,7 +52,7 @@ class Filter_Nulls(BaseEstimator, TransformerMixin):
         self.nulls_threshold = nulls_threshold
 
     @log_fun
-    def fit(self, X: dd, y=None):
+    def fit(self, X: Union[dd.DataFrame, tuple], y=None):
         """
         Calculate what columns should be removed, based on the defined thresholds
 
@@ -62,6 +63,8 @@ class Filter_Nulls(BaseEstimator, TransformerMixin):
         Returns:
             None
         """
+        if isinstance(X, tuple):
+            X = X[0]
 
         # Calculate number of missing rows in each column
         summary_df = X.isnull().sum().compute()
@@ -79,7 +82,7 @@ class Filter_Nulls(BaseEstimator, TransformerMixin):
         return self
 
     @log_fun
-    def transform(self, X: dd, y=None):
+    def transform(self, X: Union[dd.DataFrame, tuple], y=None):
         """
         Remove columns computed in fit method
 
@@ -90,6 +93,9 @@ class Filter_Nulls(BaseEstimator, TransformerMixin):
         Returns:
             (dd): Dataframe with columns removed
         """
+        if isinstance(X, tuple):
+            X = X[0]
+
         return X.drop(labels=self.feature_names, axis=1)
 
     @log_fun
@@ -134,7 +140,7 @@ class Filter_Std(BaseEstimator, TransformerMixin):
         self.inclusive = inclusive
 
     @log_fun
-    def fit(self, X: dd, y=None):
+    def fit(self, X: Union[dd.DataFrame, tuple], y=None):
         """Calculate what columns should be removed, based on the defined thresholds
 
         Args:
@@ -144,6 +150,9 @@ class Filter_Std(BaseEstimator, TransformerMixin):
         Returns:
             None
         """
+        if isinstance(X, tuple):
+            X = X[0]
+
         subset = X.select_dtypes(include=[np.number])
 
         # Calculate the standad deviation column-wisely
@@ -168,7 +177,7 @@ class Filter_Std(BaseEstimator, TransformerMixin):
         return self
 
     @log_fun
-    def transform(self, X: dd, y=None):
+    def transform(self, X: Union[dd.DataFrame, tuple], y=None):
         """
         Remove columns computed in fit method
 
@@ -179,6 +188,9 @@ class Filter_Std(BaseEstimator, TransformerMixin):
         Returns:
             (dd): Dataframe with columns removed
         """
+        if isinstance(X, tuple):
+            X = X[0]
+
         return X.drop(labels=self.feature_names, axis=1)
 
     @log_fun
@@ -231,7 +243,7 @@ class Filter_Entropy(BaseEstimator, TransformerMixin):
         self.inclusive = inclusive
 
     @log_fun
-    def fit(self, X: dd, y=None):
+    def fit(self, X: Union[dd.DataFrame, tuple], y=None):
         """Calculate what columns should be removed, based on the defined thresholds
 
         Args:
@@ -241,6 +253,9 @@ class Filter_Entropy(BaseEstimator, TransformerMixin):
         Returns:
             None
         """
+        if isinstance(X, tuple):
+            X = X[0]
+
         subset = X.select_dtypes(exclude=[np.number, "datetime64[ns]"])
 
         # Calculate the entropy column-wisely
@@ -261,7 +276,7 @@ class Filter_Entropy(BaseEstimator, TransformerMixin):
         return self
 
     @log_fun
-    def transform(self, X: dd, y=None):
+    def transform(self, X: Union[dd.DataFrame, tuple], y=None):
         """
         Remove columns computed in fit method
 
@@ -272,6 +287,9 @@ class Filter_Entropy(BaseEstimator, TransformerMixin):
         Returns:
             (dd): Dataframe with columns removed
         """
+        if isinstance(X, tuple):
+            X = X[0]
+
         return X.drop(labels=self.feature_names, axis=1)
 
     @log_fun
@@ -292,11 +310,14 @@ class Filter_Duplicates(BaseEstimator, TransformerMixin):
         self.subset = subset
 
     @log_fun
-    def fit(self, X: dd, y=None):
+    def fit(self, X: Union[dd.DataFrame, tuple], y=None):
+        if isinstance(X, tuple):
+            X = X[0]
+
         return self
 
     @log_fun
-    def transform(self, X: dd, y=None):
+    def transform(self, X: Union[dd.DataFrame, tuple], y=None):
         """
         Remove duplicated rows
 
@@ -307,6 +328,9 @@ class Filter_Duplicates(BaseEstimator, TransformerMixin):
         Returns:
             (dd): Dataframe with rows removed
         """
+        if isinstance(X, tuple):
+            X = X[0]
+            
         return X.drop_duplicates(subset=self.subset)
     
     @log_fun
@@ -365,7 +389,7 @@ def entropy(data, base: int=None) -> float:
 
 @typechecked
 @log_fun
-def make_filter_nulls_pipeline(data: dd, null_columns: list[str] or bool=True
+def make_filter_nulls_pipeline(data: dd.DataFrame, null_columns: list[str] or bool=True
                                 ,threshold: float=None):
     """
     Makes pipeline to filter columns according to missing values
@@ -405,7 +429,7 @@ def make_filter_nulls_pipeline(data: dd, null_columns: list[str] or bool=True
 
 @typechecked
 @log_fun
-def make_filter_std_pipeline(data: dd, numerical_columns: list[str] or bool=True
+def make_filter_std_pipeline(data: dd.DataFrame, numerical_columns: list[str] or bool=True
                             ,thresholds: list[float]=None, inclusive: bool=False):
     #TODO: write unit tests
     """
@@ -430,7 +454,7 @@ def make_filter_std_pipeline(data: dd, numerical_columns: list[str] or bool=True
 
 @typechecked
 @log_fun
-def make_filter_entropy_pipeline(data: dd, categorical_columns: list[str] or bool=True
+def make_filter_entropy_pipeline(data: dd.DataFrame, categorical_columns: list[str] or bool=True
                                 ,thresholds: list[float]=None, inclusive: bool=False):
     #TODO: write unit tests
     selected_columns = data.select_dtypes(exclude=[np.number], include=["object"]) if isinstance(categorical_columns, bool) else categorical_columns
