@@ -578,6 +578,8 @@ def main(data: Union[pd.DataFrame, dd.DataFrame, dict]=None, save: bool=False
         X[dataset_type].to_parquet(str(DATA / "interim" / f"X_{dataset_type}.parquet"))
         y[dataset_type].to_parquet(str(DATA / "interim" / f"y_{dataset_type}.parquet"))
 
+    logger.info(f"End of {__file__}")
+
     return X, y
 
 
