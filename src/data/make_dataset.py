@@ -578,7 +578,7 @@ def main(data: Union[pd.DataFrame, dd.DataFrame, dict]=None, save: bool=False
         X[dataset_type].to_parquet(str(DATA / "interim" / f"X_{dataset_type}.parquet"))
         y[dataset_type].to_parquet(str(DATA / "interim" / f"y_{dataset_type}.parquet"))
 
-    return None
+    return X, y
 
 
 if __name__ == '__main__':
