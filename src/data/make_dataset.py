@@ -292,31 +292,6 @@ class Train_Test_Split(BaseEstimator, TransformerMixin):
 
 
 @typechecked
-class Select_Train_Datasets(BaseEstimator, TransformerMixin):
-    @log_fun
-    def __init__(self, time_split: bool=False):
-        self.time_split = time_split
-
-    @log_fun
-    def fit(self, X=None, y=None):
-        return self
-
-    @log_fun
-    def transform(self, X: tuple, y=None):
-        if self.time_split == True:
-            y = X[1]
-            X = X[0]
-
-            X_train = X["train"]
-            y_train = y["train"]
-
-        else:
-            X_train, X_test, y_train, y_test = X
-        
-        return X_train, y_train
-
-
-@typechecked
 class Time_Split(BaseEstimator, TransformerMixin):
     """
     Splits data according to a certain date
