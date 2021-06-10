@@ -570,17 +570,13 @@ def main(data: Union[pd.DataFrame, dd.DataFrame, dict]=None, save: bool=False
     train_test_split_pipe.fit(X, y)
     X, y = train_test_split_pipe.transform(X)
 
-    for dataset_type in X.keys():
-        X[dataset_type].to_parquet(str(DATA / "raw" / f"X_{dataset_type}.parquet"))
-        y[dataset_type].to_parquet(str(DATA / "raw" / f"y_{dataset_type}.parquet"))
-
     if time_split_pipe is not None:
         time_split_pipe.fit(X, y)
         X, y = time_split_pipe.transform(X)
 
-        for dataset_type in X.keys():
-            X[dataset_type].to_parquet(str(DATA / "raw" / f"X_{dataset_type}.parquet"))
-            y[dataset_type].to_parquet(str(DATA / "raw" / f"y_{dataset_type}.parquet"))
+    for dataset_type in X.keys():
+        X[dataset_type].to_parquet(str(DATA / "raw" / f"X_{dataset_type}.parquet"))
+        y[dataset_type].to_parquet(str(DATA / "raw" / f"y_{dataset_type}.parquet"))
 
     return None
 
