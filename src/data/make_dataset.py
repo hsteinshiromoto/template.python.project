@@ -542,6 +542,7 @@ def make_preprocess_steps(preprocess_settings: dict=None) -> list:
             ,("filter_std", Filter_Std())]
 
 
+@log_fun
 @typechecked
 def main(data: Union[pd.DataFrame, dd.DataFrame, dict]=None, save: bool=False
         ,settings: dict={}, convert_to_parquet: bool=True):
