@@ -10,6 +10,7 @@ import pandas as pd
 from category_encoders import OneHotEncoder
 from pandas.api.types import is_datetime64_any_dtype as is_datetime
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.compose import ColumnTransformer
 from typeguard import typechecked
 
 PROJECT_ROOT = Path(subprocess.Popen(['git', 'rev-parse', '--show-toplevel'], 
@@ -126,27 +127,30 @@ class Input_Numeric(BaseEstimator, TransformerMixin):
 
 @typechecked
 @log_fun
-def main(X: pd.DataFrame):
+def main(X: dd.DataFrame):
+
+    encoder_steps = []
 
     # Encode numerical
     numerical_columns = X.select_dtypes(include=[np.number]).columns.values
-    encode_numerical_steps = [("extract", Extract(column=numerical_columns))
-                            ,("input_numeric", Input_Numeric())
-                            ]
+    numerical_pipeline = EPipeline(("input_numeric", Input_Numeric()))
+    encoder_steps.append(('numerical', numerical_pipeline, numerical_columns))
 
     # Encode datetime
-    datetime_columns = X.select_dtypes(include=[np.datetime64]).columns.values
-    encode_datetime_steps = [("extract", Extract(column=datetime_columns))
-                            ,("transform_datetime", Transform_Datetime())
-                            ]
+    # datetime_columns = X.select_dtypes(include=[np.datetime64]).columns.values
+    # datetime_pipeline = EPipeline(("input_numeric", Input_Numeric()))
+    # encoder_steps.append(('numerical', datetime_pipeline, datetime_columns))
 
     # Encode Categorical
     categorical_columns = X.select_dtypes(include=['category']).columns.values
-    # TODO: Remove this np save and recover list of categorical from encoder object
-    encode_categorical_steps = [("extract", Extract(column=categorical_columns))
-                                # ,("categorize", Categorizer()) # N.B.: The categorize is necessary before running OneHotEncoder()
-                                ,("transform_categorical", OneHotEncoder(handle_unknown="indicator", handle_missing="indicator"
-                                                                        ,return_df=True, verbose=4))
+    encode_categorical_steps = [("categorize", Categorizer()) # N.B.: The categorize is necessary before running OneHotEncoder()
+                                ,("transform_categorical"
+                                    ,OneHotEncoder(handle_unknown="indicator"
+                                                ,handle_missing="indicator"
+                                                ,return_df=True, verbose=4))
                                 ]
+    categorical_pipeline = EPipeline(encode_categorical_steps)
+    # TODO: Remove this np save and recover list of categorical from encoder object
+    encoder_steps.append(('categorical', categorical_pipeline, categorical_columns))
     
-    return encode_numerical_steps, encode_datetime_steps, encode_categorical_steps
+    return ColumnTransformer(encoder_steps)
