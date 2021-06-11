@@ -24,7 +24,6 @@ sys.path.append(str(PROJECT_ROOT))
 
 from src.base import Get_Settings, argparse_str2bool
 from src.base_pipeline import EPipeline, Extract
-from src.data.filter_data import Filter_Entropy, Filter_Nulls, Filter_Std
 from src.make_logger import log_fun, make_logger
 from tests.mock_dataset import mock_dataset
 
@@ -531,15 +530,6 @@ def train_test_split_steps(y_col: str, train_proportion: float=0.75
         time_split_pipe = None
 
     return pred_target_split_pipe, train_test_split_pipe, time_split_pipe
-
-
-@log_fun
-@typechecked
-def make_preprocess_steps(preprocess_settings: dict=None) -> list:
-
-    return [("filter_nulls", Filter_Nulls())
-            ,("filter_entropy", Filter_Entropy())
-            ,("filter_std", Filter_Std())]
 
 
 @log_fun
