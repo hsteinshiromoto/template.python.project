@@ -1,16 +1,15 @@
 import subprocess
 import sys
+import warnings
 from datetime import datetime
 from math import e, log
 from pathlib import Path
 from typing import Union
-import warnings
 
 import dask.dataframe as dd
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.pipeline import FeatureUnion
 from typeguard import typechecked
 
 PROJECT_ROOT = Path(subprocess.Popen(['git', 'rev-parse', '--show-toplevel'], 
@@ -467,79 +466,3 @@ def make_filter_nulls_pipeline(data: dd.DataFrame, null_columns: list[str] or bo
             ]
     
     return EPipeline(steps)
-
-
-@typechecked
-@log_fun
-def make_filter_std_pipeline(data: dd.DataFrame, numerical_columns: list[str] or bool=True
-                            ,thresholds: list[float]=None, inclusive: bool=False):
-    #TODO: write unit tests
-    """
-    Makes pipeline to filter columns according to standard deviation
-
-    Args:
-        data (dd): Data frame to be filtered
-        numerical_columns (list or bool, optional): Columns to subset the filtering. Defaults to True.
-        thresholds (list, optional): Interval of std values to filter. Defaults to None.
-        inclusive (bool, optional):  Includes or not the interval boundaries. Defaults to False.
-
-    Returns:
-        EPipeline: Pipeline to filter data frame
-    """
-    selected_columns = data.select_dtypes(include=[np.number]).columns.values if isinstance(numerical_columns, bool) else numerical_columns
-    steps = [("extract", Extract(selected_columns))
-        ,("std_filter", Filter_Std(std_thresholds=thresholds, inclusive=inclusive))
-            ]
-
-    return EPipeline(steps)
-
-
-@typechecked
-@log_fun
-def make_filter_entropy_pipeline(data: dd.DataFrame, categorical_columns: list[str] or bool=True
-                                ,thresholds: list[float]=None, inclusive: bool=False):
-    #TODO: write unit tests
-    selected_columns = data.select_dtypes(exclude=[np.number], include=["object"]) if isinstance(categorical_columns, bool) else categorical_columns
-    steps = [("extract", Extract(selected_columns))
-            ,("entropy_filter", Filter_Entropy(entropy_thresholds=thresholds
-                                                ,inclusive=inclusive))
-            ]
-
-    return EPipeline(steps)
-
-
-@typechecked
-@log_fun
-def filter_pipeline(data: dd, null_columns: list[str] or bool=True
-                    ,numerical_columns: list[str] or bool=True
-                    ,categorical_columns: list[str] or bool=True
-                    ,thresholds: dict={}, save_interim: bool=False
-                    ,pipeline: EPipeline=None, **kwargs) -> dd:
-    #TODO: write unit tests
-    """
-    Creates filter pipeline
-
-    Args:
-        data (dd): Data to be filtered
-        nulls (list or bool, optional): Columns to be filtered. Defaults to True.
-        numerical (list or bool, optional): Columns to be filtered. Defaults to True.
-        entropy (list or bool, optional): Columns to be filtered. Defaults to True.
-        thresholds (dict, optional): Low and high thresholds. Defaults to {}.
-        save_interim (bool, optional): Save filtered data to interim folder. Defaults to False.
-        pipeline (EPipeline, optional): Built pipeline. Defaults to None.
-
-    Returns:
-        dd: [description]
-    """
-    pipe_dict = {}
-
-    if null_columns:
-        pipe_dict["nulls_pipeline"] = make_filter_nulls_pipeline(data, null_columns=null_columns, threshold=thresholds.get("nulls"))
-
-    if numerical_columns:
-        pipe_dict["std_pipeline"] = make_filter_std_pipeline(data, numerical_columns=numerical_columns, thresholds=thresholds.get("numerical"), inclusive=kwargs.get("numerical"))
-
-    if categorical_columns:
-        pipe_dict["entropy_pipeline"] = make_filter_entropy_pipeline(data, categorical_columns=categorical_columns, thresholds=thresholds.get("entropy"), inclusive=kwargs.get("entropy"))
-        
-    return pipe_dict
