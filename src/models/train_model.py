@@ -21,13 +21,12 @@ DATA = PROJECT_ROOT / "data"
 
 sys.path.append(str(PROJECT_ROOT))
 
-from base import get_filename, get_settings, make_timestamp, Get_Filename
-from data.make_dataset import Get_Interim_Data
-from make_logger import log_fun, make_logger
+from src.base import Get_Settings, Get_Filename
+from src.make_logger import log_fun, make_logger
 
 @log_fun
-class Get_Raw_Datasets(Get_Filename):
-    def __init__(self, path: Path=PROJECT_ROOT / "data" / "raw"):
+class Get_Interim_Datasets(Get_Filename):
+    def __init__(self, path: Path=PROJECT_ROOT / "data" / "interim"):
         super().__init__(path)
 
     def load(self, dataset_type: str):
@@ -44,11 +43,12 @@ class Get_Raw_Datasets(Get_Filename):
 
         return X, y
 
+
 @log_fun
 class Get_Pipeline(BaseEstimator, TransformerMixin):
     @log_fun
     def __init__(self, pipeline: str, timestamp: str=None
-                ,path: Path=MODEL_PATH):
+                ,path: Path=PROJECT_ROOT / "models"):
         self.timestamp = timestamp
         self.path = path
         self.pipeline = pipeline
@@ -159,7 +159,7 @@ def main(X: dict, y: dict, settings: dict=None, timestamp: str=None
     # References
     #    [1] https://github.com/dmlc/xgboost/issues/2334#issuecomment-406282203
 
-    X, y = Get_Raw_Datasets().load("train")
+    
 
     X_train = X["train"].values
     X_cal = X["cal"].values
@@ -234,9 +234,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    get_interim_data = Get_Interim_Data()
-    get_interim_data.fit()
-    X, y = get_interim_data.transform()
+    X, y = Get_Interim_Datasets().load("train")
 
     get_predict_pipeline = Get_Pipeline("predict")
     get_predict_pipeline.fit()
