@@ -4,6 +4,7 @@ from datetime import datetime
 from math import e, log
 from pathlib import Path
 from typing import Union
+import warnings
 
 import dask.dataframe as dd
 import numpy as np
@@ -342,6 +343,47 @@ class Filter_Duplicates(BaseEstimator, TransformerMixin):
             (list): List of removed columns
         """
         return self.subset
+
+
+@typechecked
+class Filter_Columns(BaseEstimator, TransformerMixin):
+    @log_fun
+    def __init__(self, subset: list[str]):
+        self.subset = subset
+
+    @log_fun
+    def fit(self, X: dd.DataFrame, y=None):
+        return self
+
+    @log_fun
+    def transform(self, X: dd.DataFrame, y=None):
+        """
+        Drop selected columns
+
+        Args:
+            X (dd): Dataframe to be processed
+            y (dd, optional): Target. Defaults to None.
+
+        Returns:
+            (dd): Dataframe with rows removed
+        """
+        self.feature_names = set(X.columns.values) - set(self.subset)
+        not_found_cols = set(self.subset) - set(X.columns.values)
+        if len(not_found_cols) == 0:
+            msg = f"Columns {not_found_cols} not found in dataset."
+            warnings.warn(msg)
+            
+        return X.drop(columns=self.feature_names)
+    
+    @log_fun
+    def get_feature_names(self):
+        """
+        Get lists of removed columns
+
+        Returns:
+            (list): List of removed columns
+        """
+        return self.feature_names
 
 
 @typechecked
