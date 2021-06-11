@@ -1,30 +1,25 @@
-# Use category_encoders
-import os
+import subprocess
 import sys
 from copy import copy
 from datetime import datetime
 from pathlib import Path
 from typing import Union
 
-from scipy import stats
 import numpy as np
 import pandas as pd
 from category_encoders import OneHotEncoder
 from pandas.api.types import is_datetime64_any_dtype as is_datetime
 from sklearn.base import BaseEstimator, TransformerMixin
+from typeguard import typechecked
 
-SRC_PATH = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-PROJECT_ROOT = os.path.dirname(SRC_PATH)
-PROJECT_ROOT = Path(PROJECT_ROOT)
+PROJECT_ROOT = Path(subprocess.Popen(['git', 'rev-parse', '--show-toplevel'], 
+                                    stdout=subprocess.PIPE).communicate()[0].rstrip().decode('utf-8'))
 DATA = PROJECT_ROOT / "data"
 
-sys.path.append(SRC_PATH)
+sys.path.append(PROJECT_ROOT)
 
-CONTAINER_PREFIX = Path('/opt/ml/')
-MODEL_PATH =  CONTAINER_PREFIX / 'model' if CONTAINER_PREFIX.is_dir() else PROJECT_ROOT / "models"
-
-from base_pipeline import EPipeline, Extract, PandasFeatureUnion
-from make_logger import log_fun
+from src.base_pipeline import EPipeline, Extract, PandasFeatureUnion
+from src.make_logger import log_fun
 
 
 class Transform_Datetime(BaseEstimator, TransformerMixin):
@@ -129,6 +124,7 @@ class Input_Numeric(BaseEstimator, TransformerMixin):
         return self.feature_names
 
 
+@typechecked
 @log_fun
 def main(X: pd.DataFrame):
 
@@ -137,31 +133,20 @@ def main(X: pd.DataFrame):
     encode_numerical_steps = [("extract", Extract(column=numerical_columns))
                             ,("input_numeric", Input_Numeric())
                             ]
-    numerical_encoder = EPipeline(encode_numerical_steps)
-    # numerical_encoder.fit(X)
 
     # Encode datetime
     datetime_columns = X.select_dtypes(include=[np.datetime64]).columns.values
     encode_datetime_steps = [("extract", Extract(column=datetime_columns))
-                            ,("transform_datetime", Transform_Datetime())]
-    datetime_encoder = EPipeline(encode_datetime_steps)
-    # datetime_encoder.fit(X)
+                            ,("transform_datetime", Transform_Datetime())
+                            ]
 
     # Encode Categorical
     categorical_columns = X.select_dtypes(include=['category']).columns.values
     # TODO: Remove this np save and recover list of categorical from encoder object
-    np.save(str(MODEL_PATH / "categorical_columns.npy"), categorical_columns)
     encode_categorical_steps = [("extract", Extract(column=categorical_columns))
                                 # ,("categorize", Categorizer()) # N.B.: The categorize is necessary before running OneHotEncoder()
                                 ,("transform_categorical", OneHotEncoder(handle_unknown="indicator", handle_missing="indicator"
                                                                         ,return_df=True, verbose=4))
                                 ]
-    categorical_encoder = EPipeline(encode_categorical_steps)
-    # categorical_encoder.fit(X)
-
-    encoder = PandasFeatureUnion([("numerical_encoder", numerical_encoder)
-                            ,("datetime_encoder", datetime_encoder)
-                            ,("categorical_encoder", categorical_encoder)
-                            ])
-
-    return encoder, categorical_columns
+    
+    return encode_numerical_steps, encode_datetime_steps, encode_categorical_steps
