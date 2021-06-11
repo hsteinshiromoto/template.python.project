@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 
 import argparse
-import subprocess
 import pickle
+import subprocess
 import sys
 from pathlib import Path
-from typeguard import typechecked
 from typing import Union
+
+import dask.dataframe as dd
 import pandas as pd
 import scipy.stats as ss
-import dask.dataframe as dd
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.model_selection import RandomizedSearchCV, StratifiedKFold
+from typeguard import typechecked
 from xgboost.sklearn import XGBClassifier
 
 PROJECT_ROOT = Path(subprocess.Popen(['git', 'rev-parse', '--show-toplevel'], 
@@ -21,8 +22,10 @@ DATA = PROJECT_ROOT / "data"
 
 sys.path.append(str(PROJECT_ROOT))
 
-from src.base import Get_Settings, Get_Filename
+from src.base import Get_Filename, Get_Settings
+from src.data.filter_data import Filter_Entropy, Filter_Nulls, Filter_Std
 from src.make_logger import log_fun, make_logger
+
 
 @log_fun
 class Get_Interim_Datasets(Get_Filename):
@@ -76,7 +79,7 @@ class Get_Pipeline(BaseEstimator, TransformerMixin):
 
 
 @log_fun
-def instantiate_estimator(objective='binary:logistic', use_label_encoder=False):
+def instantiate_base_estimator(objective='binary:logistic', use_label_encoder=False):
     return XGBClassifier(use_label_encoder=use_label_encoder, objective=objective)
 
 
@@ -145,33 +148,42 @@ def make_randomsearch_cv_params_distr(estimator_parameters: dict, scale_pos_weig
     return params_dict
 
 
-@log_fun
-def process_data(data_loader: Get_Filename, basename: str):
+def filter_data():
 
-    X_train = data_loader.load("")
+    return [("filter_nulls", Filter_Nulls())
+            ,("filter_entropy", Filter_Entropy())
+            ,("filter_std", Filter_Std())]
+
+@log_fun
+def process_data(X: dd.DataFrame, y: dd.DataFrame, settings: dict):
+
+    
 
     return X, y
 
 
 @log_fun
-def main(X: dict, y: dict, settings: dict=None, timestamp: str=None
-        ,predict_steps: list=None):
+@typechecked
+def main(X: dict, y: dict, settings: dict=None, timestamp: str=None):
     # References
     #    [1] https://github.com/dmlc/xgboost/issues/2334#issuecomment-406282203
 
     if not settings:
         settings = Get_Settings().load()
 
+    # 1. Preprocess data
+    X, y = process_data(X, y, settings)
+
     # 2. Setup Training Parameters
     scale_pos_weight = y["train"].mean()
 
     # 3. Instantiate Estimator and Cross Validation Object
-    estimator = instantiate_estimator()
+    base_estimator = instantiate_base_estimator()
     cv_settings = settings["cv"]
     params_distr = cv_settings["params_distr"]
     del cv_settings["params_distr"]
     
-    cv = instantiate_cv(estimator, params_distr, scale_pos_weight, **cv_settings)
+    cv = instantiate_cv(base_estimator, params_distr, scale_pos_weight, **cv_settings)
 
     # 4. Fit model and get best trained estimator
     # N.B. parse X_train as matrix to avoid feature bugs [1]
