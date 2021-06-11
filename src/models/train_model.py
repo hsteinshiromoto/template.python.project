@@ -38,8 +38,8 @@ class Get_Interim_Datasets(Get_Filename):
             msg = f"Expected dataset_type to be either {allowed_types}. Got {dataset_type}."
             raise ValueError(msg)
         
-        X = dd.read_parquet(str(self.path / f"X_{dataset_type}.parquet"))
-        y = dd.read_parquet(str(self.path / f"y_{dataset_type}.parquet"))
+        X = {dataset_type: dd.read_parquet(str(self.path / f"X_{dataset_type}.parquet"))}
+        y = {dataset_type: dd.read_parquet(str(self.path / f"y_{dataset_type}.parquet"))}
 
         return X, y
 
@@ -101,13 +101,16 @@ def instantiate_cv(estimator, params_distr: dict, scale_pos_weight: float, n_ite
         #                         ,scoring="roc_auc", cv=cv, verbose=verbose, refit=refit
         #                         ,n_iter=n_iter)
 
-    else:
-        distributions = make_randomsearch_cv_params_distr(params_distr, scale_pos_weight)
-        cv_object = RandomizedSearchCV(estimator, param_distributions=distributions
-                                    ,scoring=scoring, cv=cv, verbose=verbose, refit=refit
-                                    ,n_iter=n_iter)
-
-    return cv_object
+    distributions = make_randomsearch_cv_params_distr(params_distr, scale_pos_weight)
+    return RandomizedSearchCV(
+        estimator,
+        param_distributions=distributions,
+        scoring=scoring,
+        cv=cv,
+        verbose=verbose,
+        refit=refit,
+        n_iter=n_iter,
+    )
 
 
 @log_fun
@@ -136,10 +139,7 @@ def make_randomsearch_cv_params_distr(estimator_parameters: dict, scale_pos_weig
         if data_type == "str":
             params_dict[parameter] = values
 
-        elif (distribution_type == "uniform"):
-            params_dict[parameter] = distr_map[data_type][distribution_type](*values)
-
-        elif (distribution_type == "normal"):
+        elif distribution_type in ["uniform", "normal"]:
             params_dict[parameter] = distr_map[data_type][distribution_type](*values)
 
     return params_dict
@@ -159,24 +159,11 @@ def main(X: dict, y: dict, settings: dict=None, timestamp: str=None
     # References
     #    [1] https://github.com/dmlc/xgboost/issues/2334#issuecomment-406282203
 
-    
-
-    X_train = X["train"].values
-    X_cal = X["cal"].values
-
-    y_train = y["train"].values.squeeze()
-    y_cal = y["cal"].values.squeeze()
-
-    assert X["train"].columns.to_list() == X["cal"].columns.to_list()
-
     if not settings:
-        settings = get_settings()
-
-    if not timestamp:
-        timestamp = make_timestamp()
+        settings = Get_Settings().load()
 
     # 2. Setup Training Parameters
-    scale_pos_weight = y_train.mean()
+    scale_pos_weight = y["train"].mean()
 
     # 3. Instantiate Estimator and Cross Validation Object
     estimator = instantiate_estimator()
@@ -236,8 +223,4 @@ if __name__ == '__main__':
 
     X, y = Get_Interim_Datasets().load("train")
 
-    get_predict_pipeline = Get_Pipeline("predict")
-    get_predict_pipeline.fit()
-    predict_steps = get_predict_pipeline.transform()
-
-    main(X, y, timestamp=args.timestamp, predict_steps=predict_steps)
+    main(X, y)
