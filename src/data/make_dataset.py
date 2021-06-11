@@ -129,7 +129,7 @@ class Get_Raw_Data(BaseEstimator, TransformerMixin):
 
         # Due to nans, we need to read numerical data as float and boolean as object
         # TODO: Convert to int and float according to the nulls filter
-        meta_data_dtypes_map = {"float": float, "int": float, "bool": "object", "str": str}
+        meta_data_dtypes_map = {"float": float, "int": float, "bool": "category", "str": str}
 
         mask = meta_data["python_dtype"].isin(list(meta_data_dtypes_map.keys()))
         meta_data.loc[mask, "python_dtype"] = meta_data.loc[mask, "python_dtype"].map(meta_data_dtypes_map)
@@ -155,8 +155,10 @@ class Get_Raw_Data(BaseEstimator, TransformerMixin):
     def transform(self, X=None, y=None):
         if self.basename.suffix == ".csv":
             # Load data file
-            data = dd.read_csv(str(self.path / self.basename), parse_dates=self.datetime_columns
-                                ,date_parser=date_parser, dtype=self.dtypes_mapping)
+            data = dd.read_csv(str(self.path / self.basename),
+                                parse_dates=self.datetime_columns,
+                                date_parser=date_parser, assume_missing=True,
+                                dtype=self.dtypes_mapping)
 
         elif self.basename.suffix == ".parquet":
             data = dd.read_parquet(str(self.path / self.basename))
@@ -449,7 +451,7 @@ def date_parser(array, format: str="%Y-%m-%d"):
 
 @log_fun
 @typechecked
-def get_data_steps(raw_data: Union[Path, str], meta_data: Union[Path,str]) -> list:
+def get_data_steps(raw_data: Union[Path, str], meta_data: Union[Path, str]):
     """
     Make the steps to be followed in the pipeline to read raw and meta data
 
@@ -498,9 +500,27 @@ def get_data_steps(raw_data: Union[Path, str], meta_data: Union[Path,str]) -> li
     meta_data = Path(meta_data) if isinstance(meta_data, str) else meta_data
     raw_data = Path(raw_data) if isinstance(raw_data, str) else raw_data
 
-    return [("get_meta_data", Get_Meta_Data(basename=meta_data))
-            ,("get_raw_data", Get_Raw_Data(basename=raw_data))
-            ]
+    return EPipeline([("get_meta_data", Get_Meta_Data(basename=meta_data))]), \
+            EPipeline([("get_raw_data", Get_Raw_Data(basename=raw_data))])
+
+
+@log_fun
+@typechecked
+def test_dtypes(data: dd.DataFrame, meta_data: Union[dict, pd.DataFrame]):
+
+    for index, row in meta_data.iterrows():
+        column_name = row["column_name"]
+        dtype = row["python_dtype"]
+        data_dtype = data[column_name].dtype.name
+
+        if data_dtype == "category":
+            continue
+
+        msg = f"Expected dtype of column {column_name} to be {dtype}. Got {data_dtype}."
+        if dtype not in data_dtype:
+            raise TypeError(msg)
+
+    return
 
 
 @log_fun
@@ -551,9 +571,14 @@ def main(data: Union[pd.DataFrame, dd.DataFrame, dict]=None, save: bool=False
         data = settings["get_data"]
 
     if isinstance(data, dict):
-        get_data_pipe = EPipeline(get_data_steps(**data))
-        get_data_pipe.fit(None)
-        data = get_data_pipe.transform(None)
+        get_meta_data_pipe, get_raw_data_pipe = get_data_steps(**data)
+        get_meta_data_pipe.fit(None)
+        meta_data = get_meta_data_pipe.transform(None)
+
+        get_raw_data_pipe.fit(meta_data.copy())
+        data = get_raw_data_pipe.transform(None)
+
+        test_dtypes(data, meta_data)
 
     if settings["get_data"]["raw_data"].endswith(".csv") & convert_to_parquet:
         data.to_parquet(str(DATA / "raw" / f"data.parquet"))
