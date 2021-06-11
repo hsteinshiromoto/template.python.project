@@ -138,6 +138,10 @@ class Get_Raw_Data(BaseEstimator, TransformerMixin):
         mask_datetime = meta_data["python_dtype"] == "datetime64[ns]"
         self.datetime_columns = list(meta_data.loc[mask_datetime, "column_name"].values)
 
+        # Identify categorical columns
+        mask_categorical = meta_data["is_categorical"].isin(["Y", "y", 1, "1"])
+        meta_data.loc[mask_categorical, "python_dtype"] = "category"
+
         # Create dict with column name and data type
         self.dtypes_mapping = pd.Series(meta_data.loc[~mask_datetime, "python_dtype"].values,
         index=meta_data.loc[~mask_datetime, "column_name"].values).to_dict()
