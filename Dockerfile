@@ -11,6 +11,9 @@ ARG PROJECT_NAME
 # Silence debconf
 ARG DEBIAN_FRONTEND=noninteractive
 
+ARG USERNAME=vscode
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
 # ---
 # Enviroment variables
 # ---
@@ -20,7 +23,8 @@ ENV PROJECT_ROOT /home/$PROJECT_NAME
 ENV PYTHONPATH $PROJECT_ROOT
 ENV TZ Australia/Sydney
 ENV JUPYTER_ENABLE_LAB=yes
-
+ENV SHELL /bin/bash
+ENV HOME /home/$USERNAME
 
 # Set container time zone
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
@@ -39,6 +43,16 @@ RUN apt-get update && \
     apt-get clean
 
 # ---
+# Setup vscode as nonroot user
+# ---
+RUN groupadd --gid $USER_GID $USERNAME \
+    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
+    #
+    # [Optional] Add sudo support. Omit if you don't need to install software after connecting.
+    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME
+
+# ---
 # Copy Container Setup Scripts
 # ---
 
@@ -46,23 +60,26 @@ COPY bin/entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY bin/run_python.sh /usr/local/bin/run_python.sh
 COPY bin/test_environment.py /usr/local/bin/test_environment.py
 COPY bin/setup.py /usr/local/bin/setup.py
-COPY requirements.txt /usr/local/requirements.txt
+# COPY requirements.txt /usr/local/requirements.txt
 
 RUN chmod +x /usr/local/bin/entrypoint.sh && \
-    chmod +x /usr/local/bin/run_python.sh && \
+    # chmod +x /usr/local/bin/run_python.sh && \
 	chmod +x /usr/local/bin/test_environment.py && \
 	chmod +x /usr/local/bin/setup.py
 
-RUN bash /usr/local/bin/run_python.sh test_environment && \
-	bash /usr/local/bin/run_python.sh requirements
+# RUN bash /usr/local/bin/run_python.sh test_environment && \
+# 	bash /usr/local/bin/run_python.sh requirements
 
 # Create the "home" folder
-RUN mkdir -p $PROJECT_ROOT
-WORKDIR $PROJECT_ROOT
+RUN mkdir -p /home/$USERNAME
+WORKDIR /home/$USERNAME
 
-RUN useradd -ms /bin/bash  vscode
-USER vscode
-WORKDIR $PROJECT_ROOT
+
+
+# Get poetry
+USER $USERNAME
+RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
+ENV PATH="${PATH}:$HOME/.poetry/bin"
 
 # ---
 # Setup running and entrypoint
