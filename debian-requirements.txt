@@ -1,10 +1,12 @@
-
 # Misc.
+build-essential
 curl
-python3-sklearn 
-python3-sklearn-lib 
 git
 gosu
-openssh-server
+gnupg2
+graphviz
+make
 sudo
+vim
 wget
+xzdec
